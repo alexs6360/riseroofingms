@@ -1,4 +1,11 @@
-# Lets `netlify deploy --prod` run without passing --dir each time.
-# There is no build step — dist/ is assembled by copying the source files.
+# Netlify runs `bash build.sh` to assemble dist/, then publishes it.
+# build.sh does no transpiling or bundling — it copies the source files into a
+# clean folder containing only what should be public.
+#
+# `bash build.sh` rather than `./build.sh` so the deploy does not depend on the
+# executable bit surviving in git.
+#
+# This also lets `netlify deploy --prod` run without passing --dir each time.
 [build]
+  command = "bash build.sh"
   publish = "dist"
