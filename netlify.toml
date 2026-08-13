@@ -1,0 +1,4 @@
+# Lets `netlify deploy --prod` run without passing --dir each time.
+# There is no build step — dist/ is assembled by copying the source files.
+[build]
+  publish = "dist"
