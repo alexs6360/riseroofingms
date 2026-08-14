@@ -8,7 +8,7 @@ rm -rf dist
 mkdir -p dist
 
 # Root pages and assets
-cp index.html thanks.html styles.css script.js robots.txt sitemap.xml dist/
+cp index.html thanks.html privacy.html styles.css script.js robots.txt sitemap.xml dist/
 cp -R images dist/images
 cp -R video dist/video
 

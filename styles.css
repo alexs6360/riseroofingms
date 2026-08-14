@@ -2716,6 +2716,104 @@ blockquote.card cite {
   color: rgba(255, 255, 255, 0.55);
 }
 
+/* The privacy link sits in the copyright row and takes its colour, so it reads
+   as part of that line rather than as another footer nav link. */
+.footer-bottom a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footer-bottom a:hover {
+  color: #fff;
+}
+
+.footer-sep {
+  margin: 0 4px;
+}
+
+/* Privacy policy — a reading page, so it is a single measured column rather
+   than the centred card the thanks page uses. */
+.legal {
+  padding: calc(var(--header-h) + 64px) 0 96px;
+  background: var(--color-bg);
+}
+
+.legal-inner {
+  max-width: 68ch;
+}
+
+.legal h1 {
+  margin: 0;
+  font-size: var(--text-h1);
+  color: var(--color-navy);
+}
+
+.legal-updated {
+  margin: 8px 0 32px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.legal-lead {
+  margin: 0 0 32px;
+  font-size: var(--text-lg);
+  color: var(--color-text);
+}
+
+.legal h2 {
+  margin: 40px 0 12px;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.legal p {
+  margin: 0 0 16px;
+  color: var(--color-text-muted);
+}
+
+.legal ul {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legal a {
+  color: var(--color-navy);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-slate);
+}
+
+/* Summary box — the whole policy in five lines, for anyone who will not read
+   the rest. */
+.legal-summary {
+  margin: 0 0 8px;
+  padding: 24px 28px;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--color-navy);
+}
+
+.legal-summary h2 {
+  margin-top: 0;
+}
+
+.legal-summary ul {
+  margin-bottom: 0;
+}
+
+.legal-contact {
+  line-height: 1.9;
+}
+
+.legal .btn {
+  margin-top: 40px;
+}
+
 /* Responsive
    ---------------------------------------------------------------------------
    768px is the nav breakpoint: below it the links collapse into a hamburger

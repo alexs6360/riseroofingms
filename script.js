@@ -260,9 +260,14 @@ function updateHeader() {
   if (!header) return;
   // Switch before the hero's white CTA bar slides under the transparent
   // header, which would otherwise leave white nav text on a white strip.
+  //
+  // Pages with no hero — thanks, privacy — are solid the whole way down.
+  // They used to fall back to scrollY > 0, which stripped is-solid at the top
+  // and left the 65%-navy header washed out over a white page, with a white
+  // logo on top of it.
   const solid = heroMedia
     ? heroMedia.getBoundingClientRect().bottom <= header.offsetHeight
-    : window.scrollY > 0;
+    : true;
   header.classList.toggle("is-solid", solid);
 }
 
