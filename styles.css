@@ -757,6 +757,7 @@ img {
 .service-area,
 .testimonials,
 .contact,
+.faq-section,
 .storm-section {
   padding: var(--space-section) 0;
   /* Header clearance now comes from html's scroll-padding-top, which covers
@@ -776,6 +777,7 @@ img {
 .why-us h2,
 .service-area h2,
 .testimonials h2,
+.faq-section h2,
 .storm-section h2 {
   /* Brand navy rather than near-black */
   color: var(--color-navy);
@@ -1416,9 +1418,18 @@ img {
   font-size: var(--text-sm);
 }
 
-/* FAQ — native <details>, so it works with no JS and stays keyboard operable */
+/* Surface grey, matching the storm page's FAQ band, so the white cards read as
+   raised. The contact section below shares this background — the form panel is
+   what separates them, not a colour change. */
+.faq-section {
+  background: var(--color-surface);
+}
+
+/* FAQ — native <details>, so it works with no JS and stays keyboard operable.
+   The name attribute on each item gives one-open-at-a-time natively; script.js
+   takes that over only to animate the height, which <details> cannot do. */
 .faq {
-  max-width: 68ch;
+  max-width: 800px;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
@@ -1438,9 +1449,12 @@ img {
   justify-content: space-between;
   gap: 16px;
   min-height: 56px;
-  padding: 16px 20px;
+  /* Vertical padding is zeroed so min-height alone sets the row: 16px top and
+     bottom pushed the box to 58px, since the label is already centred by the
+     flex alignment. */
+  padding: 0 20px;
   cursor: pointer;
-  color: var(--color-primary);
+  color: var(--color-navy);
   font-weight: 700;
   font-size: var(--text-base);
   list-style: none;
@@ -1460,16 +1474,57 @@ img {
   border-right: 2px solid var(--color-slate);
   border-bottom: 2px solid var(--color-slate);
   rotate: 45deg;
-  transition: rotate var(--dur-hover) var(--ease-out);
+  transition: rotate var(--dur-fast) var(--ease-out);
 }
 
 .faq-item[open] summary::after {
   rotate: 225deg;
 }
 
-.faq-item > p {
+/* Smooth expand with no JS. A height of 0 cannot animate to auto, but grid
+   track sizes can: the wrapper is a one-row grid and the row animates 0fr →
+   1fr, which resolves to the content's real height. The inner element carries
+   the overflow clip, since the grid row is what is being sized.
+
+   Only opening animates. <details> removes the content from the box tree the
+   moment it closes, so there is nothing left to animate out — closing is
+   instant, which is the usual trade for keeping this in CSS. */
+.faq-answer {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.faq-answer > * {
+  overflow: hidden;
+}
+
+.faq-item[open] .faq-answer {
+  animation: faq-expand var(--dur-fast) var(--ease-out);
+}
+
+@keyframes faq-expand {
+  from {
+    grid-template-rows: 0fr;
+  }
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+.faq-answer p {
   margin: 0;
   padding: 0 20px 20px;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-item[open] .faq-answer {
+    animation: none;
+  }
+
+  .faq-item summary::after {
+    transition: none;
+  }
 }
 
 /* Testimonials */
