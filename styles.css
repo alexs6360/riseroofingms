@@ -804,7 +804,10 @@ img {
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .services .cards {
+  .services .cards,
+  /* Compounded so it outranks .claim-grid's own rule, which is declared far
+     later in this file — a media query adds no specificity of its own. */
+  .storm-claims .claim-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -1366,88 +1369,78 @@ img {
   background: var(--color-navy);
 }
 
-/* Claims timeline. Its own light band between two white sections, so the four
-   steps read as one sequence rather than more body copy. */
+/* Claims. Deliberately the opposite treatment to "What to Do After a Storm":
+   that section is a numbered vertical checklist on light ground — the
+   homeowner's steps, where order matters. This is an icon row on navy — our
+   steps, where the point is coverage rather than sequence. */
 .storm-claims {
-  background: var(--color-surface);
-}
-
-.claim-timeline {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0;
-  list-style: none;
-  counter-reset: claim-step;
-}
-
-.claim-timeline li {
-  counter-increment: claim-step;
-  position: relative;
-  /* Room for the circle, and the 32px between steps. The padding is what the
-     connecting line spans, so the gap cannot come from a flex gap. */
-  padding-left: 60px;
-  padding-bottom: 32px;
-}
-
-.claim-timeline li:last-child {
-  padding-bottom: 0;
-}
-
-.claim-timeline li::before {
-  content: counter(claim-step);
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
   background: var(--color-navy);
   color: #fff;
-  font-weight: 700;
-  font-size: var(--text-sm);
+}
+
+/* Beats the shared .storm-section h2 rule on specificity rather than relying
+   on source order. */
+.storm-section.storm-claims h2 {
+  color: #fff;
+}
+
+.claim-intro {
+  max-width: 46ch;
+  margin: -8px auto 40px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.claim-grid {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 1040px;
   display: grid;
-  place-items: center;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px 24px;
 }
 
-/* Connector, drawn from the bottom of each circle to the top of the next.
-   Suppressed on the last step so the line terminates on the final number. */
-.claim-timeline li::after {
-  content: "";
-  position: absolute;
-  left: 17px;
-  top: 36px;
-  bottom: 0;
-  width: 2px;
-  background: var(--color-border);
-}
-
-.claim-timeline li:last-child::after {
-  display: none;
-}
-
-.claim-timeline h3 {
-  margin: 0 0 4px;
-  /* Aligns the title's cap height with the number beside it */
-  padding-top: 6px;
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--color-navy);
-}
-
-.claim-timeline p {
-  margin: 0;
-  color: var(--color-text-muted);
-}
-
-.claim-cta {
-  margin-top: 32px;
+.claim-grid li {
   text-align: center;
 }
 
-.claim-cta p {
+.claim-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
   margin: 0 auto 16px;
-  max-width: 46ch;
-  color: var(--color-text-muted);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-navy);
+}
+
+.claim-icon svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.claim-grid h3 {
+  margin: 0 0 6px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: #fff;
+}
+
+.claim-grid p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.claim-cta {
+  margin-top: 40px;
+  text-align: center;
 }
 
 /* Signs of Storm Damage. Both cards share the same navy top rule — the icons
@@ -2941,6 +2934,14 @@ blockquote.card cite {
   .storm-cols {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  /* Its own rule rather than joining the group above — the claim steps keep a
+     larger gap stacked, since each is icon plus two lines with no card edge to
+     separate them. */
+  .claim-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
   }
 
   .storm-steps li {
