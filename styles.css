@@ -3079,7 +3079,9 @@ blockquote.card cite {
   }
 
   .site-footer {
-    padding: 48px 0 0;
+    padding: 40px 0 0;
+    /* Matches the centred rhythm every other section uses on a phone */
+    text-align: center;
   }
 
   /* One column, with contact promoted above the nav so the phone number is
@@ -3087,7 +3089,56 @@ blockquote.card cite {
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 32px;
-    padding-bottom: 32px;
+    padding-bottom: 24px;
+  }
+
+  /* text-align cannot centre a block image or a max-width paragraph */
+  .footer-brand img,
+  .footer-brand p {
+    margin-inline: auto;
+  }
+
+  .site-footer h2 {
+    margin-bottom: 12px;
+  }
+
+  .site-footer ul {
+    gap: 14px;
+  }
+
+  /* Explore and Areas run two-up. Seven and six items stacked single-file is
+     most of the footer height; paired they cost four rows and three. Contact
+     is left alone — the email address needs the full width. */
+  .footer-nav ul,
+  .footer-area ul {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 16px;
+  }
+
+  /* The odd item out spans instead of sitting alone in the left column.
+     :nth-child(odd) guards both rules — add another link or city, the count
+     turns even, and they stop applying on their own.
+
+     The second selector is the last city rather than the last item: pulling
+     the footnote onto its own row leaves five cities, so without this
+     Clarksdale is stranded in the left half. */
+  .footer-nav li:last-child:nth-child(odd),
+  .footer-area li:nth-last-child(2):nth-child(odd),
+  .footer-area-more {
+    grid-column: 1 / -1;
+  }
+
+  /* 44px on the row, not just the anchor. That is what makes a plain city
+     name sit on the same rhythm as a linked one — previously the anchors
+     alone carried the height, leaving linked rows at 52px and text at 30px. */
+  .footer-nav li,
+  .footer-area li,
+  .footer-contact li {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .footer-brand {
