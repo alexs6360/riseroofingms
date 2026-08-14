@@ -1369,6 +1369,90 @@ img {
   margin-inline: auto;
 }
 
+/* Signs of Storm Damage — the two cards read as separate categories rather
+   than a repeated block, so each carries its own accent and icon. */
+.storm-card {
+  border-top: 3px solid transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.storm-card-hail {
+  border-top-color: var(--color-navy);
+}
+
+.storm-card-wind {
+  border-top-color: #f2e3c4;
+}
+
+.storm-card-icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-navy);
+}
+
+.storm-card-icon svg {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Dots, not checkmarks — every item here is a problem, and a tick reads as
+   approval. Scoped to these two cards so the claims list, where the items
+   genuinely are reassurances, keeps its checkmarks. */
+.storm-cols .storm-list {
+  gap: 14px;
+}
+
+.storm-cols .storm-list li {
+  /* Marker hangs into the card's padding so the text itself lines up with the
+     heading above it rather than sitting 26px inside it. */
+  padding-left: 0;
+}
+
+.storm-cols .storm-list li::before {
+  left: -16px;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-navy);
+  rotate: none;
+}
+
+/* Closing line, separated from the list by a rule. margin-top:auto pins it to
+   the card's baseline, so any height difference between the two lists shows as
+   space above the note rather than dead space below it. */
+.storm-card-note {
+  margin: 20px 0 0;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.storm-signs-cta {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.storm-signs-cta p {
+  margin: 0 auto 16px;
+  max-width: 46ch;
+  color: var(--color-text-muted);
+}
+
 .storm-steps {
   list-style: none;
   margin: 0 auto;
