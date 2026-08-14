@@ -19,11 +19,17 @@
   /* One alignment grid for every section */
   --max-width: 1200px;
   --header-h: 72px;
-  /* The bar's own height: 52px button plus 10px padding top and bottom.
-     Anything that has to clear it derives its spacing from this rather than
-     repeating the number. The safe-area inset is added separately where it
-     matters, since it is device-dependent. */
-  --sticky-call-h: 72px;
+  /* The bar's own height: 52px button plus 10px padding top and bottom, plus
+     its 1px top border. Anything that has to clear it derives its spacing
+     from this rather than repeating the number. */
+  --sticky-call-h: 73px;
+
+  /* What the footer pads by so the bar never covers it. script.js overwrites
+     this with the bar's measured height on load and on resize — the measured
+     value already includes the safe-area inset, because that inset lives in
+     the bar's own padding. This declaration is the no-JS fallback, which is
+     why it adds the inset itself. */
+  --sticky-clearance: calc(var(--sticky-call-h) + env(safe-area-inset-bottom));
 
   /* Spacing scale — 8px base. Every padding and margin uses one of these. */
   --space-1: 8px;
@@ -3065,21 +3071,19 @@ blockquote.card cite {
     font-size: var(--text-base);
   }
 
-  /* The sticky call bar would otherwise cover the end of the page */
-  /* Same clearance as the hero, so the end of the footer is not tucked under
-     the bar either. Derived from the token rather than restating 72px. */
-  body {
-    padding-bottom: calc(
-      var(--sticky-call-h) + 16px + env(safe-area-inset-bottom)
-    );
-  }
+  /* The clearance for the sticky bar lives on the footer, not on body. As body
+     padding it sat outside the navy background, so a strip of white page
+     showed between the end of the footer and the top of the bar. Inside the
+     footer, the navy runs under the bar and the seam disappears. */
 
   .sticky-call {
     display: block;
   }
 
   .site-footer {
-    padding: 40px 0 0;
+    /* The bottom pad is what the bar sits over, so the 24px below the
+       copyright comes from .footer-bottom and stays visible. */
+    padding: 40px 0 var(--sticky-clearance);
     /* Matches the centred rhythm every other section uses on a phone */
     text-align: center;
   }
@@ -3103,7 +3107,7 @@ blockquote.card cite {
   }
 
   .site-footer ul {
-    gap: 14px;
+    gap: 16px;
   }
 
   /* Explore and Areas run two-up. Seven and six items stacked single-file is
@@ -3113,7 +3117,7 @@ blockquote.card cite {
   .footer-area ul {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 14px 16px;
+    gap: 16px;
   }
 
   /* The odd item out spans instead of sitting alone in the left column.

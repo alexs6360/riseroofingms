@@ -276,3 +276,32 @@ function onScroll() {
 window.addEventListener("scroll", onScroll, { passive: true });
 window.addEventListener("resize", onScroll);
 updateHeader();
+
+  /* Keep the footer's bottom clearance equal to the sticky bar's real height.
+
+     The CSS fallback is a hardcoded token, which was already one pixel short
+     of what the bar actually renders. Measuring removes that class of drift
+     for good: if the label ever wraps to two lines, or a line is added, the
+     footer pads by the new height without anyone editing a number.
+
+     offsetHeight already includes the safe-area inset, since that inset is
+     part of the bar's own bottom padding — so the measured value replaces the
+     fallback's calc() rather than adding to it. */
+  const stickyBar = document.querySelector(".sticky-call");
+
+  if (stickyBar && typeof ResizeObserver === "function") {
+    const syncStickyClearance = function () {
+      const h = stickyBar.offsetHeight;
+      // Zero above 768px, where the bar is display:none. Leaving the property
+      // alone there keeps the fallback in place for the next resize down.
+      if (h > 0) {
+        document.documentElement.style.setProperty(
+          "--sticky-clearance",
+          h + "px"
+        );
+      }
+    };
+
+    new ResizeObserver(syncStickyClearance).observe(stickyBar);
+    syncStickyClearance();
+  }
