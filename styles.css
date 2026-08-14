@@ -1335,38 +1335,119 @@ img {
   gap: 24px;
 }
 
+/* Only the two Signs cards use this now — the claims list became a timeline,
+   so the checkmark variant and the .storm-cols scoping that protected it are
+   both gone. Every item here is a problem, and a tick reads as approval. */
 .storm-list {
   list-style: none;
-  margin: 0;
+  margin: 0 0 20px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .storm-list li {
   position: relative;
-  padding-left: 26px;
+  /* Marker hangs into the card's padding so the text lines up with the heading
+     above it rather than sitting indented from it. */
+  padding-left: 0;
   color: var(--color-text-muted);
 }
 
-/* Same navy tick used on the why-us cards, drawn rather than a list bullet */
 .storm-list li::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0.45em;
-  width: 12px;
-  height: 7px;
-  border-left: 2px solid var(--color-primary);
-  border-bottom: 2px solid var(--color-primary);
-  rotate: -45deg;
+  left: -16px;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-navy);
 }
 
-/* The claims list runs full width rather than inside a card */
-.storm-list-wide {
-  max-width: 62ch;
-  margin-inline: auto;
+/* Claims timeline. Its own light band between two white sections, so the four
+   steps read as one sequence rather than more body copy. */
+.storm-claims {
+  background: var(--color-surface);
+}
+
+.claim-timeline {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  counter-reset: claim-step;
+}
+
+.claim-timeline li {
+  counter-increment: claim-step;
+  position: relative;
+  /* Room for the circle, and the 32px between steps. The padding is what the
+     connecting line spans, so the gap cannot come from a flex gap. */
+  padding-left: 60px;
+  padding-bottom: 32px;
+}
+
+.claim-timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.claim-timeline li::before {
+  content: counter(claim-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  display: grid;
+  place-items: center;
+}
+
+/* Connector, drawn from the bottom of each circle to the top of the next.
+   Suppressed on the last step so the line terminates on the final number. */
+.claim-timeline li::after {
+  content: "";
+  position: absolute;
+  left: 17px;
+  top: 36px;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.claim-timeline li:last-child::after {
+  display: none;
+}
+
+.claim-timeline h3 {
+  margin: 0 0 4px;
+  /* Aligns the title's cap height with the number beside it */
+  padding-top: 6px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.claim-timeline p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.claim-cta {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.claim-cta p {
+  margin: 0 auto 16px;
+  max-width: 46ch;
+  color: var(--color-text-muted);
 }
 
 /* Signs of Storm Damage. Both cards share the same navy top rule — the icons
@@ -1397,34 +1478,6 @@ img {
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-/* Dots, not checkmarks — every item here is a problem, and a tick reads as
-   approval. Scoped to these two cards so the claims list, where the items
-   genuinely are reassurances, keeps its checkmarks. */
-.storm-cols .storm-list {
-  gap: 14px;
-  /* Floor for the space before the closing line's rule. The note's margin-top
-     is auto, which collapses to 0 in whichever card has the longer list and
-     would otherwise leave the rule touching the last item. */
-  margin-bottom: 20px;
-}
-
-.storm-cols .storm-list li {
-  /* Marker hangs into the card's padding so the text itself lines up with the
-     heading above it rather than sitting 26px inside it. */
-  padding-left: 0;
-}
-
-.storm-cols .storm-list li::before {
-  left: -16px;
-  top: 0.55em;
-  width: 6px;
-  height: 6px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--color-navy);
-  rotate: none;
 }
 
 /* Closing line, separated from the list by a rule. margin-top:auto pins it to
