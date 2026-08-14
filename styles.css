@@ -1369,20 +1369,13 @@ img {
   margin-inline: auto;
 }
 
-/* Signs of Storm Damage — the two cards read as separate categories rather
-   than a repeated block, so each carries its own accent and icon. */
+/* Signs of Storm Damage. Both cards share the same navy top rule — the icons
+   are what separate hail from wind, so a second accent colour only weakened
+   the pairing. The -hail and -wind classes stay on the markup as hooks. */
 .storm-card {
-  border-top: 3px solid transparent;
+  border-top: 3px solid var(--color-navy);
   display: flex;
   flex-direction: column;
-}
-
-.storm-card-hail {
-  border-top-color: var(--color-navy);
-}
-
-.storm-card-wind {
-  border-top-color: #f2e3c4;
 }
 
 .storm-card-icon {
@@ -1411,6 +1404,10 @@ img {
    genuinely are reassurances, keeps its checkmarks. */
 .storm-cols .storm-list {
   gap: 14px;
+  /* Floor for the space before the closing line's rule. The note's margin-top
+     is auto, which collapses to 0 in whichever card has the longer list and
+     would otherwise leave the rule touching the last item. */
+  margin-bottom: 20px;
 }
 
 .storm-cols .storm-list li {
