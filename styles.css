@@ -2732,6 +2732,43 @@ blockquote.card cite {
   margin: 0 4px;
 }
 
+/* Consent line under the submit button. Deliberately the smallest type on
+   the page — it is disclosure, not copy anyone is meant to read first. */
+.form-consent {
+  margin: 12px 0 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.form-consent a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.form-consent a:hover {
+  color: var(--color-navy);
+}
+
+/* Storm page footnote. Shares the contact section's ground above it so it
+   reads as a closing note rather than another band, separated by a hairline. */
+.storm-disclaimer {
+  background: var(--color-surface);
+  padding: 0 0 var(--space-8);
+}
+
+.storm-disclaimer p {
+  max-width: 78ch;
+  margin: 0 auto;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 /* Privacy policy — a reading page, so it is a single measured column rather
    than the centred card the thanks page uses. */
 .legal {
