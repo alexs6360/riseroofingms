@@ -2620,7 +2620,21 @@ blockquote.card cite {
   margin-inline: auto;
 }
 
-/* What happens next. Left-aligned inside the centred column — these are two
+/* Caller ID. Smaller than the lead above it — useful, but not the headline. */
+.thanks-caller {
+  max-width: 46ch;
+  margin: 8px auto 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.thanks-caller a {
+  color: var(--color-navy);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* What happens next. Left-aligned inside the centred column — these are
    facts to read, not a headline. */
 .thanks-next {
   list-style: none;
@@ -2698,6 +2712,27 @@ blockquote.card cite {
   color: var(--color-navy);
   font-weight: 700;
   white-space: nowrap;
+}
+
+/* Two ways on rather than one. Side by side where there is room, stacked and
+   full width on a phone — the same pattern the hero and city CTA bars use. */
+.thanks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.thanks-actions .btn {
+  min-height: 52px;
+  padding-block: 0;
+}
+
+@media (max-width: 768px) {
+  .thanks-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 /* Footer */
