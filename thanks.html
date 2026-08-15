@@ -4,24 +4,80 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thank You | RISE Roofing Solutions</title>
-  <meta name="description" content="Thanks for contacting RISE Roofing Solutions. We'll be in touch shortly." />
+  <meta name="description" content="Thanks for contacting RISE Roofing Solutions. We'll call within one business day to schedule your free inspection." />
   <meta name="robots" content="noindex" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="RISE Roofing Solutions" />
   <meta property="og:title" content="Thank You | RISE Roofing Solutions" />
-  <meta property="og:description" content="Thanks for contacting RISE Roofing Solutions. We'll be in touch within one business day." />
+  <meta property="og:description" content="Thanks for contacting RISE Roofing Solutions. We'll call within one business day to schedule your free inspection." />
   <meta property="og:image" content="https://riseroofingms.com/images/og-image.jpg" />
+
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
+
+  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
 
-  <header class="site-header is-solid">
+  <header class="site-header">
     <div class="container header-inner">
       <a href="/" class="logo">
-        <img src="images/logo.png" alt="RISE Roofing Solutions" class="logo-img" width="611" height="308" />
+        <img src="images/logo.png" alt="RISE Roofing Solutions" class="logo-img" width="611" height="308" onerror="this.style.display='none'" />
       </a>
-      <a href="tel:+16622134797" class="btn btn-primary nav-cta">Call (662) 213-4797</a>
+
+      <a href="tel:+16622134797" class="header-phone">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6.6 3.5h3.1l1.6 4-2 1.2a12 12 0 0 0 6 6l1.2-2 4 1.6v3.1a1.6 1.6 0 0 1-1.7 1.6A16.5 16.5 0 0 1 5 5.2 1.6 1.6 0 0 1 6.6 3.5z" />
+        </svg>
+        (662) 213-4797
+      </a>
+
+      <button
+        type="button"
+        class="nav-toggle"
+        id="nav-toggle"
+        aria-controls="site-nav"
+        aria-expanded="false"
+      >
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+        <span class="visually-hidden">Menu</span>
+      </button>
+
+      <nav class="nav" id="site-nav">
+        <a href="/">Home</a>
+        <a href="/#services">Services</a>
+        <a href="/storm-damage/">Storm Damage</a>
+
+        <div class="nav-group" data-nav-dropdown>
+          <button
+            type="button"
+            class="nav-group-toggle"
+            aria-expanded="false"
+            aria-controls="nav-areas"
+          >
+            Service Areas
+            <svg class="nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div class="nav-panel" id="nav-areas">
+            <div class="nav-panel-inner">
+              <a href="/roofing-tupelo-ms/">Tupelo</a>
+              <a href="/roofing-oxford-ms/">Oxford</a>
+              <a href="/roofing-southaven-ms/">Southaven</a>
+              <a href="/#service-area" class="nav-panel-all">All Service Areas</a>
+            </div>
+          </div>
+        </div>
+
+        <a href="/#contact">Contact</a>
+        <a href="tel:+16622134797" class="nav-phone">Call (662) 213-4797</a>
+      </nav>
+
+      <a href="/#contact" class="btn btn-primary nav-cta">Schedule Inspection</a>
     </div>
   </header>
 
@@ -32,17 +88,49 @@
       </span>
 
       <p class="eyebrow">Request received</p>
-      <h1>Thanks &mdash; we'll be in touch.</h1>
+      <h1>Thanks &mdash; your request came through.</h1>
       <p class="thanks-lead">
-        Your request is with David and the RISE team. We'll get back to you shortly to
-        talk through your roof and set up a free estimate.
+        Someone from RISE Roofing Solutions will call you within one business
+        day to schedule your inspection.
       </p>
 
-      <div class="thanks-contact">
-        <p>Need us sooner? Call directly:</p>
-        <a href="tel:+16622134797" class="thanks-phone">(662) 213-4797</a>
-        <p class="thanks-email">
-          or email <a href="mailto:david.knight@riseroofingms.com">david.knight@riseroofingms.com</a>
+      <ul class="thanks-next">
+        <li>
+          <span class="thanks-next-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7.5V12l3 2" />
+            </svg>
+          </span>
+          <div>
+            <h2>The inspection is free</h2>
+            <p>It takes about 30 to 45 minutes, and there is no obligation.</p>
+          </div>
+        </li>
+
+        <li>
+          <span class="thanks-next-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="2.5" y="7" width="19" height="12.5" rx="2" />
+              <path d="M8.5 7 10 4.5h4L15.5 7" />
+              <circle cx="12" cy="13.2" r="3.3" />
+            </svg>
+          </span>
+          <div>
+            <h2>What you get</h2>
+            <p>
+              Full photo documentation of the roof, and a written estimate for
+              anything that needs doing.
+            </p>
+          </div>
+        </li>
+      </ul>
+
+      <div class="thanks-urgent">
+        <p>
+          <strong>Storm damage that can't wait?</strong> Call
+          <a href="tel:+16622134797">(662) 213-4797</a> rather than waiting for
+          the callback, and we'll get to you as soon as we can.
         </p>
       </div>
 
@@ -52,15 +140,75 @@
 
   <footer class="site-footer">
     <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="images/logo.png" alt="RISE Roofing Solutions" width="611" height="308" />
+          <p>Raising the standard. Protecting your home.</p>
+        </div>
+
+        <nav class="footer-nav" aria-label="Footer">
+          <h2>Explore</h2>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/#services">Services</a></li>
+            <li><a href="/storm-damage/">Storm Damage</a></li>
+            <li><a href="/#founder">About</a></li>
+            <li><a href="/#why-us">Why Us</a></li>
+            <li><a href="/#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <div class="footer-contact">
+          <h2>Contact</h2>
+          <ul>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6.6 3.5h3.1l1.6 4-2 1.2a12 12 0 0 0 6 6l1.2-2 4 1.6v3.1a1.6 1.6 0 0 1-1.7 1.6A16.5 16.5 0 0 1 5 5.2 1.6 1.6 0 0 1 6.6 3.5z" />
+              </svg>
+              <a href="tel:+16622134797">(662) 213-4797</a>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="m3.5 6.5 8.5 6 8.5-6" />
+              </svg>
+              <a href="mailto:david.knight@riseroofingms.com">david.knight@riseroofingms.com</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-area">
+          <h2>Areas We Serve</h2>
+          <ul>
+            <li><a href="/roofing-tupelo-ms/">Tupelo</a></li>
+            <li><a href="/roofing-oxford-ms/">Oxford</a></li>
+            <li><a href="/roofing-southaven-ms/">Southaven</a></li>
+            <li>Hernando</li>
+            <li>Clarksdale</li>
+            <li>Holly Springs</li>
+            <li class="footer-area-more">and surrounding areas</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="footer-bottom">
         <p>
-          &copy; <span id="year">2026</span> RISE Roofing Solutions. All rights reserved.
+          &copy; <span id="year"></span> RISE Roofing Solutions. All rights reserved.
           <span class="footer-sep" aria-hidden="true">&middot;</span>
           <a href="/privacy">Privacy Policy</a>
         </p>
       </div>
     </div>
   </footer>
+
+  <div class="sticky-call">
+    <a class="sticky-call-btn" href="tel:+16622134797">
+      <svg class="sticky-call-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6.6 3.5h3.1l1.6 4-2 1.2a12 12 0 0 0 6 6l1.2-2 4 1.6v3.1a1.6 1.6 0 0 1-1.7 1.6A16.5 16.5 0 0 1 5 5.2 1.6 1.6 0 0 1 6.6 3.5z" />
+      </svg>
+      Call (662) 213-4797
+    </a>
+  </div>
 
   <script src="script.js"></script>
 </body>

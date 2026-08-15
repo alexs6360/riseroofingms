@@ -2620,31 +2620,84 @@ blockquote.card cite {
   margin-inline: auto;
 }
 
-.thanks-contact {
+/* What happens next. Left-aligned inside the centred column — these are two
+   facts to read, not a headline. */
+.thanks-next {
+  list-style: none;
   margin: 40px 0 32px;
   padding: 24px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
 }
 
-.thanks-contact p {
-  margin: 0;
+.thanks-next li {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
 }
 
-.thanks-phone {
-  display: inline-block;
-  margin: 8px 0 8px;
+.thanks-next-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-surface);
   color: var(--color-navy);
-  font-size: var(--text-xl);
-  font-weight: 800;
-  letter-spacing: -0.01em;
 }
 
-.thanks-email {
-  font-size: var(--text-sm);
+.thanks-next-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.thanks-next h2 {
+  margin: 0 0 2px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.thanks-next p {
+  margin: 0;
   color: var(--color-text-muted);
-  overflow-wrap: anywhere;
+}
+
+/* The one line someone mid-emergency needs to find. Accent rule on the left
+   rather than a second card, so it reads as an aside to the block above. */
+.thanks-urgent {
+  margin: 0 0 32px;
+  padding: 16px 20px;
+  border-left: 3px solid var(--color-navy);
+  background: var(--color-surface);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  text-align: left;
+}
+
+.thanks-urgent p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.thanks-urgent strong {
+  color: var(--color-navy);
+}
+
+.thanks-urgent a {
+  color: var(--color-navy);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Footer */
