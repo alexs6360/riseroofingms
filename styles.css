@@ -1792,6 +1792,17 @@ blockquote.card cite {
   padding-block: 13.6px;
 }
 
+/* "Request an Inspection" needs 192px at 18px, and the column stops offering
+   that below roughly 334px — the label wraps and the button grows to 74px.
+   16px is the largest step that still fits at 320px; padding rises to 14.8px
+   so the box stays at the same height it has everywhere else. */
+@media (max-width: 349.98px) {
+  .contact-form button[type="submit"] {
+    font-size: var(--text-base);
+    padding-block: 14.8px;
+  }
+}
+
 .form-status {
   margin: 8px 0 0;
   font-size: var(--text-sm);
