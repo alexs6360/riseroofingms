@@ -11,6 +11,15 @@
      the hero gradient. #647e9d itself measures 4.04:1 on #071d37 and 3.27:1 on
      #0e2e52 — this tint is 6.32:1 and 5.12:1 against the same two ends. */
   --color-accent-light: #8aa0bc;
+
+  /* Accent, two stops of the same hue family as --color-slate. Replaces the
+     cream that used to sit on the storm and Oxford heroes, so the site has one
+     accent colour rather than a warm one and a cool one.
+       --accent-light  on navy, dark surfaces, and over photography
+       --accent-deep   on white and the light sections */
+  --accent-light: #9db9dc;
+  --accent-deep: #2c5b8c;
+
   --color-surface: #f5f5f7;
   --color-border: #e3e4ea;
 
@@ -2049,7 +2058,7 @@ blockquote.card cite {
   gap: 10px;
   padding: 10px 20px;
   background: rgba(7, 29, 55, 0.8);
-  color: #f2e3c4;
+  color: var(--accent-light);
   font-size: var(--text-sm);
   font-weight: 600;
   text-align: center;
@@ -2105,7 +2114,7 @@ blockquote.card cite {
   width: 20px;
   height: 20px;
   fill: none;
-  stroke: #f2e3c4;
+  stroke: var(--accent-light);
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -2131,9 +2140,9 @@ blockquote.card cite {
   }
 }
 
-/* Warm cream against the storm's cold greys and the brick below it. */
+/* Accent against the storm's cold greys and the brick below it. */
 .city-hero-storm .city-hero-h1-city {
-  color: #f2e3c4;
+  color: var(--accent-light);
 }
 
 /* Oxford. Its wordmark spans the upper third rather than one corner, so the
@@ -2184,11 +2193,12 @@ blockquote.card cite {
   margin-bottom: 0;
 }
 
-/* The warm cream lifted from the OXFORD wordmark in the photograph. #647e9d
-   measured 2.77:1 against the composited background behind this line — below
-   even the 3:1 large-text bar — where this reads 9.16:1. */
+/* Accent over the photograph. #647e9d measured 2.77:1 against the composited
+   background behind this line — below even the 3:1 large-text bar. The cream
+   this replaces read 9.16:1; --accent-light is darker, so the measured value
+   after the swap is recorded below rather than assumed. */
 .city-hero-oxford .city-hero-h1-city {
-  color: #f2e3c4;
+  color: var(--accent-light);
 }
 
 .city-hero-oxford .city-hero-content h1::before {
