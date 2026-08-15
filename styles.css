@@ -674,13 +674,35 @@ img {
   line-height: 1.4;
 }
 
+/* Full-width band closing the hero. A sibling of .hero rather than a row
+   inside it: as a grid row the hero's own navy painted 56px below the band on
+   mobile, because the panel overflowed its track upward. Outside the grid the
+   band is full-width by definition and nothing can paint beneath it. The two
+   hero columns are already equal height — both stretch to the grid row. */
+.hero-tagline-bar {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  background: var(--color-bg);
+  /* Above the video's left-edge blend, which is painted by .hero-media and
+     would otherwise bleed over the band's top corner. */
+  position: relative;
+  z-index: 2;
+}
+
 .hero-tagline {
-  margin: 0 0 var(--space-5);
-  color: #fff;
-  font-size: 1.25rem;
+  margin: 0;
+  color: var(--color-navy);
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  /* Set in sentence case in the markup so screen readers do not spell it out */
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
 }
 
 /* Right panel — the footage */
@@ -3547,25 +3569,15 @@ blockquote.card cite {
     display: none;
   }
 
-  /* Thin rule above the tagline, centred on the panel. It is already 1.25rem
-     from the base rule, so the orphaned "your home." was a wrapping problem,
-     not a size one — balance splits it at the sentence break instead. */
+  /* 14px is the floor. The line is allowed to wrap to two rather than shrink
+     past it, so the band grows instead of the type getting smaller. */
   .hero-tagline {
-    position: relative;
-    padding-top: 24px;
-    margin-bottom: var(--space-4);
-    text-wrap: balance;
+    font-size: 0.875rem;
+    letter-spacing: 0.06em;
   }
 
-  .hero-tagline::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    translate: -50% 0;
-    width: 48px;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.3);
+  .hero-tagline-bar {
+    padding: 12px 16px;
   }
 
   /* Only one button remains here, so the column and gap just make it span the
