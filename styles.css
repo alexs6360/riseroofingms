@@ -674,6 +674,12 @@ img {
   line-height: 1.4;
 }
 
+/* The in-hero copy of the tagline is mobile only; the band below the hero
+   covers desktop. */
+.hero-tagline-inline {
+  display: none;
+}
+
 /* Full-width band closing the hero. A sibling of .hero rather than a row
    inside it: as a grid row the hero's own navy painted 56px below the band on
    mobile, because the panel overflowed its track upward. Outside the grid the
@@ -3556,7 +3562,10 @@ blockquote.card cite {
      gradient plus the poster texture in ::before. */
   .hero {
     grid-template-columns: 1fr;
-    background: linear-gradient(165deg, #071d37 0%, #0e2e52 100%);
+    /* Flat navy. The 165deg gradient lightened toward the foot of the panel,
+       and against the white band that used to sit under it that fade read as
+       a rendering artefact rather than depth. */
+    background: var(--color-navy);
     /* The watermark below is deliberately bled past the corner; without this
        it would widen the page and scroll it sideways. */
     overflow: hidden;
@@ -3626,6 +3635,30 @@ blockquote.card cite {
   .hero-logo {
     width: 260px;
     margin: var(--space-4) auto;
+  }
+
+  /* The band belongs to desktop; on a phone the tagline sits inside the hero
+     instead, so there is no white block between the hero and the service line. */
+  .hero-tagline-bar {
+    display: none;
+  }
+
+  .hero-tagline-inline {
+    display: block;
+    margin: 0 0 var(--space-4);
+    color: var(--accent-light);
+    font-size: 0.875rem;
+    /* Tighter than the desktop band: 0.08em pushed this past the panel width */
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  /* Even at 0.04em the line still wrapped, so the break is placed rather than
+     left to chance: one sentence per line instead of "Protecting your" /
+     "home." splitting mid-phrase. */
+  .hero-tagline-inline span {
+    display: block;
   }
 
   /* Four tiles rather than a list: the names alone carry the acronym on a
