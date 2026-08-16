@@ -3571,19 +3571,6 @@ blockquote.card cite {
     overflow: hidden;
   }
 
-  /* Roof texture as depth, not a photograph. The poster sits over the gradient
-     at 20% — applied as one veil rather than stacking a literal 85% navy on
-     top of it, which would compound to about 3% and vanish entirely. Under
-     .hero-panel, which carries z-index 1. */
-  .hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: url("video/hero-poster.jpg") no-repeat center / cover;
-    opacity: 0.2;
-    pointer-events: none;
-  }
-
   /* The roof mark as texture, not a second logo — oversized, barely there, and
      running off the corner so it never reads as a placed element. Sits under
      .hero-panel, which carries z-index 1. */
