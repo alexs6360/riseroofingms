@@ -3553,6 +3553,22 @@ blockquote.card cite {
   }
 }
 
+/* Hover lift on the completed-work frames. Both conditions in one query: no
+   lift for anyone who asked for less motion, and none on touch, where :hover
+   sticks after a tap instead of behaving like a hover. */
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and
+  (pointer: fine) {
+  .work-gallery figure {
+    transition: translate var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+
+  .work-gallery figure:hover {
+    translate: 0 -4px;
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
 /* Stops just short of 768px so this and the <picture> source switch at exactly
    the same width — otherwise one breakpoint would serve the portrait file
    inside the landscape container. */
