@@ -409,3 +409,75 @@ updateHeader();
       window.history.pushState(null, "", url.hash);
     }
   });
+
+  /* Roof system diagram.
+
+     The nine descriptions live once, in the .rs-fallback list, which has to be
+     in the page anyway for the no-JS case. This reads the copy back out of it
+     rather than carrying a second copy in a JSON blob — they can never drift.
+
+     role and tabindex are applied here, not in the markup: without this script
+     the shapes do nothing, and announcing them as buttons would be a lie. */
+  const rsSvg = document.querySelector(".rs-svg");
+  const rsPanel = document.getElementById("rs-panel");
+
+  if (rsSvg && rsPanel) {
+    const rsLayers = Array.from(rsSvg.querySelectorAll(".rs-layer"));
+    const rsCopy = new Map();
+
+    document.querySelectorAll(".rs-fallback-item").forEach((item) => {
+      rsCopy.set(item.dataset.layer, {
+        step: item.dataset.step,
+        name: item.querySelector("dt").textContent.trim(),
+        where: item.querySelector(".rs-where").textContent.trim(),
+        body: item.querySelector(".rs-body").textContent.trim(),
+      });
+    });
+
+    const rsFields = {
+      step: rsPanel.querySelector(".rs-panel-step"),
+      name: rsPanel.querySelector(".rs-panel-name"),
+      where: rsPanel.querySelector(".rs-panel-where"),
+      body: rsPanel.querySelector(".rs-panel-body"),
+    };
+
+    function selectLayer(el) {
+      const copy = rsCopy.get(el.dataset.layer);
+      if (!copy) return;
+
+      rsLayers.forEach((other) => {
+        const on = other === el;
+        other.classList.toggle("is-active", on);
+        other.setAttribute("aria-pressed", String(on));
+      });
+
+      rsFields.step.textContent = "Layer " + copy.step + " of " + rsLayers.length;
+      rsFields.name.textContent = copy.name;
+      rsFields.where.textContent = copy.where;
+      rsFields.body.textContent = copy.body;
+    }
+
+    rsLayers.forEach((el) => {
+      el.setAttribute("role", "button");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-pressed", "false");
+
+      el.addEventListener("click", function () {
+        selectLayer(el);
+      });
+
+      el.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+          // Space would otherwise scroll the page out from under the diagram
+          event.preventDefault();
+          selectLayer(el);
+        }
+      });
+    });
+
+    // Matches the layer the panel was rendered with, so the highlight and the
+    // text agree on first paint.
+    const rsInitial =
+      rsLayers.find((el) => el.dataset.layer === "deck") || rsLayers[0];
+    if (rsInitial) selectLayer(rsInitial);
+  }

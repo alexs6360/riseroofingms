@@ -24,4 +24,8 @@
     <loc>https://riseroofingms.com/privacy</loc>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://riseroofingms.com/roof-system</loc>
+    <priority>0.7</priority>
+  </url>
 </urlset>
