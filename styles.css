@@ -2937,12 +2937,15 @@ blockquote.card cite {
   grid-column: 1 / -1;
 }
 
-/* Capped so the lead and the row of three land in one screenful on a laptop.
-   At 1152px wide the 16/9 frame would be 648px; 460 crops a further ~29% of
-   its height, which object-position keeps centred on the roof. No effect on
-   mobile, where the frame is only ~188px tall to begin with. */
+/* The lead frame takes the lead photo's own ratio (1021x577) rather than the
+   16/9 the row uses, so it displays with nothing cropped off any edge. No
+   max-height: the cap was the only thing cropping it — the source is 1.769,
+   near enough 16/9 that the sides were never touched.
+
+   Tied to this specific photo: swapping the lead means updating this ratio,
+   or dropping back to 16/9 and accepting 0.5%. */
 .work-lead img {
-  max-height: 460px;
+  aspect-ratio: 1021 / 577;
 }
 
 /* 16/9 matches the drone frames, so three of the four display uncropped and
