@@ -3571,6 +3571,19 @@ blockquote.card cite {
     overflow: hidden;
   }
 
+  /* Roof texture as depth, not a photograph. At 20% the shingle pattern barely
+     registered and the panel read as empty navy; 30% is enough for the courses
+     to show without the poster competing with the logo or the tiles. Sits under
+     .hero-panel, which carries z-index 1. */
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("video/hero-poster.jpg") no-repeat center / cover;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
   /* The roof mark as texture, not a second logo — oversized, barely there, and
      running off the corner so it never reads as a placed element. Sits under
      .hero-panel, which carries z-index 1. */
