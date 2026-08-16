@@ -2891,7 +2891,7 @@ blockquote.card cite {
    gallery — the spacing between them comes from this margin, so nothing
    needs restructuring to add one. */
 .work-project {
-  margin-top: var(--space-7);
+  margin-top: var(--space-6);
 }
 
 .work-project + .work-project {
