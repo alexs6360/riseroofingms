@@ -310,3 +310,102 @@ updateHeader();
     new ResizeObserver(syncStickyClearance).observe(stickyBar);
     syncStickyClearance();
   }
+
+  /* Anchor scrolling, capped.
+
+     scroll-behavior: smooth paces by distance, so a jump from the top of the
+     homepage to #contact is a ~5,000px ride. This animates it here instead and
+     clamps the duration, so short hops still feel proportional and long ones
+     stop being a journey.
+
+     The CSS keeps scroll-behavior: smooth as the no-JS fallback; each step
+     passes behavior:"instant" so the native smoothing does not fight the
+     rAF loop by re-easing every frame. */
+  const SCROLL_CAP_MS = 600;
+  const SCROLL_MIN_MS = 220;
+
+  function anchorOffsetFor(el) {
+    // Mirrors what the CSS does natively: the scrollport is inset by
+    // scroll-padding-top, and the target adds its own scroll-margin-top.
+    const headerH = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--header-h")
+    );
+    const margin = parseFloat(getComputedStyle(el).scrollMarginTop);
+    return (headerH || 0) + (margin || 0);
+  }
+
+  function scrollToAnchor(el) {
+    const start = window.scrollY;
+    const maxScroll =
+      document.documentElement.scrollHeight - window.innerHeight;
+    const end = Math.max(
+      0,
+      Math.min(
+        maxScroll,
+        el.getBoundingClientRect().top + start - anchorOffsetFor(el)
+      )
+    );
+    const distance = end - start;
+    if (Math.abs(distance) < 1) return;
+
+    // Already a boolean — .matches was applied where it is defined.
+    if (prefersReducedMotion) {
+      window.scrollTo({ top: end, behavior: "instant" });
+      return;
+    }
+
+    // Proportional under the cap, clamped above it.
+    const duration = Math.min(
+      SCROLL_CAP_MS,
+      Math.max(SCROLL_MIN_MS, Math.abs(distance) * 0.45)
+    );
+    const startedAt = performance.now();
+    // ease-out cubic, so it arrives settled rather than stopping dead
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+
+    function step(now) {
+      const t = Math.min(1, (now - startedAt) / duration);
+      window.scrollTo({ top: start + distance * ease(t), behavior: "instant" });
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  document.addEventListener("click", function (event) {
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const link = event.target.closest && event.target.closest('a[href*="#"]');
+    if (!link || link.target === "_blank") return;
+
+    let url;
+    try {
+      url = new URL(link.getAttribute("href"), window.location.href);
+    } catch (e) {
+      return;
+    }
+    // Only same-document anchors. A link to another page's section navigates.
+    if (
+      url.origin !== window.location.origin ||
+      url.pathname !== window.location.pathname ||
+      !url.hash ||
+      url.hash === "#"
+    ) {
+      return;
+    }
+
+    let target;
+    try {
+      target = document.querySelector(url.hash);
+    } catch (e) {
+      return;
+    }
+    if (!target) return;
+
+    event.preventDefault();
+    scrollToAnchor(target);
+    // Keep the URL and the back button honest, without a second jump.
+    if (window.history && window.history.pushState) {
+      window.history.pushState(null, "", url.hash);
+    }
+  });
