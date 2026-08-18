@@ -2995,11 +2995,13 @@ blockquote.card cite {
   text-align: center;
 }
 
-/* A statement in its own right, not a caption for the button. The measure is
-   held near 30ch so it breaks into a couple of short lines instead of running
-   the full column, which is what made it read as supporting text. */
+/* A statement in its own right, not a caption for the button. 45ch holds the
+   measure without wrapping it: at 24px this line runs 533px and 45ch is
+   699px, so it stays on one line at every desktop width. Below the cap the
+   paragraph just fills the column, and text-align on the parent keeps it
+   centred either way. */
 .system-cta p {
-  max-width: 30ch;
+  max-width: 45ch;
   margin: 0 auto var(--space-2);
   color: var(--color-navy);
   font-size: 1.5rem;
