@@ -2984,82 +2984,33 @@ blockquote.card cite {
 }
 
 /* Link out of the services section to the roof-system page */
-/* The roof-system link, as a card rather than a line of text. It sits under a
-   filled navy CTA on several pages, so it is bordered and grey instead of
-   filled — a second solid block would read as a competing call to action. */
-.system-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  /* Clear separation from the CTA above: this is a different offer, not a
-     second button. */
+/* The roof-system link. Outlined rather than filled: on several pages it sits
+   under a filled navy CTA, and two solid buttons would compete. Height,
+   padding and radius come from .btn, whose 2px transparent border means the
+   outline costs no extra height — this button and the filled one beside it
+   are the same box. */
+.system-cta {
+  /* Clear separation from the CTA above: a different offer, not a second
+     button in the same group. */
   margin-top: 48px;
-  padding: var(--space-4);
-  background: var(--color-surface);
-  /* Tinted rather than the near-invisible neutral border: this has to read as
-     a block at a glance, not as a rule around some text. */
-  border: 1px solid var(--accent-light);
-  /* A solid rail down the left edge. The two left corners square off so the
-     rail runs the full height and meets them cleanly — rounded corners would
-     pinch it to a taper at each end. */
-  border-left: 4px solid var(--accent-deep);
-  border-radius: 0 var(--radius) var(--radius) 0;
-  text-decoration: none;
+  text-align: center;
 }
 
-/* Measure, so the line beneath the heading breaks rather than running the
-   full width of the column and reading as a banner strip. */
-.system-card-text {
-  max-width: 60ch;
-}
-
-.system-card h3 {
-  margin: 0 0 var(--space-1);
-  /* 22px — the card's own voice, a step above body copy */
-  font-size: var(--text-xl);
-  color: var(--color-navy);
-}
-
-.system-card p {
-  margin: 0;
+.system-cta p {
+  margin: 0 0 var(--space-3);
   color: var(--color-text-muted);
 }
 
-.system-card-arrow {
-  flex: none;
-  /* Pinned to the right edge whatever the text does */
-  margin-left: auto;
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: var(--accent-deep);
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.btn-outline-accent {
+  background: transparent;
+  border-color: var(--accent-deep);
+  color: var(--accent-deep);
 }
 
-.system-card:focus-visible {
-  outline: 2px solid var(--accent-deep);
-  outline-offset: 3px;
-}
-
-/* Same lift as the completed-work photos, and gated the same way: pointer
-   devices only, and never against a reduced-motion preference. */
-@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
-  .system-card {
-    transition: translate var(--dur-fast) var(--ease-out),
-      box-shadow var(--dur-fast) var(--ease-out);
-  }
-
-  .system-card:hover {
-    translate: 0 -4px;
-    box-shadow: var(--shadow-card-hover);
-  }
-
-  .system-card:hover .system-card-arrow {
-    translate: 2px 0;
-    transition: translate var(--dur-fast) var(--ease-out);
-  }
+.btn-outline-accent:hover,
+.btn-outline-accent:focus-visible {
+  background: var(--accent-deep);
+  color: #fff;
 }
 
 /* Roof system page ---------------------------------------------------------
