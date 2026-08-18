@@ -2990,15 +2990,27 @@ blockquote.card cite {
    outline costs no extra height — this button and the filled one beside it
    are the same box. */
 .system-cta {
-  /* Clear separation from the CTA above: a different offer, not a second
-     button in the same group. */
-  margin-top: 48px;
+  /* Separation from whatever precedes it — on most pages a filled CTA. */
+  margin-top: var(--space-4);
   text-align: center;
 }
 
+/* A statement in its own right, not a caption for the button. The measure is
+   held near 30ch so it breaks into a couple of short lines instead of running
+   the full column, which is what made it read as supporting text. */
 .system-cta p {
-  margin: 0 0 var(--space-3);
-  color: var(--color-text-muted);
+  max-width: 30ch;
+  margin: 0 auto var(--space-2);
+  color: var(--color-navy);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+  .system-cta p {
+    font-size: 1.25rem;
+  }
 }
 
 .btn-outline-accent {
