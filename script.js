@@ -418,66 +418,52 @@ updateHeader();
 
      role and tabindex are applied here, not in the markup: without this script
      the shapes do nothing, and announcing them as buttons would be a lie. */
-  const rsSvg = document.querySelector(".rs-svg");
-  const rsPanel = document.getElementById("rs-panel");
+  const rsFigure = document.querySelector(".rs-image");
+  const rsList = document.querySelector(".rs-list");
 
-  if (rsSvg && rsPanel) {
-    const rsLayers = Array.from(rsSvg.querySelectorAll(".rs-layer"));
-    const rsCopy = new Map();
+  if (rsFigure && rsList) {
+    const rsMarkers = Array.from(rsFigure.querySelectorAll(".rs-layer"));
+    const rsHeads = Array.from(rsList.querySelectorAll(".rs-list-item"));
 
-    document.querySelectorAll(".rs-fallback-item").forEach((item) => {
-      rsCopy.set(item.dataset.layer, {
-        step: item.dataset.step,
-        name: item.querySelector("dt").textContent.trim(),
-        where: item.querySelector(".rs-where").textContent.trim(),
-        body: item.querySelector(".rs-body").textContent.trim(),
-      });
+    // Every description is in the markup and open by default, so the page
+    // reads straight through without this script. Collapsing them is the
+    // enhancement, which is why aria-expanded is introduced here rather than
+    // in the HTML — asserting "false" on content that is visibly open would
+    // be a lie to anything that trusts the attribute.
+    rsHeads.forEach(function (btn) {
+      btn.setAttribute("aria-expanded", "false");
     });
 
-    const rsFields = {
-      step: rsPanel.querySelector(".rs-panel-step"),
-      name: rsPanel.querySelector(".rs-panel-name"),
-      where: rsPanel.querySelector(".rs-panel-where"),
-      body: rsPanel.querySelector(".rs-panel-body"),
-    };
-
-    function selectLayer(el) {
-      const copy = rsCopy.get(el.dataset.layer);
-      if (!copy) return;
-
-      rsLayers.forEach((other) => {
-        const on = other === el;
-        other.classList.toggle("is-active", on);
-        other.setAttribute("aria-pressed", String(on));
+    // One open at a time. Passing null closes them all, which is what the
+    // open row's own button does — and then no marker is highlighted either,
+    // because nothing is selected.
+    function rsShow(id) {
+      rsHeads.forEach(function (btn) {
+        btn.setAttribute("aria-expanded", String(btn.dataset.layer === id));
       });
-
-      rsFields.step.textContent = "Layer " + copy.step + " of " + rsLayers.length;
-      rsFields.name.textContent = copy.name;
-      rsFields.where.textContent = copy.where;
-      rsFields.body.textContent = copy.body;
+      rsMarkers.forEach(function (el) {
+        const on = el.dataset.layer === id;
+        el.classList.toggle("is-active", on);
+        el.setAttribute("aria-pressed", String(on));
+      });
     }
 
-    rsLayers.forEach((el) => {
-      el.setAttribute("role", "button");
-      el.setAttribute("tabindex", "0");
-      el.setAttribute("aria-pressed", "false");
-
-      el.addEventListener("click", function () {
-        selectLayer(el);
-      });
-
-      el.addEventListener("keydown", function (event) {
-        if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
-          // Space would otherwise scroll the page out from under the diagram
-          event.preventDefault();
-          selectLayer(el);
-        }
+    rsHeads.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const isOpen = btn.getAttribute("aria-expanded") === "true";
+        rsShow(isOpen ? null : btn.dataset.layer);
       });
     });
 
-    // Matches the layer the panel was rendered with, so the highlight and the
-    // text agree on first paint.
-    const rsInitial =
-      rsLayers.find((el) => el.dataset.layer === "deck") || rsLayers[0];
-    if (rsInitial) selectLayer(rsInitial);
+    // The markers are a second way in for anyone who reaches for the drawing
+    // itself; they open the matching row rather than toggling it, so clicking
+    // around the image never leaves the list closed.
+    rsMarkers.forEach(function (el) {
+      el.setAttribute("aria-pressed", "false");
+      el.addEventListener("click", function () {
+        rsShow(el.dataset.layer);
+      });
+    });
+
+    rsShow("deck");
   }

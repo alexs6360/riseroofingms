@@ -234,6 +234,7 @@ img {
 /* Underline grows out from the left edge. Scoped to direct children so the
    dropdown panel's links, which sit deeper, keep their own hover treatment. */
 .nav > a::after,
+.nav-group-link::after,
 .nav-group-toggle::after {
   content: "";
   position: absolute;
@@ -249,6 +250,8 @@ img {
 
 .nav > a:hover::after,
 .nav > a:focus-visible::after,
+.nav-group-link:hover::after,
+.nav-group-link:focus-visible::after,
 .nav-group-toggle:hover::after,
 .nav-group-toggle:focus-visible::after {
   transform: scaleX(1);
@@ -302,6 +305,20 @@ img {
 .nav-group {
   position: relative;
   display: flex;
+}
+
+/* The label is a link to the services section and the chevron is a separate
+   button for the panel. One control cannot be both — a link that also toggles
+   either swallows the navigation or the disclosure. Splitting them keeps both
+   reachable by keyboard, and hover on the group still opens the panel. */
+.nav-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-group-link {
+  position: relative;
 }
 
 .nav-group-toggle {
@@ -2980,9 +2997,9 @@ blockquote.card cite {
 }
 
 /* Roof system page ---------------------------------------------------------
-   The diagram is nine bands stacked in profile. Horizontal position carries
-   meaning: eave at the left, ridge at the right, so a component that only
-   exists at one end is only drawn there. */
+   The diagram is one roof plane drawn nine times and slid apart along the
+   slope, so each layer shows its leading edge. Geometry is generated; this is
+   only paint. */
 .rs-intro,
 .rs-diagram,
 .rs-close {
@@ -2993,6 +3010,12 @@ blockquote.card cite {
 .rs-intro {
   background: var(--color-bg);
   text-align: center;
+  /* The diagram reads as the continuation of these paragraphs, not as a
+     separate section, so the full section rhythm below them left 112px of
+     empty ground before the drawing — the section's 96px plus the last
+     paragraph's own 16px margin. The diagram's top padding is already 0, so
+     this is the only side of the junction that needed changing. */
+  padding-bottom: var(--space-4);
 }
 
 .rs-intro h1 {
@@ -3013,11 +3036,9 @@ blockquote.card cite {
   padding-top: 0;
 }
 
-/* Diagram and panel side by side; the panel drops under the drawing on a
-   phone, where a 360-unit-wide diagram already fills the column. */
 .rs-diagram-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
 }
@@ -3026,45 +3047,102 @@ blockquote.card cite {
   display: block;
   width: 100%;
   height: auto;
+  overflow: visible;
 }
 
-.rs-band {
-  fill: #dfe4ec;
-  stroke: #c3ccd9;
-  stroke-width: 1;
+/* The diagram is a photograph with markers laid over it. Positions are
+   percentages, so they track the image at any width. */
+.rs-image {
+  margin: 0;
 }
 
-.rs-band-label {
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  fill: var(--color-navy);
+/* Markers are positioned against this, not the figure — the figure also holds
+   the caption, and percentages against it put the low markers below the photo. */
+/* No fixed height, no ratio, no overflow — the frame takes its size from the
+   image, so every edge of the render is visible. It exists only to give the
+   absolutely positioned markers something to measure against. */
+.rs-image-frame {
+  position: relative;
+  line-height: 0;
+}
+
+.rs-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  /* The source has a white background. On the section's grey it would read as
+     a pasted rectangle, so it gets a surface of its own and a hairline. */
+  background: #fff;
+  border: 1px solid var(--color-border);
+}
+
+/* Marker. Centred on its coordinate rather than hanging off it, so the
+   percentages refer to the point being pointed at. */
+.rs-marker {
+  position: absolute;
+  z-index: 2;
+  translate: -50% -50%;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-navy);
+  background: #fff;
+  color: var(--color-navy);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(7, 29, 55, 0.28);
+}
+
+.rs-marker.is-active {
+  background: var(--accent-deep);
+  border-color: var(--color-navy);
+  color: #fff;
+}
+
+.rs-marker:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 3px;
+}
+
+/* Leader lines for the two ridge markers, which point at strips too close
+   together to carry a marker each. Percentage space, so they track the image;
+   non-scaling-stroke keeps the line even under the stretched viewBox. */
+.rs-leaders {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-.rs-axis {
-  stroke: var(--color-border);
-  stroke-width: 1;
+.rs-leaders line {
+  stroke: var(--color-navy);
+  stroke-width: 1.5;
 }
 
-.rs-axis-label {
-  font-family: inherit;
-  font-size: 11px;
-  fill: var(--color-text-muted);
+.rs-image-caption {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.5;
 }
 
-.rs-axis-end {
-  text-anchor: end;
-}
-
-/* Selected layer. --accent-deep is the stop meant for light ground. */
-.rs-layer.is-active .rs-band {
-  fill: var(--accent-deep);
-  stroke: var(--accent-deep);
-}
-
-.rs-layer.is-active .rs-band-label {
-  fill: #fff;
+.rs-list-note {
+  margin-left: auto;
+  /* Never compressed or pushed past the edge by a long layer name — the name
+     wraps instead. */
+  flex: none;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-text-muted);
 }
 
 .rs-hint {
@@ -3074,63 +3152,151 @@ blockquote.card cite {
   text-align: center;
 }
 
-.rs-panel {
-  padding: var(--space-4);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--accent-deep);
-  border-radius: var(--radius);
+/* Numbered list beside the diagram, in place of leader lines */
+.rs-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.rs-panel-step {
-  margin: 0 0 4px;
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+.rs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  counter-reset: none;
+}
+
+.rs-list-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* Roomier on the right: the number circle gives the left side visual mass,
+     but "not marked" would otherwise sit hard against the column edge with no
+     gap at all, which reads as text running off it. */
+  padding: 8px 16px 8px 10px;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
   color: var(--color-text-muted);
 }
 
-.rs-panel-name {
-  margin: 0 0 2px;
-  font-size: var(--text-lg);
+.rs-list-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--color-navy);
 }
 
-.rs-panel-where {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--accent-deep);
+.rs-list-name {
   font-weight: 600;
+  /* Lets a long name wrap inside the flex row rather than shunting the note
+     off the right edge. */
+  min-width: 0;
 }
 
-.rs-panel-body {
-  margin: 0;
+.rs-list-item[aria-expanded="true"] {
+  background: var(--color-bg);
+  color: var(--color-navy);
+}
+
+.rs-list-item[aria-expanded="true"] .rs-list-num {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: #fff;
+}
+
+/* Descriptions sit inside their list row. With no JS every one is open and
+   the section reads as nine headings and nine paragraphs; the script adds
+   aria-expanded and the rules below collapse them. */
+.rs-item + .rs-item {
+  margin-top: 2px;
+}
+
+.rs-desc-inner {
+  /* Indented to the layer name: 10px row padding + 26px number + 12px gap. */
+  padding: 0 16px var(--space-3) 48px;
+}
+
+.rs-body {
+  margin: var(--space-2) 0 0;
   color: var(--color-text-muted);
 }
 
-/* Every description in full, for when the script does not run. JS hides it. */
-.rs-fallback {
-  margin: var(--space-5) 0 0;
+.rs-not-shown {
+  display: block;
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
-.js .rs-fallback {
+.rs-chevron {
   display: none;
 }
 
-.rs-fallback-item + .rs-fallback-item {
-  margin-top: var(--space-3);
+.js .rs-chevron {
+  display: block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--color-slate);
+  border-bottom: 2px solid var(--color-slate);
+  rotate: 45deg;
 }
 
-.rs-fallback dt {
-  font-weight: 700;
-  color: var(--color-navy);
+.js .rs-list-item[aria-expanded="true"] .rs-chevron {
+  rotate: 225deg;
 }
 
-.rs-fallback dd {
-  margin: 2px 0 0;
-  color: var(--color-text-muted);
+/* Collapsed rows are not rendered at all — out of the layout, out of the
+   accessibility tree, out of find-in-page.
+
+   No height animation here. The 0fr-to-1fr row-track technique the FAQ uses
+   does not survive this column: measured in place, a 1fr track finds no free
+   space to claim and collapses to the padding, showing a 24px sliver instead
+   of the description. The open row is a plain block, and the reveal is
+   carried by the content instead of the box. */
+.js .rs-desc {
+  display: none;
+}
+
+.js .rs-list-item[aria-expanded="true"] + .rs-desc {
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .rs-list-item[aria-expanded="true"] + .rs-desc .rs-desc-inner {
+    animation: rs-reveal var(--dur-fast) var(--ease-out);
+  }
+
+  .js .rs-chevron {
+    transition: rotate var(--dur-fast) var(--ease-out);
+  }
+}
+
+@keyframes rs-reveal {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 .rs-where {
@@ -3163,23 +3329,41 @@ blockquote.card cite {
     grid-template-columns: 1fr;
     gap: var(--space-4);
   }
+
+  /* Markers inside a 335px-wide photo collide. The numbered list is the control
+     on a phone; shrinking them would only make them unhittable. The leaders go
+     with them — a line pointing at a marker that is not there is worse than
+     no line. */
+  .rs-marker,
+  .rs-leaders {
+    display: none;
+  }
 }
 
-/* Hit target and focus ring belong to the group, not the individual bands. */
 .js .rs-layer {
   cursor: pointer;
 }
 
-.js .rs-layer:focus-visible .rs-band {
-  stroke: var(--color-navy);
-  stroke-width: 2.5;
+.js .rs-layer:focus-visible .rs-face {
+  stroke: var(--accent-deep);
+  stroke-width: 3;
+}
+
+.rs-list-item:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .rs-band,
-  .rs-band-label {
+  .rs-face,
+  .rs-marker-dot,
+  .rs-marker-num,
+  .rs-list-item,
+  .rs-list-num {
     transition: fill var(--dur-fast) var(--ease-out),
-      stroke var(--dur-fast) var(--ease-out);
+      stroke var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
   }
 }
 
@@ -3361,12 +3545,30 @@ blockquote.card cite {
   .nav-group {
     display: block;
     position: static;
+  }
+
+  .nav-group-head {
+    display: flex;
+    align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.09);
   }
 
+  /* The label takes the whole row so the tap target is the row, not the word;
+     the chevron keeps its own 52px square beside it. */
+  .nav-group-link {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 24px;
+    font-size: var(--text-base);
+  }
+
   .nav-group-toggle {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    justify-content: center;
+    padding: 0 24px;
+    border-bottom: 0;
   }
 
   .nav-panel {

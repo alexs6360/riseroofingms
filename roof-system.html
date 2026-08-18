@@ -49,7 +49,27 @@
 
       <nav class="nav" id="site-nav">
         <a href="/">Home</a>
-        <a href="/#services">Services</a>
+        <div class="nav-group" data-nav-dropdown>
+          <div class="nav-group-head">
+            <a href="/#services" class="nav-group-link">Services</a>
+            <button
+              type="button"
+              class="nav-group-toggle"
+              aria-expanded="false"
+              aria-controls="nav-services"
+            >
+              <svg class="nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+              <span class="visually-hidden">More under Services</span>
+            </button>
+          </div>
+          <div class="nav-panel" id="nav-services">
+            <div class="nav-panel-inner">
+              <a href="/roof-system">What Goes Into a Roof</a>
+            </div>
+          </div>
+        </div>
         <a href="/storm-damage/">Storm Damage</a>
 
         <div class="nav-group" data-nav-dropdown>
@@ -104,131 +124,197 @@
     <section class="rs-diagram">
       <div class="container rs-diagram-inner">
         <div class="rs-figure">
-          <svg
-            class="rs-svg"
-            viewBox="0 0 360 400"
-            aria-labelledby="rs-svg-title rs-svg-desc"
-          >
-            <title id="rs-svg-title">Cross-section of a complete roof system</title>
-            <desc id="rs-svg-desc">
-              Nine layers shown stacked in profile, the roof deck at the bottom
-              and the ridge cap at the top. The left of the diagram is the eave,
-              the low edge of the roof; the right is the ridge, the peak. Layers
-              that exist only at one end are drawn only at that end. Select a
-              layer to read what it does.
-            </desc>
-
-      <g class="rs-layer" data-layer="deck">
-        <title>Roof deck — layer 1 of 9, the structure underneath everything</title>
-        <rect class="rs-band" x="24" y="332" width="312" height="34" rx="4" />
-        <text class="rs-band-label" x="33" y="354">Deck</text>
-      </g>
-
-      <g class="rs-layer" data-layer="ice">
-        <title>Ice and water shield — layer 2 of 9, in the valleys</title>
-        <rect class="rs-band" x="24" y="293" width="96" height="34" rx="4" />
-        <text class="rs-band-label" x="33" y="315">Ice &amp; water</text>
-      </g>
-
-      <g class="rs-layer" data-layer="drip">
-        <title>Drip edge — layer 3 of 9, along the bottom edge and up the sloped sides</title>
-        <rect class="rs-band" x="24" y="254" width="80" height="34" rx="4" />
-        <text class="rs-band-label" x="33" y="276">Drip edge</text>
-      </g>
-
-      <g class="rs-layer" data-layer="underlayment">
-        <title>Synthetic underlayment — layer 4 of 9, across the whole deck</title>
-        <rect class="rs-band" x="24" y="215" width="312" height="34" rx="4" />
-        <text class="rs-band-label" x="33" y="237">Underlayment</text>
-      </g>
-
-      <g class="rs-layer" data-layer="starter">
-        <title>Starter strip — layer 5 of 9, the first row of shingles, along the bottom edge</title>
-        <rect class="rs-band" x="24" y="176" width="90" height="34" rx="4" />
-        <text class="rs-band-label" x="33" y="198">Starter</text>
-      </g>
-
-      <g class="rs-layer" data-layer="flashing">
-        <title>Flashing — layer 6 of 9, chimneys, walls, vents and skylights</title>
-        <rect class="rs-band" x="196" y="137" width="76" height="34" rx="4" />
-        <text class="rs-band-label" x="205" y="159">Flashing</text>
-      </g>
-
-      <g class="rs-layer" data-layer="shingles">
-        <title>Architectural shingles — layer 7 of 9, the surface you can see</title>
-        <rect class="rs-band" x="24" y="98" width="312" height="34" rx="4" />
-        <text class="rs-band-label" x="33" y="120">Shingles</text>
-      </g>
-
-      <g class="rs-layer" data-layer="vent">
-        <title>Ridge vent — layer 8 of 9, along the peak</title>
-        <rect class="rs-band" x="230" y="59" width="106" height="34" rx="4" />
-        <text class="rs-band-label" x="239" y="81">Ridge vent</text>
-      </g>
-
-      <g class="rs-layer" data-layer="cap">
-        <title>Ridge cap shingles — layer 9 of 9, over the peak, covering the vent</title>
-        <rect class="rs-band" x="230" y="20" width="106" height="34" rx="4" />
-        <text class="rs-band-label" x="239" y="42">Ridge cap</text>
-      </g>
-
-            <line class="rs-axis" x1="24" y1="378" x2="336" y2="378" />
-            <text class="rs-axis-label" x="24" y="392">Eave</text>
-            <text class="rs-axis-label rs-axis-end" x="336" y="392">Ridge</text>
-          </svg>
-          <p class="rs-hint">Select a layer to read what it does.</p>
+<figure class="rs-image">
+            <div class="rs-image-frame">
+            <img
+              src="/images/work/roof-cutaway.jpg"
+              alt="Cut-away of a roof with its layers separated: the shingles, underlayment and membranes lifted clear above the plywood deck, with the rafters below."
+              width="1200"
+              height="802"
+              decoding="async"
+            />
+            <svg class="rs-leaders" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="14" y1="22" x2="35" y2="23" vector-effect="non-scaling-stroke" />
+              <line x1="14" y1="12" x2="35" y2="19.5" vector-effect="non-scaling-stroke" />
+            </svg>
+            <button
+              type="button"
+              class="rs-layer rs-marker"
+              data-layer="deck"
+              style="left: 64%; top: 34%"
+            ><span class="rs-marker-num">1</span><span class="visually-hidden">Roof deck — layer 1 of 9, the structure underneath everything</span></button>
+            <button
+              type="button"
+              class="rs-layer rs-marker"
+              data-layer="ice"
+              style="left: 40%; top: 60.3%"
+            ><span class="rs-marker-num">2</span><span class="visually-hidden">Ice and water shield — layer 2 of 9, in the valleys</span></button>
+            <button
+              type="button"
+              class="rs-layer rs-marker"
+              data-layer="underlayment"
+              style="left: 22%; top: 58%"
+            ><span class="rs-marker-num">3</span><span class="visually-hidden">Synthetic underlayment — layer 3 of 9, across the whole deck</span></button>
+            <button
+              type="button"
+              class="rs-layer rs-marker"
+              data-layer="starter"
+              style="left: 32%; top: 59.5%"
+            ><span class="rs-marker-num">4</span><span class="visually-hidden">Starter strip — layer 4 of 9, the first strip down, along the bottom edge and up the sloped sides</span></button>
+            <button
+              type="button"
+              class="rs-layer rs-marker"
+              data-layer="shingles"
+              style="left: 30%; top: 42%"
+            ><span class="rs-marker-num">5</span><span class="visually-hidden">Architectural shingles — layer 5 of 9, the surface you can see</span></button>
+            <button
+              type="button"
+              class="rs-layer rs-marker"
+              data-layer="vent"
+              style="left: 14%; top: 22%"
+            ><span class="rs-marker-num">6</span><span class="visually-hidden">Ridge vent — layer 6 of 9, along the peak</span></button>
+            <button
+              type="button"
+              class="rs-layer rs-marker"
+              data-layer="cap"
+              style="left: 14%; top: 12%"
+            ><span class="rs-marker-num">7</span><span class="visually-hidden">Ridge cap shingles — layer 7 of 9, over the peak, covering the vent</span></button>
+            </div>
+            <figcaption class="rs-image-caption">
+              Illustration of a typical roof system, not one of our projects.
+            </figcaption>
+          </figure>
+          <p class="rs-hint">Select a layer, or pick one from the list.</p>
         </div>
 
-        <div class="rs-panel" id="rs-panel" aria-live="polite">
-          <p class="rs-panel-step">Layer 1 of 9</p>
-          <h2 class="rs-panel-name">Roof deck</h2>
-          <p class="rs-panel-where">The structure underneath everything</p>
-          <p class="rs-panel-body">The flat panels nailed across your rafters — plywood, or OSB, which is the pressed wood-strand equivalent. Every other part of the roof fastens to it, so it has to be sound before anything goes on top. Panels that have gone soft from an old leak need replacing, not covering: new shingles nailed into soft decking have nothing firm to hold on to.</p>
+        <div class="rs-side">
+<ol class="rs-list">
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="deck" aria-controls="rs-desc-deck">
+                <span class="rs-list-num">1</span>
+                <span class="rs-list-name">Roof deck</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-deck">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">The structure underneath everything</p>
+                  <p class="rs-body">The flat panels nailed across your rafters — plywood, or OSB, which is the pressed wood-strand equivalent. Every other part of the roof fastens to it, so it has to be sound before anything goes on top. Panels that have gone soft from an old leak need replacing, not covering: new shingles nailed into soft decking have nothing firm to hold on to.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="ice" aria-controls="rs-desc-ice">
+                <span class="rs-list-num">2</span>
+                <span class="rs-list-name">Ice and water shield</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-ice">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">In the valleys</p>
+                  <p class="rs-body">A sticky rubberized membrane that bonds directly to the deck and seals around the nails driven through it. It goes in the valleys, where two roof planes meet and the runoff from both slopes converges into one channel. That is more water than anywhere else on the roof has to carry, which is why valleys are usually the first place a roof starts leaking.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="underlayment" aria-controls="rs-desc-underlayment">
+                <span class="rs-list-num">3</span>
+                <span class="rs-list-name">Synthetic underlayment</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-underlayment">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">Across the whole deck</p>
+                  <p class="rs-body">A tough woven sheet rolled over the entire deck before the shingles go on. It is the backup layer: when wind drives rain sideways under a shingle, this is what the water lands on instead of your decking. It also keeps the deck dry during the days the roof is open.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="starter" aria-controls="rs-desc-starter">
+                <span class="rs-list-num">4</span>
+                <span class="rs-list-name">Starter strip</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-starter">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">The first strip down, along the bottom edge and up the sloped sides</p>
+                  <p class="rs-body">A purpose-made strip with a factory adhesive line that runs along the eaves and the rakes — the bottom edge of the roof and its sloped sides. The first row of shingles seals down onto it, and so does the outer edge of every row up the sides. Without a proper starter those edges have nothing to bond to, and both are exactly where wind gets under a roof and begins peeling it upward.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="shingles" aria-controls="rs-desc-shingles">
+                <span class="rs-list-num">5</span>
+                <span class="rs-list-name">Architectural shingles</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-shingles">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">The surface you can see</p>
+                  <p class="rs-body">The visible layer. Architectural shingles are built from two bonded layers, which makes them heavier and thicker than the flat three-tab kind and gives the roof its depth and shadow line. The weight is also what helps them stay put in wind.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="vent" aria-controls="rs-desc-vent">
+                <span class="rs-list-num">6</span>
+                <span class="rs-list-name">Ridge vent</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-vent">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">Along the peak</p>
+                  <p class="rs-body">A continuous vent running the length of the peak that lets hot, damp air escape the attic. It only works if air can get in low down under the eaves, so the two are designed as a pair. Trap that heat and moisture instead and it cooks the shingles from underneath and condenses on the framing through winter.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="cap" aria-controls="rs-desc-cap">
+                <span class="rs-list-num">7</span>
+                <span class="rs-list-name">Ridge cap shingles</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-cap">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">Over the peak, covering the vent</p>
+                  <p class="rs-body">Thicker shingles made specifically to fold over the peak and cover the vent's opening. They are pre-shaped for that bend. Ordinary shingles from the main surface, cut down to size, will do the job for a while, but they were never meant to fold, and they crack along the fold line years earlier.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="drip" aria-controls="rs-desc-drip">
+                <span class="rs-list-num">8</span>
+                <span class="rs-list-name">Drip edge</span>
+                <span class="rs-list-note">not marked</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-drip">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">Along the bottom edge and up the sloped sides</p>
+                  <p class="rs-body">A bent metal strip at the roof's edges that throws runoff clear of the wood and into the gutter. Without it, water clings to the underside of the shingle and wicks back onto the fascia — the board the gutter hangs on — which rots quietly out of sight until the gutter starts pulling away.</p>
+                  <p class="rs-not-shown">Not shown in the illustration.</p>
+                </div>
+              </div>
+            </li>
+            <li class="rs-item">
+              <button type="button" class="rs-list-item" data-layer="flashing" aria-controls="rs-desc-flashing">
+                <span class="rs-list-num">9</span>
+                <span class="rs-list-name">Flashing</span>
+                <span class="rs-list-note">not marked</span>
+                <span class="rs-chevron" aria-hidden="true"></span>
+              </button>
+              <div class="rs-desc" id="rs-desc-flashing">
+                <div class="rs-desc-inner">
+                  <p class="rs-where">Chimneys, walls, vents and skylights</p>
+                  <p class="rs-body">Shaped metal at every point where the roof meets something that is not roof. These junctions are where most leaks actually start — not out in the open stretches of shingle. Flashing carried over from the old roof has already spent twenty years bending in the heat and corroding, and it ends up buried under the new shingles where you cannot inspect it.</p>
+                  <p class="rs-not-shown">Not shown in the illustration.</p>
+                </div>
+              </div>
+            </li>
+          </ol>
+
         </div>
       </div>
 
-      <!-- Every description in full. JS hides this and drives the panel
-           instead; if the script never runs, the whole page is still here. -->
-      <div class="container">
-        <dl class="rs-fallback">
-        <div class="rs-fallback-item" data-layer="deck" data-step="1">
-          <dt>Roof deck</dt>
-          <dd><span class="rs-where">The structure underneath everything</span><span class="rs-body">The flat panels nailed across your rafters — plywood, or OSB, which is the pressed wood-strand equivalent. Every other part of the roof fastens to it, so it has to be sound before anything goes on top. Panels that have gone soft from an old leak need replacing, not covering: new shingles nailed into soft decking have nothing firm to hold on to.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="ice" data-step="2">
-          <dt>Ice and water shield</dt>
-          <dd><span class="rs-where">In the valleys</span><span class="rs-body">A sticky rubberized membrane that bonds directly to the deck and seals around the nails driven through it. It goes in the valleys, where two roof planes meet and the runoff from both slopes converges into one channel. That is more water than anywhere else on the roof has to carry, which is why valleys are usually the first place a roof starts leaking.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="drip" data-step="3">
-          <dt>Drip edge</dt>
-          <dd><span class="rs-where">Along the bottom edge and up the sloped sides</span><span class="rs-body">A bent metal strip at the roof's edges that throws runoff clear of the wood and into the gutter. Without it, water clings to the underside of the shingle and wicks back onto the fascia — the board the gutter hangs on — which rots quietly out of sight until the gutter starts pulling away.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="underlayment" data-step="4">
-          <dt>Synthetic underlayment</dt>
-          <dd><span class="rs-where">Across the whole deck</span><span class="rs-body">A tough woven sheet rolled over the entire deck before the shingles go on. It is the backup layer: when wind drives rain sideways under a shingle, this is what the water lands on instead of your decking. It also keeps the deck dry during the days the roof is open.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="starter" data-step="5">
-          <dt>Starter strip</dt>
-          <dd><span class="rs-where">The first row of shingles, along the bottom edge</span><span class="rs-body">A purpose-made strip with a factory adhesive line that runs along the very bottom edge. The first row of shingles seals down onto it. Without a proper starter the bottom edge has nothing to bond to, and the eave is exactly where wind gets under a roof and begins peeling it upward.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="flashing" data-step="6">
-          <dt>Flashing</dt>
-          <dd><span class="rs-where">Chimneys, walls, vents and skylights</span><span class="rs-body">Shaped metal at every point where the roof meets something that is not roof. These junctions are where most leaks actually start — not out in the open stretches of shingle. Flashing carried over from the old roof has already spent twenty years bending in the heat and corroding, and it ends up buried under the new shingles where you cannot inspect it.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="shingles" data-step="7">
-          <dt>Architectural shingles</dt>
-          <dd><span class="rs-where">The surface you can see</span><span class="rs-body">The visible layer. Architectural shingles are built from two bonded layers, which makes them heavier and thicker than the flat three-tab kind and gives the roof its depth and shadow line. The weight is also what helps them stay put in wind.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="vent" data-step="8">
-          <dt>Ridge vent</dt>
-          <dd><span class="rs-where">Along the peak</span><span class="rs-body">A continuous vent running the length of the peak that lets hot, damp air escape the attic. It only works if air can get in low down under the eaves, so the two are designed as a pair. Trap that heat and moisture instead and it cooks the shingles from underneath and condenses on the framing through winter.</span></dd>
-        </div>
-        <div class="rs-fallback-item" data-layer="cap" data-step="9">
-          <dt>Ridge cap shingles</dt>
-          <dd><span class="rs-where">Over the peak, covering the vent</span><span class="rs-body">Thicker shingles made specifically to fold over the peak and cover the vent's opening. They are pre-shaped for that bend. Ordinary shingles from the main surface, cut down to size, will do the job for a while, but they were never meant to fold, and they crack along the fold line years earlier.</span></dd>
-        </div>
-        </dl>
-      </div>
     </section>
 
     <section class="rs-close">
@@ -258,6 +344,7 @@
           <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/#services">Services</a></li>
+            <li><a href="/roof-system">Roof System</a></li>
             <li><a href="/storm-damage/">Storm Damage</a></li>
             <li><a href="/#founder">About</a></li>
             <li><a href="/#why-us">Why Us</a></li>

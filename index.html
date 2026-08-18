@@ -129,7 +129,27 @@
       </button>
 
       <nav class="nav" id="site-nav">
-        <a href="#services">Services</a>
+        <div class="nav-group" data-nav-dropdown>
+          <div class="nav-group-head">
+            <a href="#services" class="nav-group-link">Services</a>
+            <button
+              type="button"
+              class="nav-group-toggle"
+              aria-expanded="false"
+              aria-controls="nav-services"
+            >
+              <svg class="nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+              <span class="visually-hidden">More under Services</span>
+            </button>
+          </div>
+          <div class="nav-panel" id="nav-services">
+            <div class="nav-panel-inner">
+              <a href="/roof-system">What Goes Into a Roof</a>
+            </div>
+          </div>
+        </div>
         <a href="/storm-damage/">Storm Damage</a>
         <a href="#founder" class="nav-secondary">About</a>
         <a href="#why-us">Why Us</a>
@@ -679,6 +699,7 @@
           <ul>
             <li><a href="#top">Home</a></li>
             <li><a href="#services">Services</a></li>
+            <li><a href="/roof-system">Roof System</a></li>
             <li><a href="/storm-damage/">Storm Damage</a></li>
             <li><a href="#founder">About</a></li>
             <li><a href="#why-us">Why Us</a></li>
