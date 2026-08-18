@@ -2999,8 +2999,18 @@ blockquote.card cite {
   /* Tinted rather than the near-invisible neutral border: this has to read as
      a block at a glance, not as a rule around some text. */
   border: 1px solid var(--accent-light);
-  border-radius: var(--radius);
+  /* A solid rail down the left edge. The two left corners square off so the
+     rail runs the full height and meets them cleanly — rounded corners would
+     pinch it to a taper at each end. */
+  border-left: 4px solid var(--accent-deep);
+  border-radius: 0 var(--radius) var(--radius) 0;
   text-decoration: none;
+}
+
+/* Measure, so the line beneath the heading breaks rather than running the
+   full width of the column and reading as a banner strip. */
+.system-card-text {
+  max-width: 60ch;
 }
 
 .system-card h3 {
@@ -3019,8 +3029,8 @@ blockquote.card cite {
   flex: none;
   /* Pinned to the right edge whatever the text does */
   margin-left: auto;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   fill: none;
   stroke: var(--accent-deep);
   stroke-width: 2.2;
