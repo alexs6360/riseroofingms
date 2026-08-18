@@ -3027,6 +3027,12 @@ blockquote.card cite {
 .rs-intro {
   background: var(--color-bg);
   text-align: center;
+  /* This page has no hero, so its first section sits under the fixed header.
+     Same idiom as .legal, .thanks and .hero-panel, the other places where
+     content starts at the top of the document. Without it the H1's first line
+     is behind the nav on mobile, where the section rhythm drops to 48px —
+     less than the header's own height. */
+  padding-top: calc(var(--header-h) + var(--space-5));
   /* The diagram reads as the continuation of these paragraphs, not as a
      separate section, so the full section rhythm below them left 112px of
      empty ground before the drawing — the section's 96px plus the last
