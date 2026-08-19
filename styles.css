@@ -234,7 +234,6 @@ img {
 /* Underline grows out from the left edge. Scoped to direct children so the
    dropdown panel's links, which sit deeper, keep their own hover treatment. */
 .nav > a::after,
-.nav-group-link::after,
 .nav-group-toggle::after {
   content: "";
   position: absolute;
@@ -250,8 +249,6 @@ img {
 
 .nav > a:hover::after,
 .nav > a:focus-visible::after,
-.nav-group-link:hover::after,
-.nav-group-link:focus-visible::after,
 .nav-group-toggle:hover::after,
 .nav-group-toggle:focus-visible::after {
   transform: scaleX(1);
@@ -297,10 +294,13 @@ img {
   }
 }
 
-/* Below ~900 not even the six remaining items fit: at 769 the labels alone are
-   625px against 721px of row. About and Testimonials drop out through this
-   band — they are homepage-only anchors and both are still in the footer. */
-@media (min-width: 769px) and (max-width: 899.98px) {
+/* About and Testimonials drop out through this band — they are homepage-only
+   anchors and both are still in the footer. The ceiling sits at 920 rather
+   than 900 because the two of them reappearing is the tightest moment in the
+   nav: at 900 the container has not yet grown enough to seat them alongside
+   Roof System, leaving 3px of slack. Twenty more pixels of viewport is enough
+   to seat all seven comfortably. */
+@media (min-width: 769px) and (max-width: 919.98px) {
   .nav-secondary {
     display: none;
   }
@@ -316,19 +316,6 @@ img {
   display: flex;
 }
 
-/* The label is a link to the services section and the chevron is a separate
-   button for the panel. One control cannot be both — a link that also toggles
-   either swallows the navigation or the disclosure. Splitting them keeps both
-   reachable by keyboard, and hover on the group still opens the panel. */
-.nav-group-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.nav-group-link {
-  position: relative;
-}
 
 .nav-group-toggle {
   position: relative;
@@ -3597,17 +3584,6 @@ blockquote.card cite {
     display: flex;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-  }
-
-  /* The label takes the whole row so the tap target is the row, not the word;
-     the chevron keeps its own 52px square beside it. */
-  .nav-group-link {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    min-height: 52px;
-    padding: 0 24px;
-    font-size: var(--text-base);
   }
 
   .nav-group-toggle {
