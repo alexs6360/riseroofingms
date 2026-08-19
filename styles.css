@@ -288,6 +288,15 @@ img {
   }
 }
 
+/* Contact duplicates the Schedule Inspection button beside it — same anchor,
+   same destination — so the desktop nav drops it and keeps the button. The
+   mobile menu has no header button, so it keeps the link. */
+@media (min-width: 769px) {
+  .nav-mobile-only {
+    display: none;
+  }
+}
+
 /* Below ~900 not even the six remaining items fit: at 769 the labels alone are
    625px against 721px of row. About and Testimonials drop out through this
    band — they are homepage-only anchors and both are still in the footer. */
