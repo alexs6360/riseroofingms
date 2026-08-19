@@ -3608,6 +3608,15 @@ blockquote.card cite {
     border-bottom: 0;
   }
 
+  /* Services puts its label in a sibling link and leaves the toggle holding
+     just the chevron. Service Areas keeps its label on the button itself, so
+     that toggle is the head's only child — it spreads across the row and lands
+     the chevron at the same edge. Both dropdowns then render identically. */
+  .nav-group-head > .nav-group-toggle:only-child {
+    flex: 1;
+    justify-content: space-between;
+  }
+
   .nav-panel {
     position: static;
     display: grid;
