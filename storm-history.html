@@ -3,20 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thank You | RISE Roofing Solutions</title>
-  <meta name="description" content="Thanks for contacting RISE Roofing Solutions. We'll call within one business day to schedule your free inspection." />
-  <meta name="robots" content="noindex" />
+  <title>Storm History Lookup | RISE Roofing Solutions</title>
+  <meta name="description" content="See the hail and wind events radar and the National Weather Service recorded near a North Mississippi address over the last ten years." />
+  <link rel="canonical" href="https://riseroofingms.com/storm-history" />
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="RISE Roofing Solutions" />
-  <meta property="og:title" content="Thank You | RISE Roofing Solutions" />
-  <meta property="og:description" content="Thanks for contacting RISE Roofing Solutions. We'll call within one business day to schedule your free inspection." />
+  <meta property="og:title" content="Storm History Lookup | RISE Roofing Solutions" />
+  <meta property="og:description" content="Check what storms passed over an address in the last ten years, from radar and National Weather Service records." />
+  <meta property="og:url" content="https://riseroofingms.com/storm-history" />
   <meta property="og:image" content="https://riseroofingms.com/images/og-image.jpg" />
 
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.css" rel="stylesheet" />
 
   <script>document.documentElement.classList.add("js");</script>
 </head>
@@ -85,87 +87,120 @@
     </div>
   </header>
 
-  <main class="thanks">
-    <div class="container thanks-inner">
-      <span class="thanks-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
-      </span>
-
-      <p class="eyebrow">Request received</p>
-      <h1>Thanks &mdash; your request came through.</h1>
-      <p class="thanks-lead">
-        Someone from RISE Roofing Solutions will call you within one business
-        day to schedule your inspection.
-      </p>
-      <p class="thanks-caller">
-        The call will come from
-        <a href="tel:+16622134797">(662) 213-4797</a> &mdash; save the number so
-        you don't miss it.
-      </p>
-
-      <ul class="thanks-next">
-        <li>
-          <span class="thanks-next-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 7.5V12l3 2" />
-            </svg>
-          </span>
-          <div>
-            <h2>The inspection is free</h2>
-            <p>It takes about 30 to 45 minutes, and there is no obligation.</p>
-          </div>
-        </li>
-
-        <li>
-          <span class="thanks-next-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <rect x="2.5" y="7" width="19" height="12.5" rx="2" />
-              <path d="M8.5 7 10 4.5h4L15.5 7" />
-              <circle cx="12" cy="13.2" r="3.3" />
-            </svg>
-          </span>
-          <div>
-            <h2>What you get</h2>
-            <p>
-              Full photo documentation of the roof, and a written estimate for
-              anything that needs doing.
-            </p>
-          </div>
-        </li>
-
-        <li>
-          <span class="thanks-next-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M9 4.5H7.5A1.5 1.5 0 0 0 6 6v13a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V6a1.5 1.5 0 0 0-1.5-1.5H15" />
-              <rect x="9" y="2.8" width="6" height="3.4" rx="1" />
-              <path d="M9 11h6M9 14.5h6M9 18h3" />
-            </svg>
-          </span>
-          <div>
-            <h2>If it's storm damage</h2>
-            <p>
-              Have ready: your insurance carrier, roughly when it happened, and
-              whether you've already filed.
-            </p>
-          </div>
-        </li>
-      </ul>
-
-      <div class="thanks-urgent">
-        <p>
-          <strong>Storm damage that can't wait?</strong> Call
-          <a href="tel:+16622134797">(662) 213-4797</a> rather than waiting for
-          the callback, and we'll get to you as soon as we can.
+  <main class="sh">
+    <section class="sh-intro">
+      <div class="container">
+        <h1>What storms have passed over your address</h1>
+        <p class="sh-lead">
+          Enter an address in our service area and we'll show you the hail and wind
+          events that radar and the National Weather Service recorded near it over
+          the last ten years.
         </p>
       </div>
+    </section>
 
-      <div class="thanks-actions">
-        <a href="/storm-damage/" class="btn btn-primary">See storm damage services</a>
-        <a href="/" class="btn btn-outline">Back to homepage</a>
+    <section class="sh-tool">
+      <div class="container">
+        <form class="sh-lookup" id="sh-lookup" autocomplete="off">
+          <label class="visually-hidden" for="sh-address">Street address</label>
+          <div class="sh-lookup-row">
+            <input
+              type="text"
+              id="sh-address"
+              name="address"
+              placeholder="123 Main St, Tupelo, MS"
+              enterkeyhint="search"
+              required
+            />
+            <button type="submit" class="btn btn-primary">Check this address</button>
+          </div>
+          <!-- Under the field and on screen before they type, not buried in the policy. -->
+          <p class="sh-consent">
+            We keep addresses searched here so we can follow up about a free
+            inspection. See our <a href="/privacy">Privacy Policy</a>.
+          </p>
+          <p class="sh-error" id="sh-error" role="alert" hidden></p>
+        </form>
+
+        <div class="sh-workspace">
+          <div class="sh-mapwrap">
+            <div class="sh-map" id="sh-map"></div>
+            <div class="sh-chips" id="sh-chips">
+              <button type="button" class="sh-chip sh-chip-hail is-on" data-layer="hail" aria-pressed="true">
+                <span class="sh-dot"></span>Hail
+              </button>
+              <button type="button" class="sh-chip sh-chip-wind is-on" data-layer="reports" aria-pressed="true">
+                <span class="sh-dot"></span>Storm reports
+              </button>
+            </div>
+            <div class="sh-legend">
+              <h2>Hail size (in)</h2>
+              <div class="sh-legend-row">
+                <span class="sh-swatch sh-swatch-hail"></span>
+                <span class="sh-legend-label">1.0 &rarr; 2.5+</span>
+              </div>
+              <div class="sh-legend-row">
+                <span class="sh-swatch sh-swatch-report"></span>
+                <span class="sh-legend-label">NWS report</span>
+              </div>
+            </div>
+            <p class="sh-attrib">&copy; Mapbox &middot; NOAA NCEI &middot; NWS</p>
+            <p class="sh-mapnote" id="sh-mapnote">Enter an address to begin.</p>
+          </div>
+
+          <aside class="sh-panel" id="sh-panel" aria-live="polite">
+            <div class="sh-panel-head">
+              <h2 id="sh-panel-address">No address checked yet</h2>
+              <p id="sh-panel-sub">Results will appear here.</p>
+            </div>
+            <ol class="sh-events" id="sh-events"></ol>
+            <p class="sh-empty" id="sh-empty" hidden>
+              Nothing turned up for this address in the last ten years. Damage
+              doesn't always show up in the data &mdash; an inspection is how you know.
+            </p>
+            <div class="sh-panel-cta">
+              <a href="/#contact" class="btn btn-primary">Schedule Inspection</a>
+            </div>
+          </aside>
+        </div>
+
+        <p class="sh-disclaimer">
+          Hail locations are radar-estimated from NEXRAD Level-III data, not verified
+          damage. Wind reports come from the National Weather Service and trained
+          spotters. A storm can pass over a home without appearing here, and an event
+          shown nearby does not mean a specific roof was damaged. The only way to
+          know what a storm did to your roof is to look at it.
+        </p>
       </div>
-    </div>
+    </section>
+
+    <section class="sh-close">
+      <div class="container">
+        <h2>Storm damage on your roof?</h2>
+        <p>
+          If a storm did pass over you, the next step is someone on the roof with a
+          camera. Inspections are free, take 30 to 45 minutes, and you get
+          photographs and a written estimate at the end.
+        </p>
+        <a href="/storm-damage/" class="btn btn-outline-accent">Storm damage and insurance claims</a>
+      </div>
+    </section>
   </main>
+
+  <!-- Netlify needs the form in the served HTML to register it. Submitted by
+       fetch from storm-history.js, never by the browser navigating away. The
+       field set matches the site's other forms so Netlify keeps one schema for
+       the "quote" form and the existing notification fires unchanged. -->
+  <form name="quote" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="hidden" name="form-name" value="quote" />
+    <input type="text" name="bot-field" />
+    <input type="text" name="name" />
+    <input type="tel" name="phone" />
+    <input type="email" name="email" />
+    <input type="text" name="address" />
+    <textarea name="message"></textarea>
+    <input type="text" name="page" />
+  </form>
 
   <footer class="site-footer">
     <div class="container">
@@ -242,6 +277,8 @@
     </a>
   </div>
 
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.js"></script>
   <script src="script.js"></script>
+  <script src="storm-history.js"></script>
 </body>
 </html>

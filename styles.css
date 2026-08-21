@@ -4330,3 +4330,328 @@ blockquote.card cite {
     scroll-behavior: auto !important;
   }
 }
+
+/* Storm history lookup
+   -------------------------------------------------------------------------
+   The map area borrows the dark palette from the internal preview so the two
+   read as the same tool; everything around it is the site's own chrome. */
+.sh-intro,
+.sh-tool,
+.sh-close {
+  padding: var(--space-section) 0;
+  scroll-margin-top: var(--space-3);
+}
+
+.sh-intro {
+  background: var(--color-bg);
+  text-align: center;
+  /* No hero on this page, so the first section clears the fixed header —
+     same idiom as .legal, .thanks and .rs-intro. */
+  padding-top: calc(var(--header-h) + var(--space-5));
+  padding-bottom: var(--space-4);
+}
+
+.sh-intro h1 {
+  margin: 0 0 var(--space-3);
+}
+
+.sh-lead {
+  max-width: 62ch;
+  margin: 0 auto;
+  color: var(--color-text-muted);
+}
+
+.sh-tool {
+  background: var(--color-surface);
+  padding-top: 0;
+}
+
+/* ---- the address form ---- */
+.sh-lookup {
+  max-width: 720px;
+  margin: 0 auto var(--space-5);
+}
+
+.sh-lookup-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.sh-lookup input {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 16px;
+  font: inherit;
+  color: var(--color-navy);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.sh-lookup input:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 1px;
+}
+
+.sh-lookup .btn {
+  flex: none;
+}
+
+.sh-lookup.is-busy .btn {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Stated before the field, not after it and not only in the policy. */
+.sh-consent {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.sh-error {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: #b3261e;
+}
+
+/* ---- map + result panel ---- */
+.sh-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: stretch;
+}
+
+.sh-mapwrap {
+  position: relative;
+  min-height: 520px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #0a1420;
+  border: 1px solid #22364d;
+}
+
+.sh-map {
+  position: absolute;
+  inset: 0;
+}
+
+.sh-chips {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+}
+
+.sh-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: #fff;
+  background: rgba(10, 20, 32, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.sh-chip:not(.is-on) {
+  opacity: 0.4;
+}
+
+.sh-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.sh-chip-hail .sh-dot {
+  background: #ff7a1a;
+}
+
+.sh-chip-wind .sh-dot {
+  background: #9db9dc;
+}
+
+.sh-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 5;
+  padding: 12px 14px;
+  background: rgba(14, 26, 43, 0.88);
+  border: 1px solid #22364d;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+}
+
+.sh-legend h2 {
+  margin: 0 0 8px;
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8ea3bd;
+}
+
+.sh-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: var(--text-xs);
+  color: #8ea3bd;
+}
+
+.sh-legend-row:last-child {
+  margin-bottom: 0;
+}
+
+.sh-swatch {
+  width: 44px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.sh-swatch-hail {
+  background: linear-gradient(90deg, #ffe07a, #ffb43d, #ff7a1a, #e63a1a);
+}
+
+.sh-swatch-report {
+  background: #9db9dc;
+}
+
+.sh-attrib {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  z-index: 5;
+  margin: 0;
+  font-size: 10px;
+  color: #48607a;
+}
+
+.sh-mapnote {
+  position: absolute;
+  inset: auto 16px 56px 16px;
+  z-index: 4;
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: #8ea3bd;
+}
+
+/* ---- the single-address result ---- */
+.sh-panel {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.sh-panel-head h2 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-lg);
+  color: var(--color-navy);
+}
+
+.sh-panel-head p {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.sh-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* Long histories scroll inside the panel rather than stretching the page */
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.sh-event {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.sh-event-date {
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.sh-event-value {
+  color: var(--color-text);
+}
+
+.sh-event-source {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.sh-empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.sh-panel-cta {
+  margin-top: auto;
+  padding-top: var(--space-4);
+}
+
+.sh-panel-cta .btn {
+  width: 100%;
+}
+
+.sh-disclaimer {
+  max-width: 80ch;
+  margin: var(--space-4) auto 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.sh-close {
+  background: var(--color-bg);
+  text-align: center;
+}
+
+.sh-close h2 {
+  margin: 0 0 var(--space-3);
+}
+
+.sh-close p {
+  max-width: 62ch;
+  margin: 0 auto var(--space-4);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 900px) {
+  .sh-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sh-mapwrap {
+    min-height: 360px;
+  }
+
+  .sh-lookup-row {
+    flex-direction: column;
+  }
+
+  .sh-lookup .btn {
+    width: 100%;
+  }
+}

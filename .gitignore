@@ -3,3 +3,4 @@ node_modules/
 .netlify/
 *.zip
 .DS_Store
+.env.local
