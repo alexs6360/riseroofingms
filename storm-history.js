@@ -181,11 +181,17 @@
             3.0, 1,
           ],
           "heatmap-intensity": 1.1,
+          /* Tracks ~3km on the ground rather than a pixel value that drifts.
+             The old stops grew about 1.37x per zoom while the distance between
+             cells doubles, so bands merged when zoomed out and broke into
+             separate blobs from zoom 12 in. A kernel a little under the 5km
+             dedupe grid keeps adjacent cells connected at every zoom. */
           "heatmap-radius": [
             "interpolate", ["exponential", 2], ["zoom"],
-            8, 18,
-            11, 42,
-            14, 110,
+            8, 6,
+            10, 24,
+            12, 95,
+            14, 380,
           ],
           "heatmap-opacity": 0.75,
           "heatmap-color": [
@@ -214,11 +220,14 @@
             95, 1,
           ],
           "heatmap-intensity": 1.1,
+          /* Same ground-tracking treatment, a touch wider: wind reports are
+             sparser than hail cells, so the kernel has further to reach. */
           "heatmap-radius": [
             "interpolate", ["exponential", 2], ["zoom"],
-            8, 22,
-            11, 52,
-            14, 130,
+            8, 8,
+            10, 32,
+            12, 126,
+            14, 500,
           ],
           "heatmap-opacity": 0.6,
           "heatmap-color": [
@@ -380,6 +389,26 @@
      once there are results — there is no "everything at once" state to return
      to. Interpolating across separate storms would invent a shape no storm
      had. */
+  function biggestDate(events, lon, lat) {
+    var best = null;
+    var bestCount = -1;
+    var seen = {};
+    events.forEach(function (e) {
+      if (seen[e.date]) return;
+      seen[e.date] = true;
+      var n = hail.cells.filter(function (c) {
+        return c[0] === e.date && distanceKm(lon, lat, c[2], c[3]) <= STORM_KM;
+      }).length;
+      /* events arrive newest first, so a strict > keeps the more recent day
+         when two are the same size. */
+      if (n > bestCount) {
+        bestCount = n;
+        best = e.date;
+      }
+    });
+    return best;
+  }
+
   function selectDate(date) {
     if (!current || !date) return;
     current.date = date;
@@ -487,9 +516,12 @@
              each one reads as a single event. */
           if (mapNote) mapNote.hidden = true;
           if (events.length) {
-            /* Default to the most recent storm — the one most likely to be
-               why they are here. Every other date is one click away. */
-            selectDate(events[0].date);
+            /* Default to the day with the most cells over this address rather
+               than the most recent one. The question behind the search is
+               "what storm explains my roof", and the biggest event answers
+               that better than the latest — which is often a single distant
+               wind report. Ties go to the more recent day. */
+            selectDate(biggestDate(events, lon, lat));
           } else {
             map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
           }
