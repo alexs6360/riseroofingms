@@ -45,6 +45,7 @@
   var eventsEl = document.getElementById("sh-events");
   var emptyEl = document.getElementById("sh-empty");
   var chips = Array.prototype.slice.call(document.querySelectorAll(".sh-chip"));
+  var listEl = document.getElementById("sh-suggest");
 
   /* The service area, and the box the generator pulled data for. Searches
      outside it get told so rather than returning a confident "nothing found"
@@ -470,11 +471,190 @@
     }).catch(function () { /* a failed lead record must never break the result */ });
   }
 
+  /* Runs the lookup once a coordinate is known, whichever path found it.
+     `typed` is what the homeowner actually chose or wrote — that string is
+     what gets stored, never the coordinate Mapbox returned. */
+  function runLookup(lon, lat, name, typed) {
+    var events = eventsAt(lon, lat);
+    current = { lon: lon, lat: lat, date: null };
+    render(name, events);
+
+    if (map) {
+      if (marker) marker.remove();
+      marker = new mapboxgl.Marker({ color: "#9db9dc" }).setLngLat([lon, lat]).addTo(map);
+      if (mapNote) mapNote.hidden = true;
+      if (events.length) {
+        selectDate(biggestDate(events, lon, lat));
+      } else {
+        map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
+      }
+    }
+
+    recordSearch(
+      typed,
+      events.length ? events.length + " events, most recent " + events[0].date
+                    : "no recorded events"
+    );
+  }
+
+  /* ---- address autocomplete --------------------------------------------- */
+
+  /* Search Box API: /suggest while typing, /retrieve once one is chosen. A
+     session groups the two for billing, so it is minted per search and reset
+     after a retrieve rather than per keystroke. */
+  var sessionToken = newSession();
+  var suggestTimer = null;
+  var suggestions = [];
+  var activeIndex = -1;
+
+  function newSession() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "s-" + Date.now() + "-" + Math.round(Math.random() * 1e9);
+  }
+
+  function closeSuggestions() {
+    suggestions = [];
+    activeIndex = -1;
+    listEl.hidden = true;
+    listEl.innerHTML = "";
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+  }
+
+  function highlight(i) {
+    activeIndex = i;
+    Array.prototype.forEach.call(listEl.children, function (li, n) {
+      var on = n === i;
+      li.classList.toggle("is-active", on);
+      li.setAttribute("aria-selected", String(on));
+    });
+    if (i >= 0 && listEl.children[i]) {
+      input.setAttribute("aria-activedescendant", listEl.children[i].id);
+      listEl.children[i].scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  function drawSuggestions(items) {
+    suggestions = items;
+    listEl.innerHTML = "";
+    if (!items.length) { closeSuggestions(); return; }
+
+    items.forEach(function (item, i) {
+      var li = document.createElement("li");
+      li.className = "sh-suggestion";
+      li.id = "sh-suggestion-" + i;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", "false");
+
+      var name = document.createElement("span");
+      name.className = "sh-suggestion-name";
+      name.textContent = item.name;
+      var ctx = document.createElement("span");
+      ctx.className = "sh-suggestion-context";
+      ctx.textContent = item.place_formatted || "";
+      li.appendChild(name);
+      li.appendChild(ctx);
+
+      /* mousedown, not click: blur would close the list first. */
+      li.addEventListener("mousedown", function (ev) {
+        ev.preventDefault();
+        choose(i);
+      });
+      listEl.appendChild(li);
+    });
+
+    listEl.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    highlight(-1);
+  }
+
+  function suggest(q) {
+    if (!hasToken() || q.length < 3) { closeSuggestions(); return; }
+    var url =
+      "https://api.mapbox.com/search/searchbox/v1/suggest?q=" + encodeURIComponent(q) +
+      "&session_token=" + encodeURIComponent(sessionToken) +
+      "&country=us&types=address&limit=6" +
+      "&proximity=" + CENTER.join(",") +
+      "&bbox=" + [AREA.minLon, AREA.minLat, AREA.maxLon, AREA.maxLat].join(",") +
+      "&access_token=" + MAPBOX_TOKEN;
+
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (data) { drawSuggestions((data && data.suggestions) || []); })
+      .catch(function () { closeSuggestions(); });
+  }
+
+  function choose(i) {
+    var item = suggestions[i];
+    if (!item) return;
+    var typed = item.name + (item.place_formatted ? ", " + item.place_formatted : "");
+    input.value = typed;
+    closeSuggestions();
+    say("");
+    form.classList.add("is-busy");
+
+    var url =
+      "https://api.mapbox.com/search/searchbox/v1/retrieve/" + encodeURIComponent(item.mapbox_id) +
+      "?session_token=" + encodeURIComponent(sessionToken) +
+      "&access_token=" + MAPBOX_TOKEN;
+
+    loadData()
+      .then(function () { return fetch(url); })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var f = data && data.features && data.features[0];
+        if (!f) { say("We couldn't place that address. Call us and we'll look it up."); return; }
+        var c = f.geometry.coordinates;
+        runLookup(c[0], c[1], typed, typed);
+      })
+      .catch(function () {
+        say("Something went wrong looking that up. Call us and we'll check it for you.");
+      })
+      .then(function () {
+        form.classList.remove("is-busy");
+        /* A retrieve ends the session; the next search starts a new one. */
+        sessionToken = newSession();
+      });
+  }
+
+  input.addEventListener("input", function () {
+    var q = input.value.trim();
+    clearTimeout(suggestTimer);
+    /* 300ms: a session allows 50 suggests, and one request per keystroke
+       burns through both the allowance and the user's data for nothing. */
+    suggestTimer = setTimeout(function () { suggest(q); }, 300);
+  });
+
+  input.addEventListener("keydown", function (e) {
+    if (listEl.hidden) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      highlight((activeIndex + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      highlight((activeIndex - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      choose(activeIndex);
+    } else if (e.key === "Escape") {
+      closeSuggestions();
+    }
+  });
+
+  input.addEventListener("blur", function () {
+    setTimeout(closeSuggestions, 120);
+  });
+
+  /* ---- the button, for anyone who types it all out and hits enter -------- */
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    if (activeIndex >= 0 && !listEl.hidden) { choose(activeIndex); return; }
+
     var address = (input.value || "").trim();
     if (!address) return;
     say("");
+    closeSuggestions();
 
     if (!hasToken()) {
       say("Address lookup is not configured yet. Call us and we'll check it for you.");
@@ -497,41 +677,8 @@
           say("We couldn't find that address in our service area. Check the spelling, or call us and we'll look it up.");
           return;
         }
-        /* v6: the coordinate lives on properties, not on a center array */
         var c = f.properties.coordinates;
-        var lon = c.longitude;
-        var lat = c.latitude;
-        var name = f.properties.full_address || f.properties.name || address;
-
-        var events = eventsAt(lon, lat);
-        current = { lon: lon, lat: lat, date: null };
-        render(name, events);
-
-        if (map) {
-          if (marker) marker.remove();
-          marker = new mapboxgl.Marker({ color: "#9db9dc" }).setLngLat([lon, lat]).addTo(map);
-
-          /* Ten years over five counties is a texture, not a map. Once there
-             is an address, show the cells around it and get close enough that
-             each one reads as a single event. */
-          if (mapNote) mapNote.hidden = true;
-          if (events.length) {
-            /* Default to the day with the most cells over this address rather
-               than the most recent one. The question behind the search is
-               "what storm explains my roof", and the biggest event answers
-               that better than the latest — which is often a single distant
-               wind report. Ties go to the more recent day. */
-            selectDate(biggestDate(events, lon, lat));
-          } else {
-            map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
-          }
-        }
-
-        recordSearch(
-          address,
-          events.length ? events.length + " events, most recent " + events[0].date
-                        : "no recorded events"
-        );
+        runLookup(c.longitude, c.latitude, f.properties.full_address || f.properties.name || address, address);
       })
       .catch(function () {
         say("Something went wrong looking that up. Call us and we'll check it for you.");

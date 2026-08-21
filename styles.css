@@ -4701,3 +4701,59 @@ blockquote.card cite {
     width: 100%;
   }
 }
+
+/* Address autocomplete
+   ------------------------------------------------------------------------- */
+.sh-combo {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.sh-combo input {
+  width: 100%;
+}
+
+.sh-suggest {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--color-navy);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-overlay);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.sh-suggestion {
+  display: grid;
+  gap: 1px;
+  /* 44px floor: this is a list people tap on a phone */
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  align-content: center;
+}
+
+.sh-suggestion.is-active,
+.sh-suggestion:hover {
+  background: rgba(157, 185, 220, 0.16);
+}
+
+.sh-suggestion-name {
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.sh-suggestion-context {
+  color: var(--accent-light);
+  font-size: var(--text-xs);
+}

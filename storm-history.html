@@ -104,14 +104,24 @@
         <form class="sh-lookup" id="sh-lookup" autocomplete="off">
           <label class="visually-hidden" for="sh-address">Street address</label>
           <div class="sh-lookup-row">
-            <input
-              type="text"
-              id="sh-address"
-              name="address"
-              placeholder="123 Main St, Tupelo, MS"
-              enterkeyhint="search"
-              required
-            />
+            <!-- Combobox pattern: the input owns the listbox, so a screen
+                 reader announces the suggestions and which one is active. -->
+            <div class="sh-combo">
+              <input
+                type="text"
+                id="sh-address"
+                name="address"
+                placeholder="Start typing an address"
+                enterkeyhint="search"
+                autocomplete="off"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="sh-suggest"
+                aria-autocomplete="list"
+                required
+              />
+              <ul class="sh-suggest" id="sh-suggest" role="listbox" aria-label="Address suggestions" hidden></ul>
+            </div>
             <button type="submit" class="btn btn-primary">Check this address</button>
           </div>
           <!-- Under the field and on screen before they type, not buried in the policy. -->
