@@ -4599,11 +4599,38 @@ blockquote.card cite {
   overflow-y: auto;
 }
 
+/* Rows are buttons now: selecting one filters the map to that day. */
 .sh-event {
   display: grid;
   gap: 2px;
-  padding: var(--space-2) 0;
+  width: 100%;
+  padding: var(--space-2) var(--space-2);
+  margin: 0;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: 0;
   border-top: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sh-events li:first-child .sh-event {
+  border-top: 0;
+}
+
+.sh-event:hover {
+  background: var(--color-surface);
+}
+
+.sh-event:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: -2px;
+}
+
+.sh-event.is-selected {
+  background: var(--color-surface);
+  box-shadow: inset 3px 0 0 var(--accent-deep);
 }
 
 .sh-event-date {

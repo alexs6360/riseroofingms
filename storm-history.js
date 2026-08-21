@@ -65,6 +65,13 @@
 
   var EMPTY = { type: "FeatureCollection", features: [] };
 
+  /* The reference map reads clearly because it shows one storm on one day.
+     Ten years at once cannot look like that, so a date in the results acts as
+     a filter: pick one and the map shows that day alone, over a wide enough
+     radius to see the storm pass the house rather than just the dots on it. */
+  var STORM_KM = 25;
+  var current = null;   // { lon, lat, date }
+
   var hail = null;
   var reports = null;
   var map = null;
@@ -265,26 +272,83 @@
 
     emptyEl.hidden = true;
     panelSub.textContent =
-      events.length === 1 ? "1 recorded event, most recent first"
-                          : events.length + " recorded events, most recent first";
+      events.length === 1 ? "1 recorded event — select one to see that day"
+                          : events.length + " recorded events, most recent first — select one to see that day";
 
     events.forEach(function (e) {
       var li = document.createElement("li");
-      li.className = "sh-event";
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "sh-event";
+      btn.dataset.date = e.date;
+      btn.setAttribute("aria-pressed", "false");
+
       var d = document.createElement("span");
       d.className = "sh-event-date";
       d.textContent = prettyDate(e.date);
       var v = document.createElement("span");
       v.className = "sh-event-value";
       v.textContent = e.label;
-      var s = document.createElement("span");
-      s.className = "sh-event-source";
-      s.textContent = e.source;
-      li.appendChild(d);
-      li.appendChild(v);
-      li.appendChild(s);
+      var src = document.createElement("span");
+      src.className = "sh-event-source";
+      src.textContent = e.source;
+      btn.appendChild(d);
+      btn.appendChild(v);
+      btn.appendChild(src);
+
+      btn.addEventListener("click", function () {
+        selectDate(btn.dataset.date === (current && current.date) ? null : btn.dataset.date);
+      });
+
+      li.appendChild(btn);
       eventsEl.appendChild(li);
     });
+  }
+
+  /* Passing null returns to the address view: everything near the house. */
+  function selectDate(date) {
+    if (!current) return;
+    current.date = date;
+
+    Array.prototype.forEach.call(eventsEl.querySelectorAll(".sh-event"), function (b) {
+      var on = !!date && b.dataset.date === date;
+      b.classList.toggle("is-selected", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+
+    if (!map) return;
+    var lon = current.lon;
+    var lat = current.lat;
+    var radius = date ? STORM_KM : NEARBY_KM;
+
+    var cells = hail.cells.filter(function (c) {
+      if (date && c[0] !== date) return false;
+      return distanceKm(lon, lat, c[2], c[3]) <= radius;
+    });
+    var hailSrc = map.getSource("hail");
+    if (hailSrc) hailSrc.setData(hailPoints(function (c) { return cells.indexOf(c) !== -1; }));
+
+    var repSrc = map.getSource("reports");
+    if (repSrc) {
+      repSrc.setData({
+        type: "FeatureCollection",
+        features: reports.features.filter(function (f) {
+          if (date && f.properties.date !== date) return false;
+          var g = f.geometry.coordinates;
+          return distanceKm(lon, lat, g[0], g[1]) <= radius;
+        }),
+      });
+    }
+
+    if (!date) {
+      map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 700 });
+      return;
+    }
+
+    /* Frame the storm, with the house always in shot. */
+    var b = new mapboxgl.LngLatBounds([lon, lat], [lon, lat]);
+    cells.forEach(function (c) { b.extend([c[2], c[3]]); });
+    map.fitBounds(b, { padding: 70, maxZoom: 13.5, duration: 700 });
   }
 
   /* Only the address the homeowner typed is stored — never the coordinate the
@@ -343,6 +407,7 @@
         var name = f.properties.full_address || f.properties.name || address;
 
         var events = eventsAt(lon, lat);
+        current = { lon: lon, lat: lat, date: null };
         render(name, events);
 
         if (map) {
