@@ -1,0 +1,47 @@
+name: Refresh storm data
+
+# Weekly. SWDI already carries a ~4 day floor of its own, so a daily run buys
+# little for hail; Local Storm Reports move faster, and a week-old wind layer
+# still beats the four months Storm Events runs behind.
+#
+# Free on this repository: Actions minutes are unlimited for public repos.
+# GitHub disables cron on repositories with no activity for 60 days, so if the
+# data ever stops moving, check that first.
+on:
+  schedule:
+    - cron: "17 8 * * 1"      # Mondays, 08:17 UTC — off the hour, which is when
+                              # every other scheduled job on the platform fires
+  workflow_dispatch:           # and a button, for when a storm just happened
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Regenerate the storm archive
+        run: node tools/build-storm-data.mjs data
+
+      - name: Commit only if something actually changed
+        run: |
+          git config user.name "storm-data bot"
+          git config user.email "actions@github.com"
+          if git diff --quiet -- data; then
+            echo "no change — nothing to commit"
+            exit 0
+          fi
+          # Report what moved, so the commit log is readable at a glance
+          SUMMARY=$(node -e "
+            const i = require('./data/storm-index.json');
+            console.log('hail through ' + i.hail.through + ', wind through ' + i.wind.through);
+          ")
+          git add data
+          git commit -m "Refresh storm data ($SUMMARY)"
+          git push

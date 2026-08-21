@@ -46,6 +46,7 @@
   var emptyEl = document.getElementById("sh-empty");
   var chips = Array.prototype.slice.call(document.querySelectorAll(".sh-chip"));
   var listEl = document.getElementById("sh-suggest");
+  var currencyEl = document.getElementById("sh-currency");
 
   /* The service area, and the box the generator pulled data for. Searches
      outside it get told so rather than returning a confident "nothing found"
@@ -72,6 +73,7 @@
 
   var hail = null;
   var reports = null;
+  var index = null;
   var map = null;
   var marker = null;
   var submitted = {};
@@ -106,13 +108,55 @@
 
   function loadData() {
     if (hail && reports) return Promise.resolve();
-    return Promise.all([
-      fetch("data/hail-cells.json").then(function (r) { return r.json(); }),
-      fetch("data/storm-reports.geojson").then(function (r) { return r.json(); }),
-    ]).then(function (res) {
-      hail = res[0];
-      reports = res[1];
-    });
+    return fetch("data/storm-index.json")
+      .then(function (r) { return r.json(); })
+      .then(function (idx) {
+        index = idx;
+        /* Split by year so the weekly refresh only rewrites the current
+           year's file instead of a 500KB blob every run. The lookup needs
+           every year, so they are fetched together and flattened here. */
+        var jobs = [];
+        idx.years.forEach(function (y) {
+          jobs.push(fetch("data/hail-" + y + ".json").then(function (r) { return r.json(); }));
+          jobs.push(fetch("data/reports-" + y + ".json").then(function (r) { return r.json(); }));
+        });
+        return Promise.all(jobs);
+      })
+      .then(function (parts) {
+        var cells = [];
+        var reps = [];
+        parts.forEach(function (p) {
+          if (p.cells) cells = cells.concat(p.cells);
+          if (p.reports) reps = reps.concat(p.reports);
+        });
+        cells.sort(function (a, b) { return a[0] < b[0] ? 1 : -1; });
+        hail = { cells: cells };
+        /* [date, kind, val, lon, lat, src] */
+        reports = {
+          features: reps
+            .sort(function (a, b) { return a[0] < b[0] ? 1 : -1; })
+            .map(function (r) {
+              return {
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [r[3], r[4]] },
+                properties: { date: r[0], kind: r[1], val: r[2], src: r[5] },
+              };
+            }),
+        };
+        showCurrency();
+      });
+  }
+
+  /* Per layer, from the data itself. The two are months apart when Storm
+     Events is the only wind source, and a homeowner must never read "no wind"
+     when the truth is "no wind data that recent". */
+  function showCurrency() {
+    if (!index || !currencyEl) return;
+    var bits = [];
+    if (index.hail && index.hail.through) bits.push("Hail data current through " + prettyDate(index.hail.through));
+    if (index.wind && index.wind.through) bits.push("wind through " + prettyDate(index.wind.through));
+    currencyEl.textContent = bits.join(" \u00b7 ") + ".";
+    currencyEl.hidden = false;
   }
 
   /* ---- map -------------------------------------------------------------- */
@@ -215,7 +259,7 @@
         filter: ["==", ["get", "kind"], "wind"],
         paint: {
           "heatmap-weight": [
-            "interpolate", ["linear"], ["*", ["get", "mag"], 1.15078],
+            "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
             45, 0.35,
             70, 0.7,
             95, 1,
@@ -285,8 +329,10 @@
         paint: {
           "circle-emissive-strength": 1,
           "circle-radius": 5,
+          /* Values are mph already. A report with no measured gust still gets
+             drawn — at the pale end, not omitted and not as a zero. */
           "circle-color": [
-            "interpolate", ["linear"], ["*", ["get", "mag"], 1.15078],
+            "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
             45, "#e3dcc9",
             58, "#ebc984",
             70, "#faaa42",
@@ -329,10 +375,15 @@
       var p = f.properties;
       var label;
       if (p.kind === "hail") {
-        label = (p.mag ? p.mag + '" ' : "") + "hail reported nearby";
+        label = (p.val ? p.val + '" ' : "") + "hail reported nearby";
+      } else if (p.val) {
+        /* Already mph — the generator normalises Storm Events' knots, so
+           converting here would turn a 66 mph gust into 76. */
+        label = p.val + " mph wind reported nearby";
       } else {
-        var mph = p.mag ? Math.round(p.mag * 1.15078) : null;
-        label = (mph ? mph + " mph " : "") + "wind reported nearby";
+        /* A real report with no measured gust. Saying nothing hides a storm;
+           saying 0 mph invents a reading. */
+        label = "wind damage reported nearby";
       }
       out.push({ date: (p.date || "").slice(0, 10), label: label, source: p.src });
     });

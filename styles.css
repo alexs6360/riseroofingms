@@ -4757,3 +4757,10 @@ blockquote.card cite {
   color: var(--accent-light);
   font-size: var(--text-xs);
 }
+
+/* Per-layer data currency, stated under the field */
+.sh-currency {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
