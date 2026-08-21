@@ -63,6 +63,8 @@
      house, tight enough that the dots stay countable. */
   var NEARBY_KM = 8;
 
+  var EMPTY = { type: "FeatureCollection", features: [] };
+
   var hail = null;
   var reports = null;
   var map = null;
@@ -146,7 +148,10 @@
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", function () {
-      map.addSource("hail", { type: "geojson", data: hailPoints() });
+      /* Both layers start empty. The whole ten-year field on load is a wash of
+         colour that answers no question — the map only has something to say
+         once there is an address to say it about. */
+      map.addSource("hail", { type: "geojson", data: EMPTY });
       map.addLayer({
         id: "hail",
         type: "circle",
@@ -176,7 +181,7 @@
         },
       });
 
-      map.addSource("reports", { type: "geojson", data: reports });
+      map.addSource("reports", { type: "geojson", data: EMPTY });
       map.addLayer({
         id: "reports",
         type: "circle",
@@ -201,7 +206,8 @@
         },
       });
 
-      if (mapNote) mapNote.hidden = true;
+      /* The note stays until a search puts something on the map — an empty
+         basemap with no explanation reads as broken. */
     });
   }
 
@@ -346,14 +352,25 @@
           /* Ten years over five counties is a texture, not a map. Once there
              is an address, show the cells around it and get close enough that
              each one reads as a single event. */
-          var src = map.getSource("hail");
-          if (src) {
-            src.setData(
+          var hailSrc = map.getSource("hail");
+          if (hailSrc) {
+            hailSrc.setData(
               hailPoints(function (c) {
                 return distanceKm(lon, lat, c[2], c[3]) <= NEARBY_KM;
               })
             );
           }
+          var repSrc = map.getSource("reports");
+          if (repSrc) {
+            repSrc.setData({
+              type: "FeatureCollection",
+              features: reports.features.filter(function (f) {
+                var g = f.geometry.coordinates;
+                return distanceKm(lon, lat, g[0], g[1]) <= NEARBY_KM;
+              }),
+            });
+          }
+          if (mapNote) mapNote.hidden = true;
           map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
         }
 
