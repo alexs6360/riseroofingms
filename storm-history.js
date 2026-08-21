@@ -58,10 +58,7 @@
      have to ship a geometry library to compute what one subtraction gives. */
   var HAIL_RADIUS_KM = 1.5;
   var REPORT_RADIUS_KM = 5;
-  /* How much of the ten-year field to keep on screen once an address is
-     chosen. Wide enough to show the storms that went either side of the
-     house, tight enough that the dots stay countable. */
-  var NEARBY_KM = 8;
+
 
   var EMPTY = { type: "FeatureCollection", features: [] };
 
@@ -155,38 +152,104 @@
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", function () {
-      /* Both layers start empty. The whole ten-year field on load is a wash of
-         colour that answers no question — the map only has something to say
+      /* Both sources start empty. The whole ten-year field on load is a wash
+         of colour that answers no question — the map only has something to say
          once there is an address to say it about. */
       map.addSource("hail", { type: "geojson", data: EMPTY });
+      map.addSource("reports", { type: "geojson", data: EMPTY });
+
+      /* Order matters. Contours go down first and the measured points sit on
+         top of them: the bands are an interpolation, the cells are the
+         evidence, and the evidence should not end up buried under a drawing
+         of itself.
+
+         Both sources only ever hold one day at a time — selectDate filters
+         them before they get here — so a contour can never span two storms. */
+      map.addLayer({
+        id: "hail-contour",
+        type: "heatmap",
+        source: "hail",
+        slot: "top",
+        paint: {
+          /* Weight is the hail size the radar estimated, so the shape of the
+             band comes from the measured values rather than from point count
+             alone. */
+          "heatmap-weight": [
+            "interpolate", ["linear"], ["get", "in"],
+            1.0, 0.35,
+            2.0, 0.7,
+            3.0, 1,
+          ],
+          "heatmap-intensity": 1.1,
+          "heatmap-radius": [
+            "interpolate", ["exponential", 2], ["zoom"],
+            8, 18,
+            11, 42,
+            14, 110,
+          ],
+          "heatmap-opacity": 0.75,
+          "heatmap-color": [
+            "interpolate", ["linear"], ["heatmap-density"],
+            0, "rgba(10, 20, 32, 0)",
+            0.15, "rgba(212, 203, 226, 0.45)",
+            0.35, "rgba(190, 158, 229, 0.62)",
+            0.55, "rgba(171, 104, 243, 0.74)",
+            0.75, "rgba(165, 61, 255, 0.84)",
+            1, "rgba(126, 32, 214, 0.92)",
+          ],
+        },
+      });
+
+      map.addLayer({
+        id: "wind-contour",
+        type: "heatmap",
+        source: "reports",
+        slot: "top",
+        filter: ["==", ["get", "kind"], "wind"],
+        paint: {
+          "heatmap-weight": [
+            "interpolate", ["linear"], ["*", ["get", "mag"], 1.15078],
+            45, 0.35,
+            70, 0.7,
+            95, 1,
+          ],
+          "heatmap-intensity": 1.1,
+          "heatmap-radius": [
+            "interpolate", ["exponential", 2], ["zoom"],
+            8, 22,
+            11, 52,
+            14, 130,
+          ],
+          "heatmap-opacity": 0.6,
+          "heatmap-color": [
+            "interpolate", ["linear"], ["heatmap-density"],
+            0, "rgba(10, 20, 32, 0)",
+            0.15, "rgba(227, 220, 201, 0.4)",
+            0.35, "rgba(235, 201, 132, 0.55)",
+            0.55, "rgba(250, 170, 66, 0.68)",
+            0.75, "rgba(255, 128, 31, 0.78)",
+            1, "rgba(226, 88, 12, 0.86)",
+          ],
+        },
+      });
+
       map.addLayer({
         id: "hail",
         type: "circle",
         source: "hail",
-        /* Above POI labels, below place and transit labels, so town names stay
-           readable over the cells. */
         slot: "top",
         paint: {
-          /* circle-emissive-strength defaults to 0, which means the Standard
-             style's lighting model lights this layer by ambient alone. Under
-             lightPreset "night" that ambient is nearly black, so the fill
-             rendered near-black whatever colour was specified — while the
-             legend swatch, being plain CSS and outside the lighting model,
-             showed the true purple. 1 makes the layer self-lit, so it paints
-             the colour we asked for. */
+          /* circle-emissive-strength defaults to 0, which lights the layer by
+             ambient alone. Under lightPreset "night" that ambient is nearly
+             black, so the fill rendered near-black whatever colour the ramp
+             specified. 1 makes it self-lit. */
           "circle-emissive-strength": 1,
-          /* Radius tracks the 1.5km buffer across zooms rather than being a
-             fixed pixel blob, so the dot means the same thing at every scale. */
           "circle-radius": [
             "interpolate", ["exponential", 2], ["zoom"],
             7, 2,
-            11, 14,
-            14, 90,
+            11, 6,
+            14, 12,
           ],
-          /* Purple for hail. Intensity is carried by saturation, not darkness:
-             the old ramp ended at #6a2fc0, which is 2.5:1 against the basemap
-             and sank into it — the biggest hail was the hardest to see. Every
-             stop here clears 4:1 while staying in the purple family. */
           "circle-color": [
             "interpolate", ["linear"], ["get", "in"],
             1.0, "#d4cbe2",
@@ -194,35 +257,24 @@
             2.0, "#ab68f3",
             2.5, "#a53dff",
           ],
-          "circle-opacity": 0.85,
-          /* A ring at full opacity reads even where fills overlap. */
+          "circle-opacity": 0.95,
           "circle-stroke-width": 1.5,
-          "circle-stroke-color": [
-            "interpolate", ["linear"], ["get", "in"],
-            1.0, "#d4cbe2",
-            1.5, "#be9ee5",
-            2.0, "#ab68f3",
-            2.5, "#a53dff",
-          ],
+          "circle-stroke-color": "rgba(255, 255, 255, 0.85)",
         },
       });
 
-      map.addSource("reports", { type: "geojson", data: EMPTY });
       map.addLayer({
         id: "reports",
         type: "circle",
         source: "reports",
+        slot: "top",
         /* The chip says Wind, so the layer shows wind. NWS hail reports stay
            in the results list for the address — they are real events — but
            they are not drawn under a wind label. */
         filter: ["==", ["get", "kind"], "wind"],
-        slot: "top",
         paint: {
-          /* Same reason as the hail layer. */
           "circle-emissive-strength": 1,
           "circle-radius": 5,
-          /* Coloured by the gust the spotter actually recorded, converted from
-             the knots Storm Events stores. Our reports run 45 to 94 mph. */
           "circle-color": [
             "interpolate", ["linear"], ["*", ["get", "mag"], 1.15078],
             45, "#e3dcc9",
@@ -234,9 +286,6 @@
           "circle-stroke-color": "#ffffff",
         },
       });
-
-      /* The note stays until a search puts something on the map — an empty
-         basemap with no explanation reads as broken. */
     });
   }
 
@@ -319,7 +368,7 @@
       btn.appendChild(src);
 
       btn.addEventListener("click", function () {
-        selectDate(btn.dataset.date === (current && current.date) ? null : btn.dataset.date);
+        selectDate(btn.dataset.date);
       });
 
       li.appendChild(btn);
@@ -327,9 +376,12 @@
     });
   }
 
-  /* Passing null returns to the address view: everything near the house. */
+  /* Contours only ever represent one storm day, so a date is always selected
+     once there are results — there is no "everything at once" state to return
+     to. Interpolating across separate storms would invent a shape no storm
+     had. */
   function selectDate(date) {
-    if (!current) return;
+    if (!current || !date) return;
     current.date = date;
 
     Array.prototype.forEach.call(eventsEl.querySelectorAll(".sh-event"), function (b) {
@@ -341,11 +393,10 @@
     if (!map) return;
     var lon = current.lon;
     var lat = current.lat;
-    var radius = date ? STORM_KM : NEARBY_KM;
+    var radius = STORM_KM;
 
     var cells = hail.cells.filter(function (c) {
-      if (date && c[0] !== date) return false;
-      return distanceKm(lon, lat, c[2], c[3]) <= radius;
+      return c[0] === date && distanceKm(lon, lat, c[2], c[3]) <= radius;
     });
     var hailSrc = map.getSource("hail");
     if (hailSrc) hailSrc.setData(hailPoints(function (c) { return cells.indexOf(c) !== -1; }));
@@ -355,16 +406,11 @@
       repSrc.setData({
         type: "FeatureCollection",
         features: reports.features.filter(function (f) {
-          if (date && f.properties.date !== date) return false;
+          if (f.properties.date !== date) return false;
           var g = f.geometry.coordinates;
           return distanceKm(lon, lat, g[0], g[1]) <= radius;
         }),
       });
-    }
-
-    if (!date) {
-      map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 700 });
-      return;
     }
 
     /* Frame the storm, with the house always in shot. */
@@ -439,26 +485,14 @@
           /* Ten years over five counties is a texture, not a map. Once there
              is an address, show the cells around it and get close enough that
              each one reads as a single event. */
-          var hailSrc = map.getSource("hail");
-          if (hailSrc) {
-            hailSrc.setData(
-              hailPoints(function (c) {
-                return distanceKm(lon, lat, c[2], c[3]) <= NEARBY_KM;
-              })
-            );
-          }
-          var repSrc = map.getSource("reports");
-          if (repSrc) {
-            repSrc.setData({
-              type: "FeatureCollection",
-              features: reports.features.filter(function (f) {
-                var g = f.geometry.coordinates;
-                return distanceKm(lon, lat, g[0], g[1]) <= NEARBY_KM;
-              }),
-            });
-          }
           if (mapNote) mapNote.hidden = true;
-          map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
+          if (events.length) {
+            /* Default to the most recent storm — the one most likely to be
+               why they are here. Every other date is one click away. */
+            selectDate(events[0].date);
+          } else {
+            map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
+          }
         }
 
         recordSearch(
