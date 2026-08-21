@@ -27,6 +27,7 @@
 */
 import fs from "node:fs";
 import zlib from "node:zlib";
+import { GRID_DEG, cellKey, preferred, preferredReport } from "./storm-grid.mjs";
 
 /* One geographic filter for every layer. A bbox rather than a list of county
    names: a homeowner two miles over the Pontotoc line should not get an empty
@@ -40,7 +41,6 @@ const OUT = process.argv[2];
 
 const BUFFER_KM = 1.5;      // stated on the page; the circle is a radar cell, not a footprint
 const MIN_SIZE_IN = 1.0;    // roughly where hail starts mattering to asphalt shingles
-const GRID_DEG = 0.05;      // ~5km: three radars see one storm and report it 2-3x a minute apart
 const KT_TO_MPH = 1.15078;
 
 const inBbox = (lon, lat) =>
@@ -133,15 +133,19 @@ async function hail() {
   const byKey = new Map();
   for (const c of raw) {
     const day = c.t.slice(0, 10);
-    const key = `${day}|${Math.round(c.lat / GRID_DEG)}|${Math.round(c.lon / GRID_DEG)}`;
+    const key = cellKey(day, c.lat, c.lon);
     const prev = byKey.get(key);
-    if (!prev || c.size > prev.size) {
-      byKey.set(key, { ...prev, ...c, day, srcs: new Set([...(prev?.srcs || []), c.src]) });
+    if (preferred(c, prev)) {
+      byKey.set(key, { ...c, day, srcs: new Set([...(prev?.srcs || []), c.src]) });
     } else prev.srcs.add(c.src);
   }
 
+  /* Fully ordered, so insertion order never leaks into the file. */
   const cells = [...byKey.values()]
-    .sort((a, b) => (a.day < b.day ? 1 : -1))
+    .sort((a, b) =>
+      a.day !== b.day ? (a.day < b.day ? 1 : -1)
+      : a.lon !== b.lon ? a.lon - b.lon
+      : a.lat - b.lat)
     .map((c) => [c.day, +c.size.toFixed(2), +c.lon.toFixed(3), +c.lat.toFixed(3), [...c.srcs].sort().join("/")]);
   return { raw: raw.length, cells };
 }
@@ -154,10 +158,24 @@ async function stormEvents() {
   const out = [];
   const first = END.getUTCFullYear() - YEARS;
   for (let y = first; y <= END.getUTCFullYear(); y++) {
-    const m = listing.match(new RegExp(`StormEvents_details-ftp_v1\\.0_d${y}_c\\d+\\.csv\\.gz`));
-    if (!m) continue;
-    const res = await get(`https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/${m[0]}`);
-    if (!res) { process.stderr.write(`  ! reports ${y} failed\n`); continue; }
+    /* NCEI stamps each file with a _c revision date. Taking the first match in
+       HTML listing order would pin us to whichever the directory happened to
+       list first — likely the older one, and liable to flip if the listing
+       order ever changes.
+
+       Lexical max works because every stamp is the same width (_cYYYYMMDD),
+       so string order and date order agree. That holds across all 17 years
+       listed today. If NCEI ever changes the stamp format — a different width,
+       a suffix, a non-date — this silently picks the wrong file rather than
+       failing, so it is worth re-checking if the archive starts looking
+       stale. */
+    const revisions = [
+      ...listing.matchAll(new RegExp(`StormEvents_details-ftp_v1\\.0_d${y}_c\\d+\\.csv\\.gz`, "g")),
+    ].map((x) => x[0]).sort();
+    if (!revisions.length) continue;
+    const file = revisions[revisions.length - 1];
+    const res = await get(`https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/${file}`);
+    if (!res) { process.stderr.write(`  ! reports ${y} (${file}) failed\n`); continue; }
     const text = zlib.gunzipSync(Buffer.from(await res.arrayBuffer())).toString("utf8");
     const lines = text.split("\n");
     const cols = parseCsvLine(lines[0]);
@@ -241,19 +259,20 @@ async function localStormReports(afterDate) {
    Storm Events ever backfills past its own newest record this stops the same
    storm being listed twice. ~1km, same day, same kind, same value. */
 function dedupe(rows) {
-  const seen = new Set();
-  const out = [];
+  const byKey = new Map();
   for (const r of rows) {
     const key = [
       r.date, r.kind,
       Math.round(r.lat / 0.01), Math.round(r.lon / 0.01),
       r.val === null ? "null" : r.val,
     ].join("|");
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(r);
+    /* Not first-wins. Nothing collides in the current archive — 1,446 rows,
+       1,446 distinct keys — but first-wins is the exact defect that made the
+       hail files rewrite themselves every week, and it would wake up the first
+       time two spotters report one storm from adjacent addresses. */
+    if (preferredReport(r, byKey.get(key))) byKey.set(key, r);
   }
-  return out;
+  return [...byKey.values()];
 }
 
 /* ---- write, split by year ------------------------------------------------ */
@@ -262,7 +281,12 @@ const h = await hail();
 const se = await stormEvents();
 const seThrough = se.length ? se.map((r) => r.date).sort().pop() : "1970-01-01";
 const lsr = await localStormReports(seThrough);
-const reports = dedupe([...se, ...lsr]).sort((a, b) => (a.date < b.date ? 1 : -1));
+const reports = dedupe([...se, ...lsr]).sort((a, b) =>
+  a.date !== b.date ? (a.date < b.date ? 1 : -1)
+  : a.kind !== b.kind ? (a.kind < b.kind ? -1 : 1)
+  : a.lon !== b.lon ? a.lon - b.lon
+  : a.lat !== b.lat ? a.lat - b.lat
+  : (a.val || 0) - (b.val || 0));
 
 fs.mkdirSync(OUT, { recursive: true });
 const years = new Set();
@@ -301,8 +325,12 @@ const hailThrough = h.cells.length ? h.cells[0][0] : null;
 const windRows = reports.filter((r) => r.kind === "wind");
 const windThrough = windRows.length ? windRows[0].date : null;
 
+/* No build timestamp here. It changed on every run whether or not any storm
+   data did, which defeated the workflow's "commit only if something changed"
+   guard and produced a commit every week regardless. Currency comes from the
+   newest record in each layer instead — which is what a reader actually wants
+   to know. */
 write("storm-index.json", {
-  generated: END.toISOString().slice(0, 10),
   years: [...years].sort(),
   buffer_km: BUFFER_KM,
   min_size_in: MIN_SIZE_IN,
