@@ -163,7 +163,18 @@
         id: "hail",
         type: "circle",
         source: "hail",
+        /* Above POI labels, below place and transit labels, so town names stay
+           readable over the cells. */
+        slot: "top",
         paint: {
+          /* circle-emissive-strength defaults to 0, which means the Standard
+             style's lighting model lights this layer by ambient alone. Under
+             lightPreset "night" that ambient is nearly black, so the fill
+             rendered near-black whatever colour was specified — while the
+             legend swatch, being plain CSS and outside the lighting model,
+             showed the true purple. 1 makes the layer self-lit, so it paints
+             the colour we asked for. */
+          "circle-emissive-strength": 1,
           /* Radius tracks the 1.5km buffer across zooms rather than being a
              fixed pixel blob, so the dot means the same thing at every scale. */
           "circle-radius": [
@@ -205,7 +216,10 @@
            in the results list for the address — they are real events — but
            they are not drawn under a wind label. */
         filter: ["==", ["get", "kind"], "wind"],
+        slot: "top",
         paint: {
+          /* Same reason as the hail layer. */
+          "circle-emissive-strength": 1,
           "circle-radius": 5,
           /* Coloured by the gust the spotter actually recorded, converted from
              the knots Storm Events stores. Our reports run 45 to 94 mph. */
