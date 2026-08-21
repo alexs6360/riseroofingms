@@ -130,19 +130,27 @@
                 <span class="sh-dot"></span>Hail
               </button>
               <button type="button" class="sh-chip sh-chip-wind is-on" data-layer="reports" aria-pressed="true">
-                <span class="sh-dot"></span>Storm reports
+                <span class="sh-dot"></span>Wind
               </button>
             </div>
+            <!-- The two layers are different kinds of evidence and the legend
+                 says so: one is a radar estimate, the other is someone's
+                 report. Labelling them both as "storms" would flatten that. -->
             <div class="sh-legend">
               <h2>Hail size (in)</h2>
               <div class="sh-legend-row">
                 <span class="sh-swatch sh-swatch-hail"></span>
                 <span class="sh-legend-label">1.0 &rarr; 2.5+</span>
               </div>
+              <h2 class="sh-legend-second">Wind gust (mph)</h2>
               <div class="sh-legend-row">
-                <span class="sh-swatch sh-swatch-report"></span>
-                <span class="sh-legend-label">NWS report</span>
+                <span class="sh-swatch sh-swatch-wind"></span>
+                <span class="sh-legend-label">58 &rarr; 80+</span>
               </div>
+              <!-- The two layers are different kinds of evidence and the note
+                   says so: one is a radar estimate, the other is a person's
+                   report. Calling both "storms" would flatten that. -->
+              <p class="sh-legend-note">Hail radar-estimated &middot; wind NWS reports</p>
             </div>
             <p class="sh-attrib">&copy; Mapbox &middot; NOAA NCEI &middot; NWS</p>
             <p class="sh-mapnote" id="sh-mapnote">Enter an address to begin.</p>

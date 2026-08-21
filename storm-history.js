@@ -58,6 +58,10 @@
      have to ship a geometry library to compute what one subtraction gives. */
   var HAIL_RADIUS_KM = 1.5;
   var REPORT_RADIUS_KM = 5;
+  /* How much of the ten-year field to keep on screen once an address is
+     chosen. Wide enough to show the storms that went either side of the
+     house, tight enough that the dots stay countable. */
+  var NEARBY_KM = 8;
 
   var hail = null;
   var reports = null;
@@ -106,10 +110,10 @@
 
   /* ---- map -------------------------------------------------------------- */
 
-  function hailPoints() {
+  function hailPoints(keep) {
     return {
       type: "FeatureCollection",
-      features: hail.cells.map(function (c) {
+      features: (keep ? hail.cells.filter(keep) : hail.cells).map(function (c) {
         return {
           type: "Feature",
           geometry: { type: "Point", coordinates: [c[2], c[3]] },
@@ -156,12 +160,15 @@
             11, 14,
             14, 90,
           ],
+          /* Purple for hail, amber for wind — the palette from the preview.
+             Stops are set to our own distribution: cells run 1.0 to 4.0 in,
+             median 1.25. */
           "circle-color": [
             "interpolate", ["linear"], ["get", "in"],
-            1.0, "#ffe07a",
-            1.5, "#ffb43d",
-            2.0, "#ff7a1a",
-            2.5, "#e63a1a",
+            1.0, "#cbb6ef",
+            1.5, "#a97fe0",
+            2.0, "#8b5cd6",
+            2.5, "#6a2fc0",
           ],
           "circle-opacity": 0.45,
           "circle-stroke-width": 0.5,
@@ -174,11 +181,23 @@
         id: "reports",
         type: "circle",
         source: "reports",
+        /* The chip says Wind, so the layer shows wind. NWS hail reports stay
+           in the results list for the address — they are real events — but
+           they are not drawn under a wind label. */
+        filter: ["==", ["get", "kind"], "wind"],
         paint: {
-          "circle-radius": 4,
-          "circle-color": "#9db9dc",
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#0a1420",
+          "circle-radius": 5,
+          /* Coloured by the gust the spotter actually recorded, converted from
+             the knots Storm Events stores. Our reports run 45 to 94 mph. */
+          "circle-color": [
+            "interpolate", ["linear"], ["*", ["get", "mag"], 1.15078],
+            45, "#ffe07a",
+            58, "#ffb43d",
+            70, "#ff7a1a",
+            85, "#e63a1a",
+          ],
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "#ffffff",
         },
       });
 
@@ -323,7 +342,19 @@
         if (map) {
           if (marker) marker.remove();
           marker = new mapboxgl.Marker({ color: "#9db9dc" }).setLngLat([lon, lat]).addTo(map);
-          map.flyTo({ center: [lon, lat], zoom: 12, duration: 900 });
+
+          /* Ten years over five counties is a texture, not a map. Once there
+             is an address, show the cells around it and get close enough that
+             each one reads as a single event. */
+          var src = map.getSource("hail");
+          if (src) {
+            src.setData(
+              hailPoints(function (c) {
+                return distanceKm(lon, lat, c[2], c[3]) <= NEARBY_KM;
+              })
+            );
+          }
+          map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
         }
 
         recordSearch(
