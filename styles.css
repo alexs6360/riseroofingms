@@ -4433,9 +4433,18 @@ blockquote.card cite {
   border: 1px solid #22364d;
 }
 
-.sh-map {
+/* Scoped to the wrapper on purpose. The element carries both .sh-map and
+   .mapboxgl-map, and mapbox-gl.css declares .mapboxgl-map { position:
+   relative }. Both are single-class selectors, so the tie broke on load order
+   and Mapbox won — the container collapsed to zero height and the map painted
+   nothing. Two classes outrank one whatever order the stylesheets arrive in.
+
+   height is explicit rather than left to inset, so the box is sized even if
+   position is overridden again by some future version of their stylesheet. */
+.sh-mapwrap .sh-map {
   position: absolute;
   inset: 0;
+  height: 100%;
 }
 
 .sh-chips {
