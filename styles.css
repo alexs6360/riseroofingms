@@ -4484,11 +4484,11 @@ blockquote.card cite {
 }
 
 .sh-chip-hail .sh-dot {
-  background: #8b5cd6;
+  background: #ab68f3;
 }
 
 .sh-chip-wind .sh-dot {
-  background: #ffb43d;
+  background: #faaa42;
 }
 
 .sh-legend {
@@ -4531,11 +4531,11 @@ blockquote.card cite {
 }
 
 .sh-swatch-hail {
-  background: linear-gradient(90deg, #cbb6ef, #a97fe0, #8b5cd6, #6a2fc0);
+  background: linear-gradient(90deg, #d4cbe2, #be9ee5, #ab68f3, #a53dff);
 }
 
 .sh-swatch-wind {
-  background: linear-gradient(90deg, #ffe07a, #ffb43d, #ff7a1a, #e63a1a);
+  background: linear-gradient(90deg, #e3dcc9, #ebc984, #faaa42, #ff801f);
 }
 
 .sh-legend-second {

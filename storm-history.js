@@ -172,19 +172,27 @@
             11, 14,
             14, 90,
           ],
-          /* Purple for hail, amber for wind — the palette from the preview.
-             Stops are set to our own distribution: cells run 1.0 to 4.0 in,
-             median 1.25. */
+          /* Purple for hail. Intensity is carried by saturation, not darkness:
+             the old ramp ended at #6a2fc0, which is 2.5:1 against the basemap
+             and sank into it — the biggest hail was the hardest to see. Every
+             stop here clears 4:1 while staying in the purple family. */
           "circle-color": [
             "interpolate", ["linear"], ["get", "in"],
-            1.0, "#cbb6ef",
-            1.5, "#a97fe0",
-            2.0, "#8b5cd6",
-            2.5, "#6a2fc0",
+            1.0, "#d4cbe2",
+            1.5, "#be9ee5",
+            2.0, "#ab68f3",
+            2.5, "#a53dff",
           ],
-          "circle-opacity": 0.45,
-          "circle-stroke-width": 0.5,
-          "circle-stroke-color": "rgba(255,255,255,0.25)",
+          "circle-opacity": 0.85,
+          /* A ring at full opacity reads even where fills overlap. */
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": [
+            "interpolate", ["linear"], ["get", "in"],
+            1.0, "#d4cbe2",
+            1.5, "#be9ee5",
+            2.0, "#ab68f3",
+            2.5, "#a53dff",
+          ],
         },
       });
 
@@ -203,10 +211,10 @@
              the knots Storm Events stores. Our reports run 45 to 94 mph. */
           "circle-color": [
             "interpolate", ["linear"], ["*", ["get", "mag"], 1.15078],
-            45, "#ffe07a",
-            58, "#ffb43d",
-            70, "#ff7a1a",
-            85, "#e63a1a",
+            45, "#e3dcc9",
+            58, "#ebc984",
+            70, "#faaa42",
+            85, "#ff801f",
           ],
           "circle-stroke-width": 1.5,
           "circle-stroke-color": "#ffffff",
