@@ -17,8 +17,13 @@ cp -R data dist/data
 # The export list is derived from the module, not hand-maintained. Keeping it
 # by hand dropped four functions once and shapeCells a second time — both
 # silent until something happened to call the missing one.
+# LC_ALL=C so the collation is byte order, not the machine's locale. Without it
+# macOS and Netlify's Linux agreed on the same set of exports but emitted them
+# in a different key order, so the generated file was not byte-reproducible
+# across platforms. Harmless in an object literal, but it is the same class of
+# nondeterminism that made eight archive files rewrite themselves every run.
 GRID_EXPORTS=$(grep -o '^export \(function\|const\) [A-Za-z_][A-Za-z0-9_]*' tools/storm-grid.mjs \
-  | awk '{print $3}' | sort -u)
+  | awk '{print $3}' | LC_ALL=C sort -u)
 {
   sed 's/^export //' tools/storm-grid.mjs
   printf 'window.StormGrid = {'
@@ -32,7 +37,7 @@ cp storm-grid.js dist/storm-grid.js
 # module had never exported. Cross-check them here so the build fails instead
 # of the page. Both lists come from the source, neither is hand-written.
 GRID_USED=$(grep -o 'G\.[a-zA-Z_][a-zA-Z0-9_]*\|window\.StormGrid\.[a-zA-Z_][a-zA-Z0-9_]*' storm-history.js \
-  | sed 's/.*\.//' | sort -u)
+  | sed 's/.*\.//' | LC_ALL=C sort -u)
 MISSING=""
 for name in $GRID_USED; do
   grep -q " ${name}: ${name}," storm-grid.js || MISSING="$MISSING $name"
