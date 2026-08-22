@@ -553,9 +553,14 @@
             data rates may apply. Consent is not a condition of purchase. See
             our <a href="/privacy">Privacy Policy</a>.
           </p>
-    <input type="text" name="address" />
-    <input type="text" name="storm_date" />
-  </form>
+
+          <!-- Declared so every "quote" form on the site has an identical
+               field set. Netlify registers one schema per form name and drops
+               anything undeclared, which is how storm-history leads lost their
+               address. Not used by this form. -->
+          <input type="hidden" name="address" value="" />
+          <input type="hidden" name="storm_date" value="" />
+        </form>
       </div>
     </section>
 
