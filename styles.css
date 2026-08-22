@@ -52,6 +52,10 @@
 
   /* Identical vertical padding on every content section */
   --space-section: var(--space-12);
+  /* The page's side padding, promoted to a token so the storm-history
+     workspace gutter can be the same value rather than a second number that
+     happens to match today. */
+  --container-pad: 24px;
   --space-heading: var(--space-6);
 
   /* Type scale — no element sets a size outside this set */
@@ -150,7 +154,7 @@ img {
 .container {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--container-pad);
 }
 
 /* Header — transparent over the hero, solid navy once past it */
@@ -3697,10 +3701,7 @@ blockquote.card cite {
   :root {
     --space-section: 48px;
     --space-heading: 24px;
-  }
-
-  .container {
-    padding: 0 20px;
+    --container-pad: 20px;
   }
 
   /* Icon and title share a row, description spans the full width beneath */
@@ -4347,8 +4348,8 @@ blockquote.card cite {
   text-align: center;
   /* No hero on this page, so the first section clears the fixed header —
      same idiom as .legal, .thanks and .rs-intro. */
-  padding-top: calc(var(--header-h) + var(--space-5));
-  padding-bottom: var(--space-4);
+  padding-top: calc(var(--header-h) + var(--space-6));
+  padding-bottom: var(--space-6);
 }
 
 .sh-intro h1 {
@@ -4367,9 +4368,14 @@ blockquote.card cite {
 }
 
 /* ---- the address form ---- */
+/* Rhythm on this page runs on two values from the site scale: --space-3
+   between tightly related things (heading to lead, one disclosure line to the
+   next) and --space-6 between distinct blocks (lead to search, search to the
+   map row). It previously ran 24 / 32 / 16 / 8 / 40 / 32 with no rule behind
+   any of them. */
 .sh-lookup {
   max-width: 720px;
-  margin: 0 auto var(--space-5);
+  margin: 0 auto var(--space-6);
 }
 
 .sh-lookup-row {
@@ -4403,25 +4409,34 @@ blockquote.card cite {
   pointer-events: none;
 }
 
-/* Stated before the field, not after it and not only in the policy. */
+/* Stated before the field, not after it and not only in the policy.
+
+   Centred with the heading, lead and form box above them. These lines were
+   left-aligned inside a centred column, which read as a stray edge with
+   nothing to line up against — the block has one axis now. */
 .sh-consent {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-3) 0 0;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+  text-align: center;
 }
 
 .sh-error {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-3) 0 0;
   font-size: var(--text-sm);
   color: #b3261e;
+  text-align: center;
 }
 
 /* ---- map + result panel ---- */
 .sh-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-  gap: var(--space-4);
-  align-items: stretch;
+  /* The gutter is the page's side padding, so the map's left edge, the
+     panel's right edge and the channel between them are all the same
+     measure. */
+  gap: var(--container-pad);
+  align-items: start;
 }
 
 .sh-mapwrap {
@@ -4687,6 +4702,9 @@ blockquote.card cite {
 @media (max-width: 900px) {
   .sh-workspace {
     grid-template-columns: minmax(0, 1fr);
+    /* Stacked, the two stop being columns with a gutter and become distinct
+       blocks, so the separation comes from the block value. */
+    gap: var(--space-6);
   }
 
   .sh-mapwrap {
@@ -4760,7 +4778,30 @@ blockquote.card cite {
 
 /* Per-layer data currency, stated under the field */
 .sh-currency {
-  margin: var(--space-1) 0 0;
+  margin: var(--space-3) 0 0;
   font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* Results panel sections */
+.sh-section {
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.sh-events li:first-child .sh-section,
+.sh-events > .sh-section:first-child {
+  margin-top: 0;
+}
+
+.sh-section-empty {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }

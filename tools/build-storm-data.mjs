@@ -27,7 +27,7 @@
 */
 import fs from "node:fs";
 import zlib from "node:zlib";
-import { GRID_DEG, cellKey, preferred, preferredReport } from "./storm-grid.mjs";
+import { GRID_DEG, cellKey, bucketOf, preferred, preferredReport } from "./storm-grid.mjs";
 
 /* One geographic filter for every layer. A bbox rather than a list of county
    names: a homeowner two miles over the Pontotoc line should not get an empty
@@ -146,7 +146,14 @@ async function hail() {
       a.day !== b.day ? (a.day < b.day ? 1 : -1)
       : a.lon !== b.lon ? a.lon - b.lon
       : a.lat - b.lat)
-    .map((c) => [c.day, +c.size.toFixed(2), +c.lon.toFixed(3), +c.lat.toFixed(3), [...c.srcs].sort().join("/")]);
+    .map((c) => {
+      /* Bucket indices travel with the cell. The stored coordinate is the
+         survivor detection rounded to 3dp, so a consumer recomputing the
+         bucket from it can land on the wrong side of an edge — which is
+         exactly the class of bug this ends. */
+      const [by, bx] = bucketOf(c.lat, c.lon);
+      return [c.day, +c.size.toFixed(2), +c.lon.toFixed(3), +c.lat.toFixed(3), [...c.srcs].sort().join("/"), by, bx];
+    });
   return { raw: raw.length, cells };
 }
 
@@ -313,7 +320,7 @@ const write = (name, obj) => {
 };
 
 for (const y of [...years].sort()) {
-  write(`hail-${y}.json`, { fields: ["date", "in", "lon", "lat", "radar"], cells: hailYears.get(y) || [] });
+  write(`hail-${y}.json`, { fields: ["date", "in", "lon", "lat", "radar", "by", "bx"], cells: hailYears.get(y) || [] });
   write(`reports-${y}.json`, { fields: ["date", "kind", "val", "lon", "lat", "src"],
     reports: (repYears.get(y) || []).map((r) => [r.date, r.kind, r.val, r.lon, r.lat, r.src]) });
 }

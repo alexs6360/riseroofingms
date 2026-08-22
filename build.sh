@@ -11,6 +11,42 @@ mkdir -p dist
 cp index.html thanks.html privacy.html roof-system.html storm-history.html styles.css script.js storm-history.js robots.txt sitemap.xml dist/
 cp -R images dist/images
 cp -R data dist/data
+
+# The grid maths the frontend needs are the generator's, not a second copy.
+# Derived here from tools/storm-grid.mjs so there is one file to be wrong about.
+# The export list is derived from the module, not hand-maintained. Keeping it
+# by hand dropped four functions once and shapeCells a second time — both
+# silent until something happened to call the missing one.
+GRID_EXPORTS=$(grep -o '^export \(function\|const\) [A-Za-z_][A-Za-z0-9_]*' tools/storm-grid.mjs \
+  | awk '{print $3}' | sort -u)
+{
+  sed 's/^export //' tools/storm-grid.mjs
+  printf 'window.StormGrid = {'
+  for name in $GRID_EXPORTS; do printf ' %s: %s,' "$name" "$name"; done
+  printf ' };\n'
+} > storm-grid.js
+cp storm-grid.js dist/storm-grid.js
+
+# The page and the module drifted apart three times: build.sh dropped the file
+# once, dropped an export once, and shipped a page calling five functions the
+# module had never exported. Cross-check them here so the build fails instead
+# of the page. Both lists come from the source, neither is hand-written.
+GRID_USED=$(grep -o 'G\.[a-zA-Z_][a-zA-Z0-9_]*\|window\.StormGrid\.[a-zA-Z_][a-zA-Z0-9_]*' storm-history.js \
+  | sed 's/.*\.//' | sort -u)
+MISSING=""
+for name in $GRID_USED; do
+  grep -q " ${name}: ${name}," storm-grid.js || MISSING="$MISSING $name"
+done
+if [ -n "$MISSING" ]; then
+  echo "  BUILD FAILED: storm-history.js calls StormGrid members that storm-grid.js does not expose:$MISSING" >&2
+  exit 1
+fi
+echo "  storm-grid.js exposes all $(echo "$GRID_USED" | wc -w | tr -d ' ') members the page calls"
+
+# Inject that same list as the page's runtime contract.
+GRID_API_CSV=$(echo "$GRID_USED" | tr '\n' ',' | sed 's/,$//')
+sed -i '' "s|__GRID_API__|${GRID_API_CSV}|" dist/storm-history.js 2>/dev/null \
+  || sed -i "s|__GRID_API__|${GRID_API_CSV}|" dist/storm-history.js
 cp -R video dist/video
 
 # City landing pages (folder-per-page gives clean URLs)

@@ -36,6 +36,30 @@
   var form = document.getElementById("sh-lookup");
   if (!form) return;
 
+  /* Everything this page needs out of storm-grid.js, checked on load.
+
+     build.sh has now shipped a broken grid module twice: once the file was
+     written only into dist/ and 404'd everywhere else, once the global was
+     missing four of the seven functions. Both degraded silently — the first
+     answered a worse question, the second waited for someone to select a date
+     before throwing. A check that runs at load catches the next one without
+     depending on anybody reproducing the right sequence. */
+  /* Injected by build.sh, which scrapes this file for every StormGrid member
+     it actually calls. Hand-maintaining this list drifted three times — twice
+     losing an export, once demanding functions the page had stopped using and
+     omitting all five it had started using. It is derived now, not written. */
+  var GRID_API = "__GRID_API__".split(",").filter(Boolean);
+
+  function checkGridModule() {
+    if (!window.StormGrid) return ["storm-grid.js did not load"];
+    var missing = [];
+    for (var i = 0; i < GRID_API.length; i++) {
+      if (typeof window.StormGrid[GRID_API[i]] === "undefined") missing.push(GRID_API[i]);
+    }
+    return missing;
+  }
+
+
   var input = document.getElementById("sh-address");
   var errorEl = document.getElementById("sh-error");
   var mapEl = document.getElementById("sh-map");
@@ -74,6 +98,9 @@
   var hail = null;
   var reports = null;
   var index = null;
+  /* The address's own bucket, from the shared grid module. Set on every
+     lookup and used for containment. */
+  var addrBucket = null;
   var map = null;
   var marker = null;
   var submitted = {};
@@ -96,6 +123,24 @@
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(la1) * Math.cos(la2);
     return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  /* "2.3 mi NE" beats "nearby": it tells a homeowner whether to walk outside
+     and look, or to stop reading. */
+  function bearingFrom(lon, lat, toLon, toLat) {
+    var dLon = ((toLon - lon) * Math.PI) / 180;
+    var la1 = (lat * Math.PI) / 180;
+    var la2 = (toLat * Math.PI) / 180;
+    var y = Math.sin(dLon) * Math.cos(la2);
+    var x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLon);
+    var deg = (Math.atan2(y, x) * 180) / Math.PI;
+    var names = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    return names[Math.round(((deg + 360) % 360) / 45) % 8];
+  }
+
+  function awayFrom(lon, lat, toLon, toLat) {
+    var miles = distanceKm(lon, lat, toLon, toLat) * 0.621371;
+    return miles.toFixed(1) + " mi " + bearingFrom(lon, lat, toLon, toLat);
   }
 
   function prettyDate(iso) {
@@ -161,17 +206,78 @@
 
   /* ---- map -------------------------------------------------------------- */
 
-  function hailPoints(keep) {
+  /* The address's cell at its actual 0.05 degree bounds, derived from the
+     bucket indices rather than drawn around the detection's coordinate — the
+     detection can sit anywhere inside the cell. */
+  var HAIL_BANDS = [1.0, 1.5, 1.75, 2.0, 2.5];
+
+  /* Envelope geometry, in kilometres.
+
+     A 0.05-degree cell measures 5.57km N-S by 4.56km E-W, so its centroid sits
+     3.60km from its farthest corner. The perpendicular half-reach is set above
+     that, which is what makes the hard constraint structural rather than
+     hopeful: every cell whose centroid feeds a band lies wholly inside that
+     band's envelope, so the map can never contradict the panel's "in your
+     area". Verified over the whole archive — see tools/verify-envelopes.mjs. */
+  var CELL_HALF_DIAG_KM = 3.6;
+  /* W must clear the half-diagonal, or a cell can poke out of the band drawn
+     for its own size and the map contradicts the panel. L is set well above W
+     on purpose: at L=7.5 a lone detection fitted to an aspect of 1.35, which
+     reads as a circle. Storms are not circular, and a shape that says
+     "somewhere around here, equally, in all directions" is a worse
+     description of a hail swath than an elongated one. */
+  var HAIL_W = 4.2;    // perpendicular half-reach per cell
+  var HAIL_L = 11;     // along-axis reach: sets taper length and elongation
+  /* Cells whose centres are within 8km touch orthogonally (4.56/5.57km) or
+     diagonally (7.20km); anything further apart is a separate storm and gets
+     its own lozenge. At 12km the day's cells merged into one 60x47km blob
+     with an aspect of 1.3 — a shape that says "everywhere" and taught the
+     reader nothing. */
+  var HAIL_LINK_KM = 8;
+  /* Wind reads wider and lighter, sitting behind the hail: a gust report is one
+     observation at one point, not a measured footprint. */
+  var WIND_W = 8;
+  var WIND_L = 18;
+  var WIND_LINK_KM = 25;
+
+  /* The address is a point, not a parcel. A drawn rectangle invited the
+     reading that the box is "your property" and that its edges mean
+     something; they are grid bounds, an artefact of how the radar data is
+     binned. A soft glow says "here" without claiming an extent. */
+  function addressGlow() {
+    if (!current) return EMPTY;
     return {
       type: "FeatureCollection",
-      features: (keep ? hail.cells.filter(keep) : hail.cells).map(function (c) {
-        return {
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [c[2], c[3]] },
-          properties: { date: c[0], in: c[1] },
-        };
-      }),
+      features: [{
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [current.lon, current.lat] },
+      }],
     };
+  }
+
+  function hailBands(dayCells) {
+    var g = window.StormGrid.GRID_DEG;
+    /* Cell centres, not the reported radar centroids. A detection's centroid
+       can sit anywhere inside its cell — one in the archive lies 2.67km from
+       its cell's centre, which puts the cell's far corner 5.89km away, outside
+       any envelope fitted to the centroid. Fitting to centres makes every
+       point's worst case the same 3.60km half-diagonal, which the 4.4km
+       half-reach covers. That is what turns the panel/map agreement from a
+       tuning accident into a property of the geometry. */
+    return window.StormGrid.fitEnvelopes(
+      dayCells.map(function (c) { return [c[6] * g, c[5] * g]; }),
+      dayCells.map(function (c) { return c[1]; }),
+      HAIL_BANDS, HAIL_L, HAIL_W, HAIL_LINK_KM
+    );
+  }
+
+  function windEnvelope(points) {
+    return window.StormGrid.fitEnvelopes(
+      points,
+      points.map(function () { return 1; }),
+      [1], WIND_L, WIND_W, WIND_LINK_KM
+    );
   }
 
   function initMap() {
@@ -200,120 +306,79 @@
       /* Both sources start empty. The whole ten-year field on load is a wash
          of colour that answers no question — the map only has something to say
          once there is an address to say it about. */
-      map.addSource("hail", { type: "geojson", data: EMPTY });
+      /* Sources: swath bands for hail, an envelope for wind, the address's
+         own cell, and the wind points themselves. A detection stands for a
+         ~5.5 x 4.6km cell — drawing it as a dot understated it by two orders
+         of magnitude, so the cells are drawn at true size and unioned. */
+      map.addSource("hail-bands", { type: "geojson", data: EMPTY });
+      map.addSource("wind-env", { type: "geojson", data: EMPTY });
       map.addSource("reports", { type: "geojson", data: EMPTY });
+      map.addSource("addr-glow", { type: "geojson", data: EMPTY });
 
-      /* Order matters. Contours go down first and the measured points sit on
-         top of them: the bands are an interpolation, the cells are the
-         evidence, and the evidence should not end up buried under a drawing
-         of itself.
-
-         Both sources only ever hold one day at a time — selectDate filters
-         them before they get here — so a contour can never span two storms. */
       map.addLayer({
-        id: "hail-contour",
-        type: "heatmap",
-        source: "hail",
+        id: "wind-env",
+        type: "fill",
+        source: "wind-env",
         slot: "top",
         paint: {
-          /* Weight is the hail size the radar estimated, so the shape of the
-             band comes from the measured values rather than from point count
-             alone. */
-          "heatmap-weight": [
-            "interpolate", ["linear"], ["get", "in"],
-            1.0, 0.35,
-            2.0, 0.7,
-            3.0, 1,
-          ],
-          "heatmap-intensity": 1.1,
-          /* Tracks ~3km on the ground rather than a pixel value that drifts.
-             The old stops grew about 1.37x per zoom while the distance between
-             cells doubles, so bands merged when zoomed out and broke into
-             separate blobs from zoom 12 in. A kernel a little under the 5km
-             dedupe grid keeps adjacent cells connected at every zoom. */
-          "heatmap-radius": [
-            "interpolate", ["exponential", 2], ["zoom"],
-            8, 6,
-            10, 24,
-            12, 95,
-            14, 380,
-          ],
-          "heatmap-opacity": 0.75,
-          "heatmap-color": [
-            "interpolate", ["linear"], ["heatmap-density"],
-            0, "rgba(10, 20, 32, 0)",
-            0.15, "rgba(212, 203, 226, 0.45)",
-            0.35, "rgba(190, 158, 229, 0.62)",
-            0.55, "rgba(171, 104, 243, 0.74)",
-            0.75, "rgba(165, 61, 255, 0.84)",
-            1, "rgba(126, 32, 214, 0.92)",
-          ],
+          /* Deliberately fainter than the hail bands. A gust report is one
+             observation at one point, not a measured footprint, and it should
+             not look like stronger evidence than a radar sweep.
+
+             At 0.30, amber over purple composited to a pink that belonged to
+             neither ramp and read as a third hazard. There is no blend mode to
+             blame — Mapbox fill layers composite source-over — so the fix is
+             less alpha and a lower position in the stack: wind is the backdrop
+             the hail sits on, and the hail keeps its own colour. */
+          "fill-color": "#f5a63c",
+          "fill-opacity": 0.18,
+          "fill-emissive-strength": 1,
         },
       });
 
       map.addLayer({
-        id: "wind-contour",
-        type: "heatmap",
-        source: "reports",
+        id: "hail-bands",
+        type: "fill",
+        source: "hail-bands",
         slot: "top",
-        filter: ["==", ["get", "kind"], "wind"],
         paint: {
-          "heatmap-weight": [
-            "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
-            45, 0.35,
-            70, 0.7,
-            95, 1,
+          /* Nested by construction: each band is the union of every cell at or
+             above its threshold, so bigger hail always sits inside smaller.
+             Larger sizes read deeper, on the same ramp as the legend. */
+          /* Every band visibly distinct from the one under it. The old base was
+             pale enough to read as grey haze, which made the cores look like
+             separate islands rather than the middle of one shape. */
+          "fill-color": [
+            "interpolate", ["linear"], ["get", "min"],
+            1.0, "#cdb6ee",
+            1.5, "#b189e6",
+            1.75, "#9a63dd",
+            2.0, "#8340d2",
+            2.5, "#6b21c0",
           ],
-          "heatmap-intensity": 1.1,
-          /* Same ground-tracking treatment, a touch wider: wind reports are
-             sparser than hail cells, so the kernel has further to reach. */
-          "heatmap-radius": [
-            "interpolate", ["exponential", 2], ["zoom"],
-            8, 8,
-            10, 32,
-            12, 126,
-            14, 500,
+          "fill-opacity": [
+            "interpolate", ["linear"], ["get", "min"],
+            1.0, 0.42,
+            1.75, 0.6,
+            2.5, 0.78,
           ],
-          "heatmap-opacity": 0.6,
-          "heatmap-color": [
-            "interpolate", ["linear"], ["heatmap-density"],
-            0, "rgba(10, 20, 32, 0)",
-            0.15, "rgba(227, 220, 201, 0.4)",
-            0.35, "rgba(235, 201, 132, 0.55)",
-            0.55, "rgba(250, 170, 66, 0.68)",
-            0.75, "rgba(255, 128, 31, 0.78)",
-            1, "rgba(226, 88, 12, 0.86)",
-          ],
+          "fill-emissive-strength": 1,
         },
       });
-
       map.addLayer({
-        id: "hail",
-        type: "circle",
-        source: "hail",
+        id: "hail-bands-line",
+        type: "line",
+        source: "hail-bands",
         slot: "top",
         paint: {
-          /* circle-emissive-strength defaults to 0, which lights the layer by
-             ambient alone. Under lightPreset "night" that ambient is nearly
-             black, so the fill rendered near-black whatever colour the ramp
-             specified. 1 makes it self-lit. */
-          "circle-emissive-strength": 1,
-          "circle-radius": [
-            "interpolate", ["exponential", 2], ["zoom"],
-            7, 2,
-            11, 6,
-            14, 12,
-          ],
-          "circle-color": [
-            "interpolate", ["linear"], ["get", "in"],
+          "line-color": [
+            "interpolate", ["linear"], ["get", "min"],
             1.0, "#d4cbe2",
-            1.5, "#be9ee5",
-            2.0, "#ab68f3",
             2.5, "#a53dff",
           ],
-          "circle-opacity": 0.95,
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "rgba(255, 255, 255, 0.85)",
+          "line-width": 1,
+          "line-opacity": 0.7,
+          "line-emissive-strength": 1,
         },
       });
 
@@ -322,15 +387,14 @@
         type: "circle",
         source: "reports",
         slot: "top",
-        /* The chip says Wind, so the layer shows wind. NWS hail reports stay
-           in the results list for the address — they are real events — but
-           they are not drawn under a wind label. */
         filter: ["==", ["get", "kind"], "wind"],
         paint: {
           "circle-emissive-strength": 1,
-          "circle-radius": 5,
-          /* Values are mph already. A report with no measured gust still gets
-             drawn — at the pale end, not omitted and not as a zero. */
+          "circle-radius": [
+            "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
+            45, 4,
+            95, 9,
+          ],
           "circle-color": [
             "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
             45, "#e3dcc9",
@@ -342,6 +406,40 @@
           "circle-stroke-color": "#ffffff",
         },
       });
+
+      /* On top of everything: a glow locating the address. The radius is
+         interpolated exponentially on base 2, which is exactly how web
+         mercator scales, so it holds a constant ~5km on the ground at every
+         zoom instead of swelling as you zoom in. */
+      map.addLayer({
+        id: "addr-glow",
+        type: "circle",
+        source: "addr-glow",
+        slot: "top",
+        paint: {
+          "circle-color": "#dbeaff",
+          "circle-blur": 1,
+          "circle-opacity": 0.5,
+          "circle-emissive-strength": 1,
+          "circle-radius": [
+            "interpolate", ["exponential", 2], ["zoom"],
+            7, 4.9,
+            12, 157.8,
+          ],
+        },
+      });
+      map.addLayer({
+        id: "addr-core",
+        type: "circle",
+        source: "addr-glow",
+        slot: "top",
+        paint: {
+          "circle-color": "#ffffff",
+          "circle-radius": 3.5,
+          "circle-opacity": 0.95,
+          "circle-emissive-strength": 1,
+        },
+      });
     });
   }
 
@@ -349,8 +447,16 @@
     chip.addEventListener("click", function () {
       var on = chip.classList.toggle("is-on");
       chip.setAttribute("aria-pressed", String(on));
-      if (!map || !map.getLayer(chip.dataset.layer)) return;
-      map.setLayoutProperty(chip.dataset.layer, "visibility", on ? "visible" : "none");
+      if (!map) return;
+      /* One chip, several layers: a hazard is a band plus its outline, or an
+         envelope plus the points inside it. */
+      var groups = { hail: ["hail-bands", "hail-bands-line"], reports: ["wind-env", "reports"] };
+      (groups[chip.dataset.layer] || []).forEach(function (id) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+      });
+      /* Hail and wind cover different ground on the same day, so the frame
+         follows whichever hazards are showing. */
+      if (current && current.date) fitToStorm();
     });
   });
 
@@ -360,13 +466,25 @@
     var out = [];
 
     hail.cells.forEach(function (c) {
-      if (distanceKm(lon, lat, c[2], c[3]) <= HAIL_RADIUS_KM) {
-        out.push({
-          date: c[0],
-          label: c[1].toFixed(2).replace(/0$/, "") + '" hail',
-          source: "NEXRAD radar" + (c[4] ? " (" + c[4] + ")" : ""),
-        });
-      }
+      /* Containment, not proximity. A cell is ~5.6 x 4.6km, so its centroid
+         can sit 3.6km from an address the cell still covers — the old 1.5km
+         radius threw away roughly three quarters of genuine in-cell hits.
+         Indices come from the file; nothing is recomputed here. */
+      var here = addrBucket && c[5] === addrBucket[0] && c[6] === addrBucket[1];
+      var near = !here && distanceKm(lon, lat, c[2], c[3]) <= REPORT_RADIUS_KM;
+      if (!here && !near) return;
+      var size = c[1].toFixed(2).replace(/0$/, "");
+      out.push({
+        date: c[0],
+        /* "in your area" is what the data supports: radar estimated hail
+           somewhere in the cell containing this address. Not "on your roof". */
+        label: here
+          ? size + '" hail estimated in your area'
+          : size + '" hail estimated ' + awayFrom(lon, lat, c[2], c[3]),
+        source: "NEXRAD radar" + (c[4] ? " (" + c[4] + ")" : ""),
+        here: !!here,
+        size: c[1],
+      });
     });
 
     reports.features.forEach(function (f) {
@@ -374,16 +492,17 @@
       if (distanceKm(lon, lat, g[0], g[1]) > REPORT_RADIUS_KM) return;
       var p = f.properties;
       var label;
+      var where = awayFrom(lon, lat, g[0], g[1]);
       if (p.kind === "hail") {
-        label = (p.val ? p.val + '" ' : "") + "hail reported nearby";
+        label = (p.val ? p.val + '" ' : "") + "hail reported " + where;
       } else if (p.val) {
         /* Already mph — the generator normalises Storm Events' knots, so
            converting here would turn a 66 mph gust into 76. */
-        label = p.val + " mph wind reported nearby";
+        label = p.val + " mph wind reported " + where;
       } else {
         /* A real report with no measured gust. Saying nothing hides a storm;
            saying 0 mph invents a reading. */
-        label = "wind damage reported nearby";
+        label = "wind damage reported " + where;
       }
       out.push({ date: (p.date || "").slice(0, 10), label: label, source: p.src });
     });
@@ -401,13 +520,47 @@
       emptyEl.hidden = false;
       return;
     }
-
     emptyEl.hidden = true;
-    panelSub.textContent =
-      events.length === 1 ? "1 recorded event — select one to see that day"
-                          : events.length + " recorded events, most recent first — select one to see that day";
 
-    events.forEach(function (e) {
+    /* Two questions, two sections. Recency-first buried twelve in-cell hail
+       dates under a couple of nearby wind reports, which is the wrong answer
+       to "what happened at my house". */
+    /* Both sections newest first. Ranking the in-cell list by size put a 2016
+       hailstorm above a 2025 one, which reads as "we have nothing recent". */
+    var here = events.filter(function (e) { return e.here; })
+      .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    var near = events.filter(function (e) { return !e.here; })
+      .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+
+    panelSub.textContent =
+      here.length
+        ? here.length + (here.length === 1 ? " event at this address" : " events at this address")
+          + ", " + near.length + " nearby — select one to see that day"
+        : "No detections in the cell containing this address; "
+          + near.length + " nearby — select one to see that day";
+
+    section("At your address", here, "Nothing was detected in the cell containing this address.");
+    section("Nearby", near, "Nothing else was recorded within a few miles.");
+  }
+
+  function section(title, rows, emptyText) {
+    var head = document.createElement("li");
+    head.className = "sh-section";
+    head.setAttribute("role", "presentation");
+    head.textContent = title;
+    eventsEl.appendChild(head);
+
+    if (!rows.length) {
+      /* Say it plainly. A hidden heading reads as "we found nothing anywhere",
+         which is a different claim. */
+      var none = document.createElement("li");
+      none.className = "sh-section-empty";
+      none.textContent = emptyText;
+      eventsEl.appendChild(none);
+      return;
+    }
+
+    rows.forEach(function (e) {
       var li = document.createElement("li");
       var btn = document.createElement("button");
       btn.type = "button";
@@ -427,10 +580,7 @@
       btn.appendChild(d);
       btn.appendChild(v);
       btn.appendChild(src);
-
-      btn.addEventListener("click", function () {
-        selectDate(btn.dataset.date);
-      });
+      btn.addEventListener("click", function () { selectDate(btn.dataset.date); });
 
       li.appendChild(btn);
       eventsEl.appendChild(li);
@@ -461,9 +611,106 @@
     return best;
   }
 
+  /* Frame the storm, not the house.
+
+     Sitting at address zoom showed a handful of cells with no visible relation
+     to the pin — a fragment of a storm rather than a storm. Fitting to the
+     day's own footprint lets a track read as a track. The pin is always in the
+     bounds, so a house well outside the storm still shows its distance from
+     it rather than dropping off screen.
+
+     Which hazards count is whatever the chips have switched on: hail and wind
+     footprints for the same day are different shapes, so the frame follows
+     the toggle. */
+  function stormBounds() {
+    if (!current || !current.date) return null;
+    var date = current.date;
+    var lon = current.lon;
+    var lat = current.lat;
+    var b = new mapboxgl.LngLatBounds([lon, lat], [lon, lat]);
+
+    if (hazardOn("hail")) {
+      hail.cells.forEach(function (c) {
+        if (c[0] === date && distanceKm(lon, lat, c[2], c[3]) <= STORM_KM) b.extend([c[2], c[3]]);
+      });
+    }
+    if (hazardOn("reports")) {
+      reports.features.forEach(function (f) {
+        var p = f.properties;
+        if (p.date !== date || p.kind !== "wind") return;
+        var g = f.geometry.coordinates;
+        if (distanceKm(lon, lat, g[0], g[1]) <= STORM_KM) b.extend(g);
+      });
+    }
+    return b;
+  }
+
+  function hazardOn(layerId) {
+    var chip = chips.filter(function (c) { return c.dataset.layer === layerId; })[0];
+    return !chip || chip.classList.contains("is-on");
+  }
+
+  function fitToStorm() {
+    if (!map) return;
+    var b = stormBounds();
+    if (!b) return;
+
+    /* Padding has to clear the furniture sitting on top of the map — chips at
+       the top left, legend and attribution at the bottom left — or the fitted
+       content hides underneath them. The detail panel sits beside the map
+       rather than over it at every breakpoint, so it needs no allowance.
+
+       Capped against the container: Mapbox throws if padding exceeds the
+       canvas, which a 360px-tall phone map would hit with desktop numbers. */
+    var box = map.getContainer().getBoundingClientRect();
+    var cap = function (want, extent) { return Math.max(12, Math.min(want, Math.round(extent * 0.18))); };
+    var padding = {
+      top: cap(70, box.height),
+      bottom: cap(100, box.height),
+      left: cap(90, box.width),
+      right: cap(60, box.width),
+    };
+
+    map.fitBounds(b, {
+      padding: padding,
+      /* A single-cell day would otherwise slam to street level over one blob;
+         a day spanning the state would pull back until everything is a speck. */
+      maxZoom: 11,
+      minZoom: 7,
+      /* Animated, so the move reads as pulling back to show the whole storm
+         rather than teleporting somewhere else. */
+      duration: 900,
+      essential: true,
+    });
+  }
+
   function selectDate(date) {
-    if (!current || !date) return;
+    if (!current) return;
+
+    /* No date means nothing to draw. The map used to keep whatever was last
+       loaded, so it showed dots belonging to no selected day — a state the
+       page never explained. */
+    if (!date) {
+      current.date = null;
+      Array.prototype.forEach.call(eventsEl.querySelectorAll(".sh-event"), function (b) {
+        b.classList.remove("is-selected");
+        b.setAttribute("aria-pressed", "false");
+      });
+      if (map) {
+        ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
+          var src = map.getSource(id);
+          if (src) src.setData(EMPTY);
+        });
+      }
+      if (mapNote) {
+        mapNote.textContent = "Select a date to see that storm.";
+        mapNote.hidden = false;
+      }
+      return;
+    }
+
     current.date = date;
+    if (mapNote) mapNote.hidden = true;
 
     Array.prototype.forEach.call(eventsEl.querySelectorAll(".sh-event"), function (b) {
       var on = !!date && b.dataset.date === date;
@@ -476,28 +723,53 @@
     var lat = current.lat;
     var radius = STORM_KM;
 
-    var cells = hail.cells.filter(function (c) {
-      return c[0] === date && distanceKm(lon, lat, c[2], c[3]) <= radius;
+    /* Clear first, then draw. Every layer is emptied before anything is
+       computed, so a throw halfway through leaves a blank map and a visible
+       message rather than the previous date's geometry sitting under the new
+       date's panel. That exact failure shipped a map showing 2.0" cores on a
+       day whose largest stone was 1.5" — the panel had updated and the
+       drawing had not, and nothing on screen said so. */
+    ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
+      var src = map.getSource(id);
+      if (src) src.setData(EMPTY);
     });
-    var hailSrc = map.getSource("hail");
-    if (hailSrc) hailSrc.setData(hailPoints(function (c) { return cells.indexOf(c) !== -1; }));
 
-    var repSrc = map.getSource("reports");
-    if (repSrc) {
-      repSrc.setData({
-        type: "FeatureCollection",
-        features: reports.features.filter(function (f) {
-          if (f.properties.date !== date) return false;
-          var g = f.geometry.coordinates;
-          return distanceKm(lon, lat, g[0], g[1]) <= radius;
-        }),
+    try {
+      var cells = hail.cells.filter(function (c) {
+        return c[0] === date && distanceKm(lon, lat, c[2], c[3]) <= radius;
       });
+      var bandSrc = map.getSource("hail-bands");
+      if (bandSrc) bandSrc.setData(hailBands(cells));
+
+      var glowSrc = map.getSource("addr-glow");
+      if (glowSrc) glowSrc.setData(addressGlow());
+
+      var dayReports = reports.features.filter(function (f) {
+        if (f.properties.date !== date) return false;
+        var g = f.geometry.coordinates;
+        return distanceKm(lon, lat, g[0], g[1]) <= radius;
+      });
+      var repSrc = map.getSource("reports");
+      if (repSrc) repSrc.setData({ type: "FeatureCollection", features: dayReports });
+
+      var envSrc = map.getSource("wind-env");
+      if (envSrc) {
+        envSrc.setData(windEnvelope(
+          dayReports.filter(function (f) { return f.properties.kind === "wind"; })
+            .map(function (f) { return f.geometry.coordinates; })
+        ));
+      }
+    } catch (err) {
+      console.error("storm-history: could not draw " + date, err);
+      if (mapNote) {
+        mapNote.textContent =
+          "The storm map couldn't be drawn for this date. The dates and sizes listed below are unaffected.";
+        mapNote.hidden = false;
+      }
+      return;
     }
 
-    /* Frame the storm, with the house always in shot. */
-    var b = new mapboxgl.LngLatBounds([lon, lat], [lon, lat]);
-    cells.forEach(function (c) { b.extend([c[2], c[3]]); });
-    map.fitBounds(b, { padding: 70, maxZoom: 13.5, duration: 700 });
+    fitToStorm();
   }
 
   /* Only the address the homeowner typed is stored — never the coordinate the
@@ -526,6 +798,15 @@
      `typed` is what the homeowner actually chose or wrote — that string is
      what gets stored, never the coordinate Mapbox returned. */
   function runLookup(lon, lat, name, typed) {
+    if (!window.StormGrid) {
+      /* Without the shared grid module there is no containment test, and the
+         page would quietly answer a different, worse question. Better to stop
+         than to under-report someone's storm history. */
+      console.error("storm-grid.js failed to load — containment unavailable");
+      say("Something didn't load on this page. Refresh, or call us and we'll check the address for you.");
+      return;
+    }
+    addrBucket = window.StormGrid.bucketOf(lat, lon);
     var events = eventsAt(lon, lat);
     current = { lon: lon, lat: lat, date: null };
     render(name, events);
@@ -737,5 +1018,21 @@
       .then(function () { form.classList.remove("is-busy"); });
   });
 
-  loadData().then(initMap);
+  /* Fail here, visibly, rather than part-way through someone's lookup. */
+  var gridProblems = checkGridModule();
+  if (gridProblems.length) {
+    console.error("storm-history: grid module unusable —", gridProblems.join(", "));
+    say(
+      "This tool isn't working right now — " + gridProblems.join(", ") +
+      ". Refresh the page, or call us and we'll check the address for you."
+    );
+    input.disabled = true;
+    form.querySelector("button[type=submit]").disabled = true;
+    if (mapNote) {
+      mapNote.textContent = "Storm map unavailable.";
+      mapNote.hidden = false;
+    }
+  } else {
+    loadData().then(initMap);
+  }
 })();
