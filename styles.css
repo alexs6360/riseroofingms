@@ -4769,27 +4769,43 @@ blockquote.card cite {
   background: var(--color-bg);
 }
 
-/* The site centres .contact-info > p and .contact h2 but leaves the container
-   at start, so the phone — an inline-block, not a paragraph — sat left of
-   everything around it. Centred here so the column reads as one block. */
+/* Left-aligned, against the site's centred .contact-info. The form beside it is
+   a left-aligned stack of labelled fields, and a centred column next to it read
+   as two different systems sharing a row. Everything here now hangs off one
+   edge with the form.
+
+   Each rule below overrides an existing centring rule rather than adding to it:
+   .contact h2 and .contact-info > p both set text-align: center, and the latter
+   also sets margin-inline: auto, which would keep the paragraph box centred
+   even once its text was left-aligned.
+
+   Vertically centred against the form. The column is roughly a third of the
+   form's height, so top-aligning left one large void beneath it that read as a
+   missing element; splitting that space above and below reads as a deliberate
+   pairing of two unequal columns. */
 .sh-contact .contact-info {
-  text-align: center;
+  text-align: left;
+  align-self: center;
 }
 
-/* Alignment is inherited, not set: the site's .contact-info > p is centred,
-   and overriding the heading to the left put a left title over centred copy.
-   Only the spacing is page-specific here. */
 .sh-contact .contact-info h2 {
   margin: 0 0 var(--space-2);
+  text-align: left;
 }
 
 .sh-contact .contact-info > p:not(.sh-contact-hours) {
   margin: 0 0 var(--space-6);
+  margin-inline: 0;
+  text-align: left;
 }
 
 /* The phone is the point of this section for anyone who would rather call than
    type, so it is sized as a heading rather than as body copy. A real tel: link,
    so it dials on a phone instead of being text someone has to copy. */
+/* An inline-block, so it sits on a text line and takes the container's
+   text-align rather than filling the column — left-aligning the container is
+   what puts its left edge on the same line as the copy above it. The padding is
+   vertical only, deliberately, so nothing indents it off that edge. */
 .sh-contact-phone {
   display: inline-block;
   font-size: var(--text-xl);
@@ -4812,6 +4828,8 @@ blockquote.card cite {
    no top margin at all. */
 .sh-contact .contact-info > p.sh-contact-hours {
   margin: var(--space-2) 0 0;
+  margin-inline: 0;
+  text-align: left;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
