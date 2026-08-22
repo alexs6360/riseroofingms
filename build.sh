@@ -59,6 +59,11 @@ for city in roofing-tupelo-ms roofing-oxford-ms roofing-southaven-ms storm-damag
   cp -R "$city" "dist/$city"
 done
 
+# One shared block across five pages, assembled here rather than pasted five
+# times. Runs last: every page has to be in dist/ first, including the city
+# directories copied above.
+node tools/inject-partials.mjs || exit 1
+
 # Drag-and-drop bundle
 rm -f rise-roofing-site.zip
 ( cd dist && zip -r -X ../rise-roofing-site.zip . -x '.*' >/dev/null )

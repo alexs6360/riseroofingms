@@ -1201,6 +1201,20 @@
   });
 
   /* Fail here, visibly, rather than part-way through someone's lookup. */
+  /* Arriving from the lookup block on another page: the address rides in the
+     query string, so the visitor lands on a result rather than on an empty
+     field they have to fill in twice. Geocoded here exactly as a typed
+     submission is — the block deliberately does not use the Search Box
+     autocomplete, so no session is spent getting here. */
+  function prefillFromQuery() {
+    var q = new URLSearchParams(window.location.search).get("address");
+    if (!q) return;
+    q = q.trim().slice(0, 200);
+    if (!q) return;
+    input.value = q;
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  }
+
   var gridProblems = checkGridModule();
   if (gridProblems.length) {
     console.error("storm-history: grid module unusable —", gridProblems.join(", "));
@@ -1215,6 +1229,6 @@
       mapNote.hidden = false;
     }
   } else {
-    loadData().then(initMap);
+    loadData().then(initMap).then(prefillFromQuery);
   }
 })();

@@ -1,0 +1,39 @@
+    <!-- Injected at build time from partials/lookup-cta.html by
+         tools/inject-partials.mjs. One source for four pages: edit the partial
+         and every page changes together. Do not edit the copy in dist/. -->
+    <section class="lookup-cta">
+      <div class="container lookup-cta-inner">
+        <h2>See what storms have hit your address</h2>
+        <p class="lookup-cta-lead">{{LEAD}}</p>
+
+        <!-- A GET form, so it works with JavaScript off: the browser builds
+             /storm-history?address=… itself and the storm page runs the lookup
+             from the query string.
+
+             A plain text input, deliberately NOT the Search Box autocomplete.
+             Sessions are the 500/month free tier and this block sits on the
+             site's highest-traffic pages; one autocomplete session per curious
+             visitor would exhaust it in a week. Geocoding still happens exactly
+             once, on the storm page, against the 100,000/month tier. -->
+        <form class="lookup-cta-form" action="/storm-history" method="get">
+          <label class="visually-hidden" for="lookup-cta-address">Street address</label>
+          <input
+            type="text"
+            id="lookup-cta-address"
+            name="address"
+            placeholder="123 Main St, Tupelo"
+            autocomplete="street-address"
+            enterkeyhint="search"
+            required
+          />
+          <button type="submit" class="btn btn-primary">See storm history</button>
+        </form>
+
+        <!-- Same disclosure as the storm page, and for the same reason: it is
+             shown before they type, not after. -->
+        <p class="lookup-cta-note">
+          We keep addresses searched here so we can follow up about a free
+          inspection. See our <a href="/privacy">Privacy Policy</a>.
+        </p>
+      </div>
+    </section>
