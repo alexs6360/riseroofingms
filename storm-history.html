@@ -145,6 +145,12 @@
               <button type="button" class="sh-chip sh-chip-wind is-on" data-layer="reports" aria-pressed="true">
                 <span class="sh-dot"></span>Wind
               </button>
+              <!-- Basemap switch, not a layer toggle. Its label names the view
+                   it takes you TO, so it reads as an action rather than a
+                   state. Satellite is the default: imagery is where a
+                   homeowner can find their own roof. -->
+              <button type="button" class="sh-chip sh-chip-basemap" id="sh-basemap"
+                      aria-pressed="true" aria-label="Switch to map view">Map</button>
             </div>
             <!-- The two layers are different kinds of evidence and the legend
                  says so: one is a radar estimate, the other is someone's

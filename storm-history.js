@@ -64,6 +64,7 @@
   var errorEl = document.getElementById("sh-error");
   var mapEl = document.getElementById("sh-map");
   var mapNote = document.getElementById("sh-mapnote");
+  var styleChip = document.getElementById("sh-basemap");
   var panelAddress = document.getElementById("sh-panel-address");
   var panelSub = document.getElementById("sh-panel-sub");
   var eventsEl = document.getElementById("sh-events");
@@ -77,6 +78,11 @@
      for somewhere we have no data. */
   var AREA = { minLon: -91.0, minLat: 33.9, maxLon: -88.4, maxLat: 35.05 };
   var CENTER = [-89.7, 34.45];
+  /* Proximity bias for address search. CENTER is the centroid of the whole
+     bbox, which sits in open country between towns; biasing to it ranked rural
+     road names above the streets people actually type. Tupelo is the largest
+     population centre in the area and where most searches come from. */
+  var TUPELO = [-88.7034, 34.2576];
 
   /* A radar hail cell is a storm-scale detection, not a damage footprint.
      1.5km is the radius the generator buffered to; the hit test is the same
@@ -280,6 +286,59 @@
     );
   }
 
+  /* Two basemaps, one set of storm layers.
+
+     A homeowner reading a dark vector map is reading an abstraction; on
+     imagery they can find their own roof under the swath, which is the point
+     of the page. Satellite is the default for that reason, with the vector
+     view kept for orientation when the imagery is too busy.
+
+     Standard Satellite rather than the classic satellite-streets style: it is
+     Mapbox Standard with an imagery base, so it keeps roads and place labels
+     AND keeps the bottom/middle/top slots. The classic style has no slots, and
+     every layer here is placed with slot: "top".
+
+     The colour ramps were tuned against a flat dark ground. Over imagery the
+     same alphas turn to haze on grass and vanish over parking lots, so each
+     basemap carries its own paint and neither is fixed by breaking the other. */
+  var BASEMAPS = {
+    satellite: {
+      label: "Satellite",
+      style: "mapbox://styles/mapbox/standard-satellite",
+      light: "day",
+      /* Lower than the dark view, not higher. The first cut raised these to
+         0.55-0.88 on the theory that imagery would wash the bands out; it
+         does the opposite — a 0.88 fill hides the roof the reader came to
+         look at, which is the whole reason for showing imagery. Separation
+         comes from the strokes instead, so the bands stay legible and the
+         ground stays visible through them. */
+      hailFill: [1.0, 0.2, 1.75, 0.3, 2.5, 0.44],
+      hailLine: { width: 2, opacity: 1, lo: "#ffffff", hi: "#d19bff" },
+      windFill: 0.13,
+      windLine: { width: 1.8, opacity: 0.9 },
+      /* White on white: over a bright roof or a parking lot the pale glow
+         disappeared entirely. Navy reads as a shadow against every surface in
+         the imagery, and the core keeps a ring so it never sits on its own
+         value. */
+      glow: "#071d37",
+      glowOpacity: 0.55,
+      coreStroke: "#071d37",
+    },
+    dark: {
+      label: "Map",
+      style: "mapbox://styles/mapbox/standard",
+      light: "night",
+      hailFill: [1.0, 0.42, 1.75, 0.6, 2.5, 0.78],
+      hailLine: { width: 1, opacity: 0.7, lo: "#d4cbe2", hi: "#a53dff" },
+      windFill: 0.18,
+      windLine: { width: 1, opacity: 0.45 },
+      glow: "#dbeaff",
+      glowOpacity: 0.5,
+      coreStroke: "#0a1420",
+    },
+  };
+  var basemap = "satellite";
+
   function initMap() {
     if (map || !mapEl) return;
     if (!hasToken()) {
@@ -294,164 +353,223 @@
     mapboxgl.accessToken = MAPBOX_TOKEN;
     map = new mapboxgl.Map({
       container: "sh-map",
-      style: "mapbox://styles/mapbox/standard",
-      config: { basemap: { lightPreset: "night" } },
+      style: BASEMAPS[basemap].style,
+      config: { basemap: { lightPreset: BASEMAPS[basemap].light } },
       center: CENTER,
       zoom: 7.2,
       attributionControl: false,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
-    map.on("load", function () {
-      /* Both sources start empty. The whole ten-year field on load is a wash
-         of colour that answers no question — the map only has something to say
-         once there is an address to say it about. */
-      /* Sources: swath bands for hail, an envelope for wind, the address's
-         own cell, and the wind points themselves. A detection stands for a
-         ~5.5 x 4.6km cell — drawing it as a dot understated it by two orders
-         of magnitude, so the cells are drawn at true size and unioned. */
-      map.addSource("hail-bands", { type: "geojson", data: EMPTY });
-      map.addSource("wind-env", { type: "geojson", data: EMPTY });
-      map.addSource("reports", { type: "geojson", data: EMPTY });
-      map.addSource("addr-glow", { type: "geojson", data: EMPTY });
+    /* style.load, not load: it fires on the first style AND on every switch,
+       and setStyle discards every source and layer added after the initial
+       load. One handler rebuilds them either way, so the two paths cannot
+       drift apart. */
+    map.on("style.load", function () {
+      /* setConfigProperty, not a config option on setStyle: setStyle's options
+         are diff/localIdeographFontFamily and it ignores anything else, so the
+         light preset silently failed to apply on every switch after the first.
+         Applied here it runs on the initial load and on each switch alike. */
+      try { map.setConfigProperty("basemap", "lightPreset", BASEMAPS[basemap].light); }
+      catch (e) { console.warn("storm-history: lightPreset not applied", e); }
+      addStormLayers();
+      applyChips();
+      /* Repaint the selected date without re-framing. Calling selectDate here
+         would call fitToStorm and throw away wherever the reader had panned
+         to, which is exactly what a basemap toggle must not do. */
+      if (current && current.date) paintDate(current.date);
+    });
+  }
 
-      map.addLayer({
-        id: "wind-env",
-        type: "fill",
-        source: "wind-env",
-        slot: "top",
-        paint: {
-          /* Deliberately fainter than the hail bands. A gust report is one
-             observation at one point, not a measured footprint, and it should
-             not look like stronger evidence than a radar sweep.
+  function addStormLayers() {
+    var b = BASEMAPS[basemap];
 
-             At 0.30, amber over purple composited to a pink that belonged to
-             neither ramp and read as a third hazard. There is no blend mode to
-             blame — Mapbox fill layers composite source-over — so the fix is
-             less alpha and a lower position in the stack: wind is the backdrop
-             the hail sits on, and the hail keeps its own colour. */
-          "fill-color": "#f5a63c",
-          "fill-opacity": 0.18,
-          "fill-emissive-strength": 1,
-        },
-      });
+    /* Both sources start empty. The whole ten-year field on load is a wash of
+       colour that answers no question — the map only has something to say once
+       there is an address to say it about. */
+    map.addSource("hail-bands", { type: "geojson", data: EMPTY });
+    map.addSource("wind-env", { type: "geojson", data: EMPTY });
+    map.addSource("reports", { type: "geojson", data: EMPTY });
+    map.addSource("addr-glow", { type: "geojson", data: EMPTY });
 
-      map.addLayer({
-        id: "hail-bands",
-        type: "fill",
-        source: "hail-bands",
-        slot: "top",
-        paint: {
-          /* Nested by construction: each band is the union of every cell at or
-             above its threshold, so bigger hail always sits inside smaller.
-             Larger sizes read deeper, on the same ramp as the legend. */
-          /* Every band visibly distinct from the one under it. The old base was
-             pale enough to read as grey haze, which made the cores look like
-             separate islands rather than the middle of one shape. */
-          "fill-color": [
-            "interpolate", ["linear"], ["get", "min"],
-            1.0, "#cdb6ee",
-            1.5, "#b189e6",
-            1.75, "#9a63dd",
-            2.0, "#8340d2",
-            2.5, "#6b21c0",
-          ],
-          "fill-opacity": [
-            "interpolate", ["linear"], ["get", "min"],
-            1.0, 0.42,
-            1.75, 0.6,
-            2.5, 0.78,
-          ],
-          "fill-emissive-strength": 1,
-        },
-      });
-      map.addLayer({
-        id: "hail-bands-line",
-        type: "line",
-        source: "hail-bands",
-        slot: "top",
-        paint: {
-          "line-color": [
-            "interpolate", ["linear"], ["get", "min"],
-            1.0, "#d4cbe2",
-            2.5, "#a53dff",
-          ],
-          "line-width": 1,
-          "line-opacity": 0.7,
-          "line-emissive-strength": 1,
-        },
-      });
+    /* Wind first, so it is the backdrop the hail sits on. Amber over purple
+       composited to a pink belonging to neither ramp. */
+    map.addLayer({
+      id: "wind-env",
+      type: "fill",
+      source: "wind-env",
+      slot: "top",
+      paint: {
+        "fill-color": "#f5a63c",
+        "fill-opacity": b.windFill,
+        "fill-emissive-strength": 1,
+      },
+    });
+    map.addLayer({
+      id: "wind-env-line",
+      type: "line",
+      source: "wind-env",
+      slot: "top",
+      paint: {
+        "line-color": "#f5a63c",
+        "line-width": b.windLine.width,
+        "line-opacity": b.windLine.opacity,
+        "line-emissive-strength": 1,
+      },
+    });
 
-      map.addLayer({
-        id: "reports",
-        type: "circle",
-        source: "reports",
-        slot: "top",
-        filter: ["==", ["get", "kind"], "wind"],
-        paint: {
-          "circle-emissive-strength": 1,
-          "circle-radius": [
-            "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
-            45, 4,
-            95, 9,
-          ],
-          "circle-color": [
-            "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
-            45, "#e3dcc9",
-            58, "#ebc984",
-            70, "#faaa42",
-            85, "#ff801f",
-          ],
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "#ffffff",
-        },
-      });
+    map.addLayer({
+      id: "hail-bands",
+      type: "fill",
+      source: "hail-bands",
+      slot: "top",
+      paint: {
+        /* Nested by construction: each band contains every band above it, so
+           bigger hail always sits inside smaller. Larger sizes read deeper, on
+           the same ramp as the legend. */
+        "fill-color": [
+          "interpolate", ["linear"], ["get", "min"],
+          1.0, "#cdb6ee",
+          1.5, "#b189e6",
+          1.75, "#9a63dd",
+          2.0, "#8340d2",
+          2.5, "#6b21c0",
+        ],
+        "fill-opacity": [
+          "interpolate", ["linear"], ["get", "min"],
+          b.hailFill[0], b.hailFill[1],
+          b.hailFill[2], b.hailFill[3],
+          b.hailFill[4], b.hailFill[5],
+        ],
+        "fill-emissive-strength": 1,
+      },
+    });
+    /* The stroke is what keeps one band readable against the next over
+       imagery, where the fills alone stop separating. */
+    map.addLayer({
+      id: "hail-bands-line",
+      type: "line",
+      source: "hail-bands",
+      slot: "top",
+      paint: {
+        "line-color": [
+          "interpolate", ["linear"], ["get", "min"],
+          1.0, b.hailLine.lo,
+          2.5, b.hailLine.hi,
+        ],
+        "line-width": b.hailLine.width,
+        "line-opacity": b.hailLine.opacity,
+        "line-emissive-strength": 1,
+      },
+    });
 
-      /* On top of everything: a glow locating the address. The radius is
-         interpolated exponentially on base 2, which is exactly how web
-         mercator scales, so it holds a constant ~5km on the ground at every
-         zoom instead of swelling as you zoom in. */
-      map.addLayer({
-        id: "addr-glow",
-        type: "circle",
-        source: "addr-glow",
-        slot: "top",
-        paint: {
-          "circle-color": "#dbeaff",
-          "circle-blur": 1,
-          "circle-opacity": 0.5,
-          "circle-emissive-strength": 1,
-          "circle-radius": [
-            "interpolate", ["exponential", 2], ["zoom"],
-            7, 4.9,
-            12, 157.8,
-          ],
-        },
-      });
-      map.addLayer({
-        id: "addr-core",
-        type: "circle",
-        source: "addr-glow",
-        slot: "top",
-        paint: {
-          "circle-color": "#ffffff",
-          "circle-radius": 3.5,
-          "circle-opacity": 0.95,
-          "circle-emissive-strength": 1,
-        },
+    map.addLayer({
+      id: "reports",
+      type: "circle",
+      source: "reports",
+      slot: "top",
+      filter: ["==", ["get", "kind"], "wind"],
+      paint: {
+        "circle-emissive-strength": 1,
+        "circle-radius": [
+          "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
+          45, 4,
+          95, 9,
+        ],
+        "circle-color": [
+          "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
+          45, "#e3dcc9",
+          58, "#ebc984",
+          70, "#faaa42",
+          85, "#ff801f",
+        ],
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff",
+      },
+    });
+
+    /* On top of everything: a glow locating the address. The radius is
+       interpolated exponentially on base 2, which is exactly how web mercator
+       scales, so it holds a constant ~5km on the ground at every zoom instead
+       of swelling as you zoom in. */
+    map.addLayer({
+      id: "addr-glow",
+      type: "circle",
+      source: "addr-glow",
+      slot: "top",
+      paint: {
+        "circle-color": b.glow,
+        "circle-blur": 1,
+        "circle-opacity": b.glowOpacity,
+        "circle-emissive-strength": 1,
+        "circle-radius": [
+          "interpolate", ["exponential", 2], ["zoom"],
+          7, 4.9,
+          12, 157.8,
+        ],
+      },
+    });
+    map.addLayer({
+      id: "addr-core",
+      type: "circle",
+      source: "addr-glow",
+      slot: "top",
+      paint: {
+        "circle-color": "#ffffff",
+        "circle-radius": 3.5,
+        "circle-opacity": 0.95,
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": b.coreStroke,
+        "circle-emissive-strength": 1,
+      },
+    });
+  }
+
+  /* One chip, several layers: a hazard is a band plus its outline, or an
+     envelope plus the points inside it. */
+  var CHIP_LAYERS = {
+    hail: ["hail-bands", "hail-bands-line"],
+    reports: ["wind-env", "wind-env-line", "reports"],
+  };
+
+  function applyChips() {
+    chips.forEach(function (chip) {
+      if (!chip.dataset.layer) return;
+      var on = chip.classList.contains("is-on");
+      (CHIP_LAYERS[chip.dataset.layer] || []).forEach(function (id) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
       });
     });
   }
 
+  function setBasemap(next) {
+    if (!map || next === basemap || !BASEMAPS[next]) return;
+    basemap = next;
+    /* setStyle keeps the camera. Sources, layers and the marker's DOM element
+       are handled by the style.load rebuild above. */
+    map.setStyle(BASEMAPS[next].style);
+    if (styleChip) {
+      styleChip.textContent = BASEMAPS[next === "satellite" ? "dark" : "satellite"].label;
+      styleChip.setAttribute("aria-pressed", String(next === "satellite"));
+      styleChip.setAttribute(
+        "aria-label",
+        "Switch to " + BASEMAPS[next === "satellite" ? "dark" : "satellite"].label.toLowerCase() + " view"
+      );
+    }
+  }
+
   chips.forEach(function (chip) {
     chip.addEventListener("click", function () {
+      /* The basemap chip is a mode switch, not a layer toggle: it carries no
+         .is-on state of its own and must not fall through to the layer code. */
+      if (chip === styleChip) {
+        setBasemap(basemap === "satellite" ? "dark" : "satellite");
+        return;
+      }
       var on = chip.classList.toggle("is-on");
       chip.setAttribute("aria-pressed", String(on));
       if (!map) return;
-      /* One chip, several layers: a hazard is a band plus its outline, or an
-         envelope plus the points inside it. */
-      var groups = { hail: ["hail-bands", "hail-bands-line"], reports: ["wind-env", "reports"] };
-      (groups[chip.dataset.layer] || []).forEach(function (id) {
+      (CHIP_LAYERS[chip.dataset.layer] || []).forEach(function (id) {
         if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
       });
       /* Hail and wind cover different ground on the same day, so the frame
@@ -509,6 +627,26 @@
 
     out.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
     return out;
+  }
+
+  /* Back to the state before any address was checked. Leaving the previous
+     address's events on screen under a new address's error message would
+     attribute one home's storm history to another. */
+  function resetPanel() {
+    current = null;
+    addrBucket = null;
+    panelAddress.textContent = "No address checked yet";
+    panelSub.textContent = "Results will appear here.";
+    eventsEl.innerHTML = "";
+    emptyEl.hidden = true;
+    if (map) {
+      ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
+        var src = map.getSource(id);
+        if (src) src.setData(EMPTY);
+      });
+    }
+    if (marker) { marker.remove(); marker = null; }
+    if (mapNote) { mapNote.textContent = "Select a date to see that storm."; mapNote.hidden = false; }
   }
 
   function render(address, events) {
@@ -719,6 +857,14 @@
     });
 
     if (!map) return;
+    paintDate(date);
+    fitToStorm();
+  }
+
+  /* Drawing only — no camera. Called by selectDate, and again after a basemap
+     switch to restore the geometry onto the rebuilt style. */
+  function paintDate(date) {
+    if (!map || !current) return;
     var lon = current.lon;
     var lat = current.lat;
     var radius = STORM_KM;
@@ -768,8 +914,6 @@
       }
       return;
     }
-
-    fitToStorm();
   }
 
   /* Only the address the homeowner typed is stored — never the coordinate the
@@ -797,6 +941,13 @@
   /* Runs the lookup once a coordinate is known, whichever path found it.
      `typed` is what the homeowner actually chose or wrote — that string is
      what gets stored, never the coordinate Mapbox returned. */
+  /* The bbox the archive was built over. An address outside it has no data,
+     which is not the same fact as "no storms happened there". */
+  function inServiceArea(lon, lat) {
+    return lon >= AREA.minLon && lon <= AREA.maxLon &&
+           lat >= AREA.minLat && lat <= AREA.maxLat;
+  }
+
   function runLookup(lon, lat, name, typed) {
     if (!window.StormGrid) {
       /* Without the shared grid module there is no containment test, and the
@@ -806,6 +957,17 @@
       say("Something didn't load on this page. Refresh, or call us and we'll check the address for you.");
       return;
     }
+    /* Checked here rather than in each caller, so the autocomplete path and
+       the typed-and-submitted path cannot answer differently. Returning zero
+       events for an address we simply have no data for would read as "no
+       storms here", which is a claim the page must never make. */
+    if (!inServiceArea(lon, lat)) {
+      say("That address is outside our coverage area, so we don't have storm history for it. " +
+          "We cover north Mississippi — call us and we'll tell you whether we can still help.");
+      resetPanel();
+      return;
+    }
+
     addrBucket = window.StormGrid.bucketOf(lat, lon);
     var events = eventsAt(lon, lat);
     current = { lon: lon, lat: lat, date: null };
@@ -906,7 +1068,7 @@
       "https://api.mapbox.com/search/searchbox/v1/suggest?q=" + encodeURIComponent(q) +
       "&session_token=" + encodeURIComponent(sessionToken) +
       "&country=us&types=address&limit=6" +
-      "&proximity=" + CENTER.join(",") +
+      "&proximity=" + TUPELO.join(",") +
       "&bbox=" + [AREA.minLon, AREA.minLat, AREA.maxLon, AREA.maxLat].join(",") +
       "&access_token=" + MAPBOX_TOKEN;
 
@@ -994,9 +1156,15 @@
     }
 
     var url =
+      /* Deliberately no bbox here, unlike /suggest. Filtering server-side
+         made an address in Memphis and a misspelled address in Tupelo return
+         the identical empty result, so the page had to guess which had
+         happened and told everyone to check their spelling. Resolving the
+         address first and testing the coordinate ourselves lets the two be
+         told apart and answered honestly. */
       "https://api.mapbox.com/search/geocode/v6/forward?q=" + encodeURIComponent(address) +
       "&country=us&types=address&limit=1&autocomplete=false" +
-      "&bbox=" + [AREA.minLon, AREA.minLat, AREA.maxLon, AREA.maxLat].join(",") +
+      "&proximity=" + TUPELO.join(",") +
       "&access_token=" + MAPBOX_TOKEN;
 
     form.classList.add("is-busy");
@@ -1006,7 +1174,10 @@
       .then(function (data) {
         var f = data && data.features && data.features[0];
         if (!f) {
-          say("We couldn't find that address in our service area. Check the spelling, or call us and we'll look it up.");
+          /* No longer "in our service area": coverage is a separate answer
+             now, given above. Reaching here means the geocoder could not
+             resolve the text at all. */
+          say("We couldn't find that address. Check the spelling, or call us and we'll look it up.");
           return;
         }
         var c = f.properties.coordinates;

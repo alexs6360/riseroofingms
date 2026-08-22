@@ -4506,7 +4506,25 @@ blockquote.card cite {
   backdrop-filter: blur(6px);
 }
 
-.sh-chip:not(.is-on) {
+/* The basemap switch sits with the layer chips because it is part of the same
+   furniture, but it is a different kind of control: it has no on/off state, so
+   it never takes the dimmed .is-on treatment. The rule divider keeps the two
+   kinds from reading as one row of four toggles. */
+.sh-chip-basemap {
+  margin-left: var(--space-1);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.sh-chip-basemap:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Dimming means "this layer is hidden". The basemap switch has no hidden
+   state — it always does something — so it must not inherit the dimmed look,
+   which read as a disabled control. */
+.sh-chip:not(.is-on):not(.sh-chip-basemap) {
   opacity: 0.4;
 }
 
