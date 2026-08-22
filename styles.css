@@ -56,6 +56,10 @@
      workspace gutter can be the same value rather than a second number that
      happens to match today. */
   --container-pad: 24px;
+  /* Storm history's content column. The search row and the map/panel row both
+     take it, so they share one edge — the row used to run the full container
+     while the search box stopped at 720px, and nothing lined up vertically. */
+  --sh-col: 1000px;
   --space-heading: var(--space-6);
 
   /* Type scale — no element sets a size outside this set */
@@ -4352,8 +4356,12 @@ blockquote.card cite {
   padding-bottom: var(--space-6);
 }
 
+/* Three groups in the intro, and the gaps say so: --space-2 inside a group,
+   --space-6 between them. Everything was previously 24 / 48 / 24 / 24, close
+   enough that nothing grouped — heading, lead, search, consent and currency
+   all read as five separate items. */
 .sh-intro h1 {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-2);
 }
 
 .sh-lead {
@@ -4362,8 +4370,12 @@ blockquote.card cite {
   color: var(--color-text-muted);
 }
 
+/* No background of its own. The grey band used to start at the search row,
+   which cut the heading and lead away from the control they belong to and made
+   the intro read as two blocks. The whole intro sits on one ground now, and
+   the page's one tonal break moved down to .sh-close, where it separates the
+   tool from the closing CTA instead of splitting the tool in half. */
 .sh-tool {
-  background: var(--color-surface);
   padding-top: 0;
 }
 
@@ -4374,7 +4386,7 @@ blockquote.card cite {
    map row). It previously ran 24 / 32 / 16 / 8 / 40 / 32 with no rule behind
    any of them. */
 .sh-lookup {
-  max-width: 720px;
+  max-width: var(--sh-col);
   margin: 0 auto var(--space-6);
 }
 
@@ -4413,16 +4425,20 @@ blockquote.card cite {
 
    Centred with the heading, lead and form box above them. These lines were
    left-aligned inside a centred column, which read as a stray edge with
-   nothing to line up against — the block has one axis now. */
+   nothing to line up against — the block has one axis now.
+
+   Set off from the search control by a group gap, with the currency line
+   pulled tight beneath it so the two read as one footnote rather than two
+   separate announcements. */
 .sh-consent {
-  margin: var(--space-3) 0 0;
+  margin: var(--space-6) 0 0;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
   text-align: center;
 }
 
 .sh-error {
-  margin: var(--space-3) 0 0;
+  margin: var(--space-2) 0 0;
   font-size: var(--text-sm);
   color: #b3261e;
   text-align: center;
@@ -4437,6 +4453,8 @@ blockquote.card cite {
      measure. */
   gap: var(--container-pad);
   align-items: start;
+  max-width: var(--sh-col);
+  margin: 0 auto;
 }
 
 .sh-mapwrap {
@@ -4685,7 +4703,7 @@ blockquote.card cite {
 }
 
 .sh-close {
-  background: var(--color-bg);
+  background: var(--color-surface);
   text-align: center;
 }
 
@@ -4778,7 +4796,7 @@ blockquote.card cite {
 
 /* Per-layer data currency, stated under the field */
 .sh-currency {
-  margin: var(--space-3) 0 0;
+  margin: var(--space-1) 0 0;
   font-size: var(--text-xs);
   color: var(--color-text-muted);
   text-align: center;
