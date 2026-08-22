@@ -212,23 +212,79 @@
         <a href="/storm-damage/" class="btn btn-outline-accent">Storm damage and insurance claims</a>
       </div>
     </section>
+
+    <!-- Reuses the site's contact section verbatim — .contact / .contact-inner /
+         .contact-info / .contact-form — rather than a second implementation.
+         Only the copy and the phone treatment are page-specific.
+
+         This is the seventh declaration of the "quote" form. Netlify registers
+         one schema per form name and silently drops undeclared fields, which is
+         how storm-history leads lost their address, so the field set here is
+         identical to the other six: form-name, page, bot-field, name, phone,
+         email, message, address, storm_date. -->
+    <section id="contact" class="contact sh-contact">
+      <div class="container contact-inner">
+        <div class="contact-info">
+          <h2>Have it looked at</h2>
+          <p>
+            A storm on this map doesn't mean your roof is damaged, and an empty
+            map doesn't mean it isn't. The only way to know is for someone to get
+            up there. Inspections are free, take 30 to 45 minutes, and you get
+            photographs and a written estimate at the end.
+          </p>
+          <a class="sh-contact-phone" href="tel:+16622134797">(662)&nbsp;213-4797</a>
+          <p class="sh-contact-hours">Monday&ndash;Saturday, 7am&ndash;6pm. We respond within one business day.</p>
+        </div>
+
+        <form
+          class="contact-form"
+          id="contact-form"
+          name="quote"
+          method="POST"
+          action="/thanks"
+          data-netlify="true"
+          data-netlify-honeypot="bot-field"
+        >
+          <!-- Netlify matches the submission to the form by this value -->
+          <input type="hidden" name="form-name" value="quote" />
+          <input type="hidden" name="page" value="Storm History" />
+
+          <p class="visually-hidden" aria-hidden="true">
+            <label>Leave this field empty: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+          </p>
+
+          <label for="sh-contact-name">Name</label>
+          <input type="text" id="sh-contact-name" name="name" autocomplete="name" required />
+
+          <label for="sh-contact-phone-input">Phone</label>
+          <input type="tel" id="sh-contact-phone-input" name="phone" autocomplete="tel" required />
+
+          <label for="sh-contact-email">Email</label>
+          <input type="email" id="sh-contact-email" name="email" autocomplete="email" />
+
+          <label for="sh-contact-address">Address</label>
+          <input type="text" id="sh-contact-address" name="address" autocomplete="street-address" />
+
+          <label for="sh-contact-message">How can we help?</label>
+          <textarea id="sh-contact-message" name="message" rows="4"></textarea>
+
+          <button type="submit" class="btn btn-primary">Request an Inspection</button>
+
+          <!-- Declared so every "quote" form on the site has an identical field
+               set. Not used by this form. -->
+          <input type="hidden" name="storm_date" value="" />
+
+          <p class="form-consent">
+            By submitting this form you agree that RISE Roofing Solutions may
+            contact you by phone, text, or email about your inquiry. Message and
+            data rates may apply. Consent is not a condition of purchase. See
+            our <a href="/privacy">Privacy Policy</a>.
+          </p>
+        </form>
+      </div>
+    </section>
   </main>
 
-  <!-- Netlify needs the form in the served HTML to register it. Submitted by
-       fetch from storm-history.js, never by the browser navigating away. The
-       field set matches the site's other forms so Netlify keeps one schema for
-       the "quote" form and the existing notification fires unchanged. -->
-  <form name="quote" data-netlify="true" netlify-honeypot="bot-field" hidden>
-    <input type="hidden" name="form-name" value="quote" />
-    <input type="text" name="bot-field" />
-    <input type="text" name="name" />
-    <input type="tel" name="phone" />
-    <input type="email" name="email" />
-    <input type="text" name="address" />
-    <textarea name="message"></textarea>
-    <input type="text" name="page" />
-    <input type="text" name="storm_date" />
-  </form>
 
   <footer class="site-footer">
     <div class="container">

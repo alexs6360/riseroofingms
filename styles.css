@@ -4756,6 +4756,66 @@ blockquote.card cite {
   }
 }
 
+/* Contact section at the foot of the storm history page.
+
+   The markup is the site's existing .contact / .contact-inner block; only the
+   spacing and the phone treatment are page-specific, on the same two values
+   the intro uses — --space-2 inside a group, --space-6 between them.
+
+   White, because .sh-close directly above it took the surface tone. Two grey
+   bands in a row would read as one long section with a heading floating in the
+   middle of it. */
+.sh-contact {
+  background: var(--color-bg);
+}
+
+/* The site centres .contact-info > p and .contact h2 but leaves the container
+   at start, so the phone — an inline-block, not a paragraph — sat left of
+   everything around it. Centred here so the column reads as one block. */
+.sh-contact .contact-info {
+  text-align: center;
+}
+
+/* Alignment is inherited, not set: the site's .contact-info > p is centred,
+   and overriding the heading to the left put a left title over centred copy.
+   Only the spacing is page-specific here. */
+.sh-contact .contact-info h2 {
+  margin: 0 0 var(--space-2);
+}
+
+.sh-contact .contact-info > p:not(.sh-contact-hours) {
+  margin: 0 0 var(--space-6);
+}
+
+/* The phone is the point of this section for anyone who would rather call than
+   type, so it is sized as a heading rather than as body copy. A real tel: link,
+   so it dials on a phone instead of being text someone has to copy. */
+.sh-contact-phone {
+  display: inline-block;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-navy);
+  text-decoration: none;
+  /* 44px of vertical target on touch without moving it visually on desktop */
+  padding: var(--space-1) 0;
+}
+
+.sh-contact-phone:hover,
+.sh-contact-phone:focus-visible {
+  color: var(--accent-deep);
+  text-decoration: underline;
+}
+
+/* Beaten by `.sh-contact .contact-info > p` on specificity when it was one
+   class lighter, which silently gave the hours line a 48px bottom margin and
+   no top margin at all. */
+.sh-contact .contact-info > p.sh-contact-hours {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
 /* Address autocomplete
    ------------------------------------------------------------------------- */
 .sh-combo {
