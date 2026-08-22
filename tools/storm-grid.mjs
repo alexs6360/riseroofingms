@@ -523,12 +523,15 @@ export function fitEnvelopes(pts, vals, bands, L, W, linkKm) {
       if (!prof) return;
       var ring = profileToRing(fit.us, prof);
       if (!ring) return;
+      const smoothed = smoothRing(ring, ENV_SMOOTH, 0.25).map(fit.toLngLat);
       feats.push({
         type: "Feature",
         properties: { min: min },
         geometry: {
           type: "Polygon",
-          coordinates: [smoothRing(ring, ENV_SMOOTH, 0.25).map(fit.toLngLat)],
+          /* Simplified here, once, so the page and the email render identical
+             geometry. See SIMPLIFY_M. */
+          coordinates: [simplifyRing(smoothed, SIMPLIFY_M, smoothed[0][1])],
         },
       });
     });
@@ -566,4 +569,56 @@ export function roundProfile(us, w, support) {
     out[i] = (1 - ELLIPSE_BLEND) * w[i] + ELLIPSE_BLEND * ell;
   }
   return out;
+}
+
+/* Douglas-Peucker, tolerance in metres.
+
+   Chaikin generates far more vertices than the curve needs — a lens carries
+   ~1,300 where ~110 describe it to within a metre. That redundancy is free on
+   the page and fatal in a URL: the Static Images API caps the request at 8,192
+   characters, and the full-resolution overlay for one day runs to 306,000 as
+   GeoJSON or 44,000 as an encoded polyline.
+
+   Applied here, inside fitEnvelopes, so the page and the notification function
+   render the same shape from the same call. Simplifying only for the email
+   would put a different swath in David's inbox than the homeowner saw, which
+   is worse than sending no picture at all.
+
+   40m is chosen against the archive's worst day, not against a convenient one:
+   at 10m Tupelo fits comfortably and the worst day needs 11,618 characters,
+   and 20m misses the cap by 13. At 40m the worst day is 6,357 with 1,835 to
+   spare. The cost is 0.32px of deviation at zoom 10 and 0.63px at zoom 11,
+   which is the page's clamped maximum — sub-pixel everywhere it can be seen. */
+export const SIMPLIFY_M = 40;
+
+export function simplifyRing(ring, tolM, lat) {
+  if (ring.length < 4) return ring;
+  const kx = 111320 * Math.cos((lat * Math.PI) / 180);
+  const ky = 110574;
+  const P = ring.map((p) => [p[0] * kx, p[1] * ky]);
+  const keep = new Array(P.length).fill(false);
+  keep[0] = keep[P.length - 1] = true;
+
+  /* Iterative, not recursive: a 1,300-vertex ring at a small tolerance can
+     nest deeply enough to matter, and this runs inside a lead pipeline. */
+  const stack = [[0, P.length - 1]];
+  while (stack.length) {
+    const [s, e] = stack.pop();
+    if (e <= s + 1) continue;
+    const a = P[s], b = P[e];
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    const L = Math.hypot(dx, dy);
+    let max = -1, idx = -1;
+    for (let i = s + 1; i < e; i++) {
+      const q = P[i];
+      const d = L < 1e-9
+        ? Math.hypot(q[0] - a[0], q[1] - a[1])
+        : Math.abs(dx * (a[1] - q[1]) - (a[0] - q[0]) * dy) / L;
+      if (d > max) { max = d; idx = i; }
+    }
+    if (max > tolM && idx > 0) { keep[idx] = true; stack.push([s, idx], [idx, e]); }
+  }
+  const out = ring.filter((_, i) => keep[i]);
+  /* A ring that collapses below a triangle is not a shape any more. */
+  return out.length >= 4 ? out : ring;
 }

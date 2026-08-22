@@ -919,7 +919,7 @@
   /* Only the address the homeowner typed is stored — never the coordinate the
      geocoder returned. Mapbox's temporary geocoding tier, which is the free
      one, does not permit storing its results. */
-  function recordSearch(address, summary) {
+  function recordSearch(address, summary, topDate) {
     if (submitted[address]) return;
     submitted[address] = true;
     var body = new URLSearchParams({
@@ -930,6 +930,11 @@
       address: address,
       message: "Searched " + new Date().toISOString().slice(0, 10) + " — " + summary,
       page: "Storm History",
+      /* The date the notification should draw. Sending it means the function
+         fetches one year file instead of all eleven to work out which storm
+         mattered. Still no coordinate: a date is not a location, and the
+         address string is the same one already in the field above. */
+      storm_date: topDate || "",
     });
     fetch("/", {
       method: "POST",
@@ -973,12 +978,17 @@
     current = { lon: lon, lat: lat, date: null };
     render(name, events);
 
+    /* Chosen once, used twice: the date the map opens on is the date the
+       notification draws, so David's email and the homeowner's screen are
+       showing the same storm. */
+    var topDate = events.length ? biggestDate(events, lon, lat) : "";
+
     if (map) {
       if (marker) marker.remove();
       marker = new mapboxgl.Marker({ color: "#9db9dc" }).setLngLat([lon, lat]).addTo(map);
       if (mapNote) mapNote.hidden = true;
       if (events.length) {
-        selectDate(biggestDate(events, lon, lat));
+        selectDate(topDate);
       } else {
         map.flyTo({ center: [lon, lat], zoom: 13.5, duration: 900 });
       }
@@ -987,7 +997,8 @@
     recordSearch(
       typed,
       events.length ? events.length + " events, most recent " + events[0].date
-                    : "no recorded events"
+                    : "no recorded events",
+      topDate
     );
   }
 

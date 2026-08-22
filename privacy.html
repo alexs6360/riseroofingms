@@ -95,8 +95,10 @@
       </p>
       <p>
         To find an address on the map we send it to <strong>Mapbox</strong>, a
-        third-party mapping service, which turns it into a location. We do not store
-        the coordinates Mapbox returns &mdash; only the address you typed.
+        third-party mapping service, which turns it into a location. We store the
+        address text only. We do not keep the coordinates the map service returns
+        &mdash; they're used to draw your map and to prepare the email we send our
+        own team about your request, then discarded.
       </p>
 
       <h2>Where it goes</h2>
@@ -147,7 +149,9 @@
         submissions. Our hosting and form handling come from Netlify, so what
         you send is stored on Netlify's servers as well as reaching us. The storm
         history page uses Mapbox for its map and to look up the address you
-        search.
+        search. When you search an address, we email it to our own team through
+        <strong>Resend</strong>, an email delivery service, together with a map of
+        the storm you were shown.
       </p>
       <p>
         These providers hold your information only in order to provide that

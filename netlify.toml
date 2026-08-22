@@ -9,3 +9,11 @@
 [build]
   command = "bash build.sh"
   publish = "dist"
+
+# Event-triggered function: Netlify calls formSubmitted on every verified form
+# submission. The built-in form notification stays enabled alongside it — that
+# email is the floor, and this one is the upgrade. If this function is broken,
+# unbundled, or out of API credit, David still hears about the lead.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
