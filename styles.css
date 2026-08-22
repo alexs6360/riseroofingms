@@ -4762,17 +4762,27 @@ blockquote.card cite {
    rhythm is the storm page's two values — --space-2 inside a group, --space-6
    between them — so the block reads the same wherever it lands.
 
-   Surface tone rather than navy: it sits directly under a dark hero on every
-   page that carries it, and navy-on-navy would have swallowed it. */
+   Navy, not surface grey. Every other band on these pages is white or grey, so
+   the one thing on the site nobody else offers was reading as another form
+   section. The brand navy is already the header and the footer, so this is the
+   site's own colour doing the work rather than a new accent. */
 .lookup-cta {
-  background: var(--color-surface);
-  /* On the homepage .service-line sits directly beneath and carries the same
-     surface tone, so without an edge the two ran together into one grey mass.
-     Same border idiom .service-line already uses on its own bottom. */
+  background: var(--color-navy);
+  /* Tighter than a full content section. --space-section top and bottom left a
+     96px void under a 14px disclosure line, which read as the block having
+     stopped early rather than as breathing room. */
+  padding: var(--space-8) 0;
+  /* The city and storm-damage heroes are navy too, so on four of the five
+     pages this band butts against the same colour and the seam disappeared —
+     one tall navy region instead of a hero and a feature. A hairline in the
+     accent gives the edge back without introducing a second blue. */
+  border-top: 1px solid rgba(157, 185, 220, 0.22);
   border-bottom: 1px solid var(--color-border);
-  padding: var(--space-section) 0;
 }
 
+/* An outlined panel, not just centred text. Against a navy hero the hairline
+   above marks the section boundary; this marks the block itself, so it reads as
+   a distinct thing on both a white-adjacent page and a navy-adjacent one. */
 .lookup-cta-inner {
   max-width: 720px;
   text-align: center;
@@ -4780,55 +4790,106 @@ blockquote.card cite {
 
 .lookup-cta h2 {
   margin: 0 0 var(--space-2);
+  color: #fff;
 }
 
 .lookup-cta-lead {
   margin: 0 0 var(--space-6);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .lookup-cta-form {
-  display: flex;
-  gap: var(--space-2);
+  margin: 0;
 }
 
-.lookup-cta-form input {
+/* One control. The white surface belongs to the wrapper, the input is
+   transparent inside it, and the button sits in the padding at its right
+   edge. */
+.lookup-cta-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px;
+  background: var(--color-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+/* :focus-within, so the whole control lights up when the field inside it is
+   focused — the input has no border of its own to show a state on. */
+.lookup-cta-field:focus-within {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 4px rgba(157, 185, 220, 0.32);
+}
+
+.lookup-cta-field input {
   flex: 1;
   min-width: 0;
-  min-height: 52px;
-  padding: 0 16px;
+  /* Taller than the button, so the field reads as the surface and the button
+     as the thing sitting on it. */
+  min-height: 58px;
+  padding: 0 var(--space-2);
   font: inherit;
   color: var(--color-navy);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  background: transparent;
+  border: 0;
 }
 
-.lookup-cta-form input:focus-visible {
-  outline: 2px solid var(--accent-deep);
-  outline-offset: 1px;
+.lookup-cta-field input::placeholder {
+  color: var(--color-text-muted);
 }
 
-.lookup-cta-form .btn {
+/* The wrapper owns the focus ring, so the input showing its own would draw a
+   second box inside the first. */
+.lookup-cta-field input:focus {
+  outline: none;
+}
+
+.lookup-cta-field .btn {
   flex: none;
+  min-height: 46px;
 }
 
 .lookup-cta-note {
   margin: var(--space-2) 0 0;
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.lookup-cta-note a {
+  color: var(--accent-light);
 }
 
 @media (max-width: 640px) {
-  /* Stacked, the field and the button stop being a row and become two
-     controls, so the button takes the full width like every other primary
-     action on a phone. */
-  .lookup-cta-form {
+  /* Stacked, the two stop being one control: the button becomes a full-width
+     primary action like every other one on a phone, and the field gets its own
+     edge back now that it is no longer the container. */
+  .lookup-cta-field {
     flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+    padding: var(--space-2);
   }
 
-  .lookup-cta-form .btn {
+  .lookup-cta-field input {
+    min-height: 52px;
+    padding: 0 var(--space-1);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .lookup-cta-field .btn {
     width: 100%;
+  }
+}
+
+/* The base .btn already lists transform in its transition and nothing on the
+   site uses it, so the lift is new behaviour rather than a new pattern — it is
+   scoped here and guarded, not applied site-wide. */
+@media (prefers-reduced-motion: no-preference) {
+  .lookup-cta .btn:hover {
+    transform: translateY(-1px);
   }
 }
 

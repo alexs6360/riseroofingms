@@ -3,8 +3,21 @@
          and every page changes together. Do not edit the copy in dist/. -->
     <section class="lookup-cta">
       <div class="container lookup-cta-inner">
-        <h2>See what storms have hit your address</h2>
-        <p class="lookup-cta-lead">{{LEAD}}</p>
+        <!-- reveal is the site's existing scroll-in class: script.js already
+             observes it, staggers siblings, and skips the whole thing under
+             prefers-reduced-motion. A second observer here would be a second
+             implementation of a solved problem.
+
+             Deliberately on the text only, never on the field or the button.
+             .reveal starts at opacity 0 and is cleared by JavaScript, so
+             anything wearing it is invisible until an IntersectionObserver
+             callback lands. That is an acceptable bet for a heading and a
+             fine one to lose for a decorative card — but this is the site's
+             primary lead capture on five pages, and a missed callback would
+             hide the control itself. The copy fades in; the thing people
+             have to type into is always there. -->
+        <h2 class="reveal">See what storms have hit your address</h2>
+        <p class="lookup-cta-lead reveal">{{LEAD}}</p>
 
         <!-- A GET form, so it works with JavaScript off: the browser builds
              /storm-history?address=… itself and the storm page runs the lookup
@@ -17,16 +30,22 @@
              once, on the storm page, against the 100,000/month tier. -->
         <form class="lookup-cta-form" action="/storm-history" method="get">
           <label class="visually-hidden" for="lookup-cta-address">Street address</label>
-          <input
-            type="text"
-            id="lookup-cta-address"
-            name="address"
-            placeholder="123 Main St, Tupelo"
-            autocomplete="street-address"
-            enterkeyhint="search"
-            required
-          />
-          <button type="submit" class="btn btn-primary">See storm history</button>
+          <!-- Field and button are one control: at equal heights side by side
+               they competed for the eye, and neither read as the action. The
+               button is inset inside the field's own white surface, so the
+               shape reads as a single search bar. -->
+          <div class="lookup-cta-field">
+            <input
+              type="text"
+              id="lookup-cta-address"
+              name="address"
+              placeholder="123 Main St, Tupelo"
+              autocomplete="street-address"
+              enterkeyhint="search"
+              required
+            />
+            <button type="submit" class="btn btn-primary">See storm history</button>
+          </div>
         </form>
 
         <!-- Same disclosure as the storm page, and for the same reason: it is
