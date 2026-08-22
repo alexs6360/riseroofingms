@@ -25,10 +25,10 @@ const BAND_FILL = {
 };
 
 const log = (stage, detail) =>
-  console.log(JSON.stringify({ fn: "on-form-submitted", stage, ...detail }));
+  console.log(JSON.stringify({ fn: "submission-created", stage, ...detail }));
 const warn = (stage, err, detail = {}) =>
   console.warn(JSON.stringify({
-    fn: "on-form-submitted", stage, degraded: true,
+    fn: "submission-created", stage, degraded: true,
     error: err && err.message ? err.message : String(err), ...detail,
   }));
 
@@ -175,46 +175,72 @@ async function sendEmail({ data, image, note }) {
   return (await r.json())?.id;
 }
 
-export default {
-  async formSubmitted(event) {
-    const data = event?.data || {};
-    /* Only storm-history leads carry an address worth drawing. Everything else
-       is already covered by the built-in notification, so stay out of its way
-       rather than sending a second, emptier copy. */
-    if (!data.address) { log("skipped", { reason: "no address field" }); return; }
+/* Legacy filename dispatch: Netlify subscribes this function to the event by
+   matching the file name, so it MUST stay `submission-created`.
 
-    const token = process.env.MAPBOX_TOKEN;
-    const siteUrl = process.env.URL || "https://riseroofingms-662.netlify.app";
+   The typed-handler form — any filename, `export default { formSubmitted }` —
+   is what the current docs recommend, and it deployed cleanly and was never
+   invoked once. Netlify's own blog says "simply by naming your function file
+   submission-created.js", and @netlify/build still carries 'submission-created'
+   in its set of event-triggered function names on main today. `form-submitted`
+   exists in no doc, blog or source file; it was an inference from kebab-casing
+   the handler name, and acting on it would have failed exactly as silently.
 
-    let image = null, note = "";
-    try {
-      if (!token) throw new Error("MAPBOX_TOKEN not set");
-      if (!data.storm_date) throw new Error("no storm_date on submission");
-      const { lon, lat } = await geocode(data.address, token);
-      if (lon < AREA.minLon || lon > AREA.maxLon || lat < AREA.minLat || lat > AREA.maxLat) {
-        throw new Error("address outside the archive bbox");
-      }
-      image = await stormImage({ lon, lat, date: data.storm_date, token, siteUrl });
-      log("image-built", { date: data.storm_date, bands: image.bands, urlLen: image.urlLen });
-    } catch (err) {
-      /* Degraded, not failed. The email still goes. */
-      note = err && err.message ? err.message : String(err);
-      warn("image", err, { address: data.address, date: data.storm_date });
-    }
-
-    try {
-      const id = await sendEmail({ data, image, note });
-      log("sent", { id, withImage: !!image, address: data.address });
-    } catch (err) {
-      /* Last line of defence. Netlify ignores the return value of an event
-         handler and does not retry, so throwing here would lose the richer
-         email silently — the built-in notification is what still saves the
-         lead. Logged loudly so it shows up in a log-drain alert. */
-      console.error(JSON.stringify({
-        fn: "on-form-submitted", stage: "send", failed: true,
-        error: err && err.message ? err.message : String(err),
-        address: data.address,
-      }));
-    }
-  },
+   Only one convention may be live at a time. If this file also exported a
+   formSubmitted handler and both dispatchers worked, David would get three
+   emails per lead — this one twice, plus the built-in notification. */
+export default async (req) => {
+  let data = {};
+  try {
+    const body = await req.json();
+    data = body?.payload?.data || {};
+  } catch (err) {
+    console.error(JSON.stringify({
+      fn: "submission-created", stage: "parse", failed: true,
+      error: err && err.message ? err.message : String(err),
+    }));
+    return;
+  }
+  await handleSubmission(data);
 };
+
+async function handleSubmission(data) {
+  /* Only storm-history leads carry an address worth drawing. Everything else
+     is already covered by the built-in notification, so stay out of its way
+     rather than sending a second, emptier copy. */
+  if (!data.address) { log("skipped", { reason: "no address field" }); return; }
+
+  const token = process.env.MAPBOX_TOKEN;
+  const siteUrl = process.env.URL || "https://riseroofingms-662.netlify.app";
+
+  let image = null, note = "";
+  try {
+    if (!token) throw new Error("MAPBOX_TOKEN not set");
+    if (!data.storm_date) throw new Error("no storm_date on submission");
+    const { lon, lat } = await geocode(data.address, token);
+    if (lon < AREA.minLon || lon > AREA.maxLon || lat < AREA.minLat || lat > AREA.maxLat) {
+      throw new Error("address outside the archive bbox");
+    }
+    image = await stormImage({ lon, lat, date: data.storm_date, token, siteUrl });
+    log("image-built", { date: data.storm_date, bands: image.bands, urlLen: image.urlLen });
+  } catch (err) {
+    /* Degraded, not failed. The email still goes. */
+    note = err && err.message ? err.message : String(err);
+    warn("image", err, { address: data.address, date: data.storm_date });
+  }
+
+  try {
+    const id = await sendEmail({ data, image, note });
+    log("sent", { id, withImage: !!image, address: data.address });
+  } catch (err) {
+    /* Last line of defence. Netlify ignores the return value of an event
+       function and does not retry, so throwing here would lose the richer
+       email silently — the built-in notification is what still saves the
+       lead. Logged loudly so it shows up in a log drain. */
+    console.error(JSON.stringify({
+      fn: "submission-created", stage: "send", failed: true,
+      error: err && err.message ? err.message : String(err),
+      address: data.address,
+    }));
+  }
+}
