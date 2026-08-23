@@ -187,8 +187,9 @@
           <p class="hero-acronym hero-anim hero-anim-2">R.I.S.E.</p>
 
           <!-- TAGLINE, COPY 1 of 2 — mobile.
-               The other copy is in .hero-tagline-bar, immediately after
-               </section> below. Edit both together or they will disagree.
+               The other copy is in .hero-tagline-scrim, overlaid on the foot
+               of the video panel below. Edit both together or they will
+               disagree.
                Only one is ever in the layout (the other is display:none), so
                it is never announced twice. -->
           <p class="hero-tagline hero-tagline-inline hero-anim hero-anim-2">
@@ -272,6 +273,16 @@
           tabindex="-1"
         ></video>
         <span class="hero-overlay" aria-hidden="true"></span>
+
+        <!-- TAGLINE, COPY 2 of 2 — desktop. Overlaid on the foot of the video
+             rather than in a band beneath it. Hidden below 768px, where the
+             in-panel copy above takes over; only one is ever in the layout, so
+             it is never announced twice. Edit both together. -->
+        <div class="hero-tagline-scrim">
+          <p class="hero-tagline">
+            <span>Raising the standard.</span> <span>Protecting your home.</span>
+          </p>
+        </div>
       </div>
 
     </section>
@@ -279,15 +290,6 @@
     <!-- TAGLINE, COPY 2 of 2 — desktop.
          The other copy is .hero-tagline-inline, inside .hero-panel-inner
          above. Edit both together or they will disagree. -->
-    <div class="hero-tagline-bar">
-      <!-- One span per sentence, same as the in-hero copy above: at this size
-           the line wraps, and the break has to land between the two sentences
-           rather than orphaning "home." -->
-      <p class="hero-tagline">
-        <span>Raising the standard.</span> <span>Protecting your home.</span>
-      </p>
-    </div>
-
 
     <!-- lookup-cta -->
     <section class="service-line">

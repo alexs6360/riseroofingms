@@ -713,27 +713,41 @@ img {
   display: inline-block;
 }
 
-/* Full-width band closing the hero. A sibling of .hero rather than a row
-   inside it: as a grid row the hero's own navy painted 56px below the band on
-   mobile, because the panel overflowed its track upward. Outside the grid the
-   band is full-width by definition and nothing can paint beneath it. The two
-   hero columns are already equal height — both stretch to the grid row. */
-.hero-tagline-bar {
-  min-height: 60px;
+/* The tagline overlaid on the foot of the video, desktop only.
+
+   The scrim is load-bearing, not decoration. The footage changes brightness
+   frame to frame — pale sky in some, dark shingle in others — so white text
+   laid straight on it would be legible in one second of the loop and gone in
+   the next. The gradient reaches FULL navy well above the text, so the type
+   sits on an opaque surface and its contrast is a fixed property of the
+   design rather than something that depends on which frame is showing.
+
+   Left and right are flush with the video panel: .hero-overlay already
+   dissolves navy across the left 29% of this panel, so the scrim meets it in
+   the same colour and the existing seam treatment is unchanged. */
+.hero-tagline-scrim {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
-  background: var(--color-bg);
-  /* Above the video's left-edge blend, which is painted by .hero-media and
-     would otherwise bleed over the band's top corner. */
-  position: relative;
-  z-index: 2;
+  align-items: flex-end;
+  min-height: 200px;
+  padding: 0 var(--space-6) var(--space-5);
+  background-image: linear-gradient(
+    to bottom,
+    rgba(7, 29, 55, 0) 0%,
+    rgba(7, 29, 55, 0.72) 42%,
+    var(--color-navy) 72%,
+    var(--color-navy) 100%
+  );
+  pointer-events: none;
 }
 
 .hero-tagline {
   margin: 0;
-  color: var(--color-navy);
+  color: #fff;
   /* --text-xl. It was 1rem, which read as a caption; --text-h2 was the first
      attempt and overshot badly — it is a clamp topping out at 40px, which put
      the tagline at the same size as "Our Services" and had it spanning nearly
@@ -4132,7 +4146,9 @@ blockquote.card cite {
 
   /* The band belongs to desktop; on a phone the tagline sits inside the hero
      instead, so there is no white block between the hero and the service line. */
-  .hero-tagline-bar {
+  /* The in-panel copy takes over here; the overlay is desktop only, and the
+     video is not even loaded at this width. */
+  .hero-tagline-scrim {
     display: none;
   }
 
@@ -4198,10 +4214,6 @@ blockquote.card cite {
   .hero-tagline {
     font-size: 0.875rem;
     letter-spacing: 0.06em;
-  }
-
-  .hero-tagline-bar {
-    padding: 12px 16px;
   }
 
   /* Only one button remains here, so the column and gap just make it span the
