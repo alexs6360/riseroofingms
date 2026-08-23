@@ -467,3 +467,198 @@ updateHeader();
 
     rsShow("deck");
   }
+
+/* Address autocomplete — Mapbox Search Box.
+   -------------------------------------------------------------------------
+   One implementation, two callers: the storm history page's own field and the
+   lookup block injected into five other pages. Written here because every page
+   that needs it already loads this file.
+
+   Sessions are the money. A session is minted once and reused across every
+   keystroke of one search, then reset after a /retrieve — billing groups the
+   suggests and the retrieve together, so per-keystroke tokens would multiply
+   the bill by the length of the address. At 500 free sessions a month this is
+   the tightest limit on the account by a factor of 60, which is also why the
+   caller sets minChars: a session starts on the first suggest call, so the
+   character count is the real throttle, not the debounce. */
+window.AddressAutocomplete = (function () {
+  /* The service area, in one place. Suggestions outside it are not offered at
+     all, which is cheaper and kinder than offering an address we have no data
+     for and then explaining that we have no data for it. */
+  var AREA = { minLon: -91.0, minLat: 33.9, maxLon: -88.4, maxLat: 35.05 };
+  var TUPELO = [-88.7034, 34.2576];
+
+  function newSession() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "s-" + Date.now() + "-" + Math.round(Math.random() * 1e9);
+  }
+
+  function attach(opts) {
+    var input = opts.input;
+    var listEl = opts.listEl;
+    var token = opts.token;
+    var minChars = opts.minChars || 3;
+    var debounceMs = Math.max(opts.debounceMs || 300, 300);
+    var prefix = opts.idPrefix || "ac";
+    var onChoose = opts.onChoose;
+    if (!input || !listEl || !token) return null;
+
+    var session = newSession();
+    var timer = null;
+    var items = [];
+    var activeIndex = -1;
+
+    function close() {
+      items = [];
+      activeIndex = -1;
+      listEl.hidden = true;
+      listEl.innerHTML = "";
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+    }
+
+    function highlight(i) {
+      activeIndex = i;
+      Array.prototype.forEach.call(listEl.children, function (li, n) {
+        var on = n === i;
+        li.classList.toggle("is-active", on);
+        li.setAttribute("aria-selected", String(on));
+      });
+      if (i >= 0 && listEl.children[i]) {
+        input.setAttribute("aria-activedescendant", listEl.children[i].id);
+        listEl.children[i].scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    function label(item) {
+      return item.name + (item.place_formatted ? ", " + item.place_formatted : "");
+    }
+
+    function draw(list) {
+      items = list;
+      listEl.innerHTML = "";
+      if (!list.length) { close(); return; }
+
+      list.forEach(function (item, i) {
+        var li = document.createElement("li");
+        li.className = "sh-suggestion";
+        li.id = prefix + "-suggestion-" + i;
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", "false");
+
+        var name = document.createElement("span");
+        name.className = "sh-suggestion-name";
+        name.textContent = item.name;
+        var ctx = document.createElement("span");
+        ctx.className = "sh-suggestion-context";
+        ctx.textContent = item.place_formatted || "";
+        li.appendChild(name);
+        li.appendChild(ctx);
+
+        /* mousedown, not click: blur would close the list first. */
+        li.addEventListener("mousedown", function (ev) {
+          ev.preventDefault();
+          pick(i);
+        });
+        listEl.appendChild(li);
+      });
+
+      listEl.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      highlight(-1);
+    }
+
+    function suggest(q) {
+      if (q.length < minChars) { close(); return; }
+      var url =
+        "https://api.mapbox.com/search/searchbox/v1/suggest?q=" + encodeURIComponent(q) +
+        "&session_token=" + encodeURIComponent(session) +
+        "&country=us&types=address&limit=6" +
+        "&proximity=" + TUPELO.join(",") +
+        "&bbox=" + [AREA.minLon, AREA.minLat, AREA.maxLon, AREA.maxLat].join(",") +
+        "&access_token=" + token;
+
+      fetch(url)
+        .then(function (r) { return r.json(); })
+        .then(function (data) { draw((data && data.suggestions) || []); })
+        .catch(close);
+    }
+
+    function pick(i) {
+      var item = items[i];
+      if (!item) return;
+      var typed = label(item);
+      input.value = typed;
+      close();
+      onChoose(item, typed, api);
+    }
+
+    input.addEventListener("input", function () {
+      var q = input.value.trim();
+      clearTimeout(timer);
+      timer = setTimeout(function () { suggest(q); }, debounceMs);
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (listEl.hidden) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        highlight((activeIndex + 1) % items.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        highlight((activeIndex - 1 + items.length) % items.length);
+      } else if (e.key === "Enter" && activeIndex >= 0) {
+        e.preventDefault();
+        pick(activeIndex);
+      } else if (e.key === "Escape") {
+        close();
+      }
+    });
+
+    input.addEventListener("blur", function () {
+      setTimeout(close, 120);
+    });
+
+    var api = {
+      close: close,
+      hasActive: function () { return activeIndex >= 0 && !listEl.hidden; },
+      chooseActive: function () { pick(activeIndex); },
+      sessionToken: function () { return session; },
+      /* A retrieve ends the session; the next search starts a new one. */
+      resetSession: function () { session = newSession(); },
+    };
+    return api;
+  }
+
+  return { attach: attach, AREA: AREA, TUPELO: TUPELO };
+})();
+
+/* The lookup block, on five pages. Selecting a suggestion goes straight to the
+   storm page with the address; the form's plain GET submit is untouched, so
+   typing it out and pressing enter still works with JavaScript off or the
+   dropdown ignored. No /retrieve here — the storm page geocodes what it is
+   given against the 100,000/month tier, and a retrieve would buy a coordinate
+   this page has no use for. */
+(function () {
+  var block = document.querySelector(".lookup-cta-field");
+  if (!block) return;
+  var input = document.getElementById("lookup-cta-address");
+  var listEl = document.getElementById("lookup-cta-suggest");
+  var token = "__MAPBOX_TOKEN__";
+  if (!input || !listEl || token.indexOf("pk.") !== 0) return;
+
+  window.AddressAutocomplete.attach({
+    input: input,
+    listEl: listEl,
+    token: token,
+    /* 5, not the storm page's 3. "123 M" is not a committed searcher, and the
+       first suggest call is what opens a billable session. On the storm page
+       someone has already chosen to be there; here they are browsing. */
+    minChars: 5,
+    debounceMs: 300,
+    idPrefix: "lookup-cta",
+    onChoose: function (item, typed) {
+      window.location.href = "/storm-history?address=" + encodeURIComponent(typed);
+    },
+  });
+})();

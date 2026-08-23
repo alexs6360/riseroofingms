@@ -75,8 +75,10 @@ echo "dist/ built — $(find dist -type f | wc -l | tr -d ' ') files, $(du -sh d
 # (gitignored) does the same so the preview works.
 if [ -f .env.local ]; then . ./.env.local; fi
 if [ -n "${MAPBOX_TOKEN:-}" ]; then
-  sed -i '' "s|__MAPBOX_TOKEN__|${MAPBOX_TOKEN}|" dist/storm-history.js 2>/dev/null \
-    || sed -i "s|__MAPBOX_TOKEN__|${MAPBOX_TOKEN}|" dist/storm-history.js
+  for f in dist/storm-history.js dist/script.js; do
+    sed -i '' "s|__MAPBOX_TOKEN__|${MAPBOX_TOKEN}|" "$f" 2>/dev/null \
+      || sed -i "s|__MAPBOX_TOKEN__|${MAPBOX_TOKEN}|" "$f"
+  done
   echo "  mapbox token injected into dist/storm-history.js"
 else
   echo "  WARNING: MAPBOX_TOKEN unset — the storm history map will show as unconfigured"

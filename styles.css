@@ -4809,6 +4809,8 @@ blockquote.card cite {
    transparent inside it, and the button sits in the padding at its right
    edge. */
 .lookup-cta-field {
+  /* Anchors the suggestion list, which is absolutely positioned against it. */
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -4863,6 +4865,20 @@ blockquote.card cite {
 
 .lookup-cta-note a {
   color: var(--accent-light);
+}
+
+/* The dropdown reuses .sh-suggest wholesale — same markup, same classes, same
+   styling as the storm page. It only needs adjusting for where it lands: there
+   the list is navy against a white page, here it is navy against a navy card,
+   so the 12% white border disappears. A brighter edge and a wider offset give
+   it back its own outline. */
+/* Two classes, not one. .sh-suggest is a single class and sits ~200 lines
+   further down the file, so a single-class override here lost the tie on
+   source order and silently did nothing — the same way .mapboxgl-map beat
+   .sh-map and collapsed the storm map to zero height. */
+.lookup-cta-field .lookup-cta-suggest {
+  top: calc(100% + 8px);
+  border-color: rgba(157, 185, 220, 0.38);
 }
 
 @media (max-width: 640px) {

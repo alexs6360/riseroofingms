@@ -35,16 +35,31 @@
                button is inset inside the field's own white surface, so the
                shape reads as a single search bar. -->
           <div class="lookup-cta-field">
+            <!-- Combobox, same pattern as the storm page: the input owns the
+                 listbox so a screen reader announces the suggestions and which
+                 one is active. autocomplete="off" so the browser's own history
+                 dropdown does not cover ours. -->
             <input
               type="text"
               id="lookup-cta-address"
               name="address"
               placeholder="123 Main St, Tupelo"
-              autocomplete="street-address"
+              autocomplete="off"
               enterkeyhint="search"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="lookup-cta-suggest"
+              aria-autocomplete="list"
               required
             />
             <button type="submit" class="btn btn-primary">See storm history</button>
+            <ul
+              class="sh-suggest lookup-cta-suggest"
+              id="lookup-cta-suggest"
+              role="listbox"
+              aria-label="Address suggestions"
+              hidden
+            ></ul>
           </div>
         </form>
 
