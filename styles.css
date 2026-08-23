@@ -4766,25 +4766,28 @@ blockquote.card cite {
    the one thing on the site nobody else offers was reading as another form
    section. The brand navy is already the header and the footer, so this is the
    site's own colour doing the work rather than a new accent. */
+/* The section is only a wrapper now — the navy belongs to the card inside it.
+
+   Full-bleed navy read as another site section, and on four of the five pages
+   it butted straight against a navy hero or tagline bar so the darks stacked
+   into one region. Insetting it puts page background on all four sides, which
+   is what separates it from whatever sits above without needing a hairline to
+   fake an edge. */
 .lookup-cta {
-  background: var(--color-navy);
-  /* Tighter than a full content section. --space-section top and bottom left a
-     96px void under a 14px disclosure line, which read as the block having
-     stopped early rather than as breathing room. */
   padding: var(--space-8) 0;
-  /* The city and storm-damage heroes are navy too, so on four of the five
-     pages this band butts against the same colour and the seam disappeared —
-     one tall navy region instead of a hero and a feature. A hairline in the
-     accent gives the edge back without introducing a second blue. */
-  border-top: 1px solid rgba(157, 185, 220, 0.22);
-  border-bottom: 1px solid var(--color-border);
 }
 
-/* An outlined panel, not just centred text. Against a navy hero the hairline
-   above marks the section boundary; this marks the block itself, so it reads as
-   a distinct thing on both a white-adjacent page and a navy-adjacent one. */
+/* The card. A contained navy panel reads as a feature; a full-width navy band
+   reads as another section, which is what it was doing.
+
+   --space-6 inside, against the --space-8 the section puts outside it: the
+   navy is now only as tall as the content needs, rather than 64px of empty
+   dark above the heading and below the disclosure line. */
 .lookup-cta-inner {
-  max-width: 720px;
+  max-width: 780px;
+  padding: var(--space-6);
+  background: var(--color-navy);
+  border-radius: var(--radius);
   text-align: center;
 }
 
