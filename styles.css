@@ -4820,15 +4820,37 @@ blockquote.card cite {
 .lookup-cta-inner {
   max-width: 780px;
   padding: var(--space-6);
-  /* Both stops are existing brand navies — --color-primary-dark is the lighter
-     one already used for button hovers — so the gradient can only ever move
-     within the navy the site already owns. Off-axis angle so the light falls
-     across a corner rather than reading as a horizontal band. */
-  background: linear-gradient(152deg, var(--color-primary-dark) 0%, var(--color-navy) 62%);
+  /* Two painted layers, not one. The card's own gradient fills the padding
+     box; a second gradient fills the border box and shows only through the
+     1px transparent border. That is what makes the edge non-uniform without
+     putting anything inside the card.
+
+     Both run at the same 152deg as each other, so the edge is brightest at the
+     top-left corner where the interior gradient is lightest and has faded to
+     almost nothing by the bottom-right — it reinforces the light direction
+     already there rather than outlining the shape.
+
+     Interior stops are existing brand navies: --color-primary-dark is the
+     lighter one already used for button hovers, so the gradient can only ever
+     move within the navy the site owns. */
+  background:
+    linear-gradient(152deg, var(--color-primary-dark) 0%, var(--color-navy) 62%) padding-box,
+    linear-gradient(
+        152deg,
+        rgba(157, 185, 220, 0.5) 0%,
+        rgba(157, 185, 220, 0.18) 38%,
+        rgba(157, 185, 220, 0.04) 72%
+      )
+      border-box;
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  /* The lift, plus a 1px inner highlight along the top edge — the way a raised
-     surface catches light on its leading edge. */
-  box-shadow: var(--shadow-lift), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  /* Three layers, front to back: the 1px inner highlight along the top edge,
+     the lift, then an ambient glow. The glow is not a shadow — no offset, far
+     wider spread, far lower opacity — so instead of the card casting downward
+     it reads as the card putting a little light onto the page around it. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    var(--shadow-lift),
+    0 0 90px 12px rgba(44, 91, 140, 0.13);
   text-align: center;
 }
 
