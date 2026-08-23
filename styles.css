@@ -734,12 +734,15 @@ img {
 .hero-tagline {
   margin: 0;
   color: var(--color-navy);
-  /* --text-h2, not a one-off. It was 1rem, which in a 60px band read as a
-     caption under the hero rather than as the brand line. h2 is the largest
-     token that stays below --text-h1 at every viewport the clamp covers — 40px
-     against the h1's 44px at desktop, 34.6 against 40.8 at 768 — so it carries
-     weight without setting up a second headline. */
-  font-size: var(--text-h2);
+  /* --text-xl. It was 1rem, which read as a caption; --text-h2 was the first
+     attempt and overshot badly — it is a clamp topping out at 40px, which put
+     the tagline at the same size as "Our Services" and had it spanning nearly
+     the full viewport.
+
+     The token ladder is 18 / 22 / 28-40, so xl is the only existing step in
+     between, and the only one that stays under the h1's 32px at every width.
+     A statement, not a headline. */
+  font-size: var(--text-xl);
   font-weight: 700;
   /* Set in sentence case in the markup so screen readers do not spell it out */
   text-transform: uppercase;
