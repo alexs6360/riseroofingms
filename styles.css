@@ -706,6 +706,13 @@ img {
   display: none;
 }
 
+/* inline-block, not block: the two sentences sit on one line wherever there is
+   room and break as whole units when there is not. The in-hero copy uses block
+   for the same reason, but it is always two lines on a phone. */
+.hero-tagline span {
+  display: inline-block;
+}
+
 /* Full-width band closing the hero. A sibling of .hero rather than a row
    inside it: as a grid row the hero's own navy painted 56px below the band on
    mobile, because the panel overflowed its track upward. Outside the grid the
@@ -727,13 +734,20 @@ img {
 .hero-tagline {
   margin: 0;
   color: var(--color-navy);
-  font-size: 1rem;
+  /* --text-h2, not a one-off. It was 1rem, which in a 60px band read as a
+     caption under the hero rather than as the brand line. h2 is the largest
+     token that stays below --text-h1 at every viewport the clamp covers — 40px
+     against the h1's 44px at desktop, 34.6 against 40.8 at 768 — so it carries
+     weight without setting up a second headline. */
+  font-size: var(--text-h2);
   font-weight: 700;
   /* Set in sentence case in the markup so screen readers do not spell it out */
   text-transform: uppercase;
   letter-spacing: 0.08em;
   line-height: 1.35;
   text-align: center;
+  /* Balanced rather than ragged when it does take two lines. */
+  text-wrap: balance;
   text-wrap: balance;
 }
 

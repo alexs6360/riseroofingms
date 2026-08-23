@@ -280,7 +280,12 @@
          The other copy is .hero-tagline-inline, inside .hero-panel-inner
          above. Edit both together or they will disagree. -->
     <div class="hero-tagline-bar">
-      <p class="hero-tagline">Raising the standard. Protecting your home.</p>
+      <!-- One span per sentence, same as the in-hero copy above: at this size
+           the line wraps, and the break has to land between the two sentences
+           rather than orphaning "home." -->
+      <p class="hero-tagline">
+        <span>Raising the standard.</span> <span>Protecting your home.</span>
+      </p>
     </div>
 
 
