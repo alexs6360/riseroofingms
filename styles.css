@@ -86,6 +86,11 @@
   --shadow-card-hover: 0 2px 4px rgba(16, 31, 61, 0.06),
     0 18px 32px rgba(16, 31, 61, 0.13);
   --shadow-overlay: 0 2px 20px rgba(0, 0, 0, 0.22);
+  /* Two layers, both tinted navy rather than black, and both wide relative to
+     their offset: a large soft pool plus a tighter contact shadow. A single
+     hard drop shadow reads as a sticker; this reads as weight. */
+  --shadow-lift: 0 28px 56px -28px rgba(7, 29, 55, 0.42),
+    0 10px 24px -16px rgba(7, 29, 55, 0.22);
 
   font-size: 16px;
 }
@@ -4786,8 +4791,15 @@ blockquote.card cite {
 .lookup-cta-inner {
   max-width: 780px;
   padding: var(--space-6);
-  background: var(--color-navy);
+  /* Both stops are existing brand navies — --color-primary-dark is the lighter
+     one already used for button hovers — so the gradient can only ever move
+     within the navy the site already owns. Off-axis angle so the light falls
+     across a corner rather than reading as a horizontal band. */
+  background: linear-gradient(152deg, var(--color-primary-dark) 0%, var(--color-navy) 62%);
   border-radius: var(--radius);
+  /* The lift, plus a 1px inner highlight along the top edge — the way a raised
+     surface catches light on its leading edge. */
+  box-shadow: var(--shadow-lift), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   text-align: center;
 }
 
@@ -4818,6 +4830,9 @@ blockquote.card cite {
   background: var(--color-bg);
   border: 1px solid transparent;
   border-radius: var(--radius);
+  /* Sitting on the card, not cut into it. Navy-tinted so it reads as the card's
+     own shadow rather than a grey smudge. */
+  box-shadow: 0 2px 10px rgba(7, 29, 55, 0.3);
   transition: border-color var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out);
 }
@@ -4826,7 +4841,10 @@ blockquote.card cite {
    focused — the input has no border of its own to show a state on. */
 .lookup-cta-field:focus-within {
   border-color: var(--accent-light);
-  box-shadow: 0 0 0 4px rgba(157, 185, 220, 0.32);
+  /* Resting shadow kept underneath the ring — replacing it would drop the pill
+     flat onto the card at the moment it gains focus. */
+  box-shadow: 0 2px 10px rgba(7, 29, 55, 0.3),
+    0 0 0 4px rgba(157, 185, 220, 0.32);
 }
 
 .lookup-cta-field input {
