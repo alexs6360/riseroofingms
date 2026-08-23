@@ -216,6 +216,59 @@
      bucket indices rather than drawn around the detection's coordinate — the
      detection can sit anywhere inside the cell. */
   var HAIL_BANDS = [1.0, 1.5, 1.75, 2.0, 2.5];
+  var HAIL_COLORS = ["#cdb6ee", "#b189e6", "#9a63dd", "#8340d2", "#6b21c0"];
+
+  /* Fade timings. The bands finish at 4 * 60 + 360 = 600ms — the shape builds
+     inward from the widest to the core, which is the order the data actually
+     nests. The glow follows once they have settled. Fading out on a date
+     switch is deliberately much shorter than fading in: it is not information,
+     it is just getting the old shape off the screen before the new one lands.
+     Two swaths cross-fading would read as one shape that is wrong. */
+  var FADE_MS = 360;
+  var STAGGER_MS = 60;
+  var FADE_OUT_MS = 180;
+  var GLOW_MS = 180;
+  var GLOW_DELAY = FADE_MS + (HAIL_BANDS.length - 1) * STAGGER_MS;
+
+  var reducedMotion =
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* The band layers are per-band now, so the ramps that were data-driven
+     expressions have to be resolved to a value per band instead. Same numbers,
+     read at the same stops. */
+  function interpAt(x, pairs) {
+    if (x <= pairs[0][0]) return pairs[0][1];
+    for (var i = 0; i < pairs.length - 1; i++) {
+      var a = pairs[i], c = pairs[i + 1];
+      if (x >= a[0] && x <= c[0]) {
+        var t = c[0] === a[0] ? 0 : (x - a[0]) / (c[0] - a[0]);
+        return a[1] + (c[1] - a[1]) * t;
+      }
+    }
+    return pairs[pairs.length - 1][1];
+  }
+
+  function bandOpacity(i, b) {
+    return interpAt(HAIL_BANDS[i], [
+      [b.hailFill[0], b.hailFill[1]],
+      [b.hailFill[2], b.hailFill[3]],
+      [b.hailFill[4], b.hailFill[5]],
+    ]);
+  }
+
+  function lineColorFor(i, b) {
+    var lo = b.hailLine.lo, hi = b.hailLine.hi;
+    var t = (HAIL_BANDS[i] - HAIL_BANDS[0]) /
+      (HAIL_BANDS[HAIL_BANDS.length - 1] - HAIL_BANDS[0]);
+    var mix = function (c1, c2) {
+      var p = function (h) { return [1, 3, 5].map(function (k) { return parseInt(h.substr(k, 2), 16); }); };
+      var a = p(c1), c = p(c2);
+      return "#" + a.map(function (v, k) {
+        return Math.round(v + (c[k] - v) * t).toString(16).padStart(2, "0");
+      }).join("");
+    };
+    return mix(lo, hi);
+  }
 
   /* Envelope geometry, in kilometres.
 
@@ -377,6 +430,9 @@
       /* Repaint the selected date without re-framing. Calling selectDate here
          would call fitToStorm and throw away wherever the reader had panned
          to, which is exactly what a basemap toggle must not do. */
+      /* The rebuilt style has every layer back at opacity 0, so this is a
+         first draw again as far as the fade is concerned. */
+      drawnDate = null;
       if (current && current.date) paintDate(current.date);
     });
   }
@@ -401,7 +457,11 @@
       slot: "top",
       paint: {
         "fill-color": "#f5a63c",
-        "fill-opacity": b.windFill,
+        /* Fades with the FIRST hail band, not on its own schedule: it is the
+           ground the swath sits on, so it has to be there as the swath arrives
+           rather than turning up under it. */
+        "fill-opacity": 0,
+        "fill-opacity-transition": { duration: FADE_MS, delay: 0 },
         "fill-emissive-strength": 1,
       },
     });
@@ -413,54 +473,56 @@
       paint: {
         "line-color": "#f5a63c",
         "line-width": b.windLine.width,
-        "line-opacity": b.windLine.opacity,
+        "line-opacity": 0,
+        "line-opacity-transition": { duration: FADE_MS, delay: 0 },
         "line-emissive-strength": 1,
       },
     });
 
-    map.addLayer({
-      id: "hail-bands",
-      type: "fill",
-      source: "hail-bands",
-      slot: "top",
-      paint: {
-        /* Nested by construction: each band contains every band above it, so
-           bigger hail always sits inside smaller. Larger sizes read deeper, on
-           the same ramp as the legend. */
-        "fill-color": [
-          "interpolate", ["linear"], ["get", "min"],
-          1.0, "#cdb6ee",
-          1.5, "#b189e6",
-          1.75, "#9a63dd",
-          2.0, "#8340d2",
-          2.5, "#6b21c0",
-        ],
-        "fill-opacity": [
-          "interpolate", ["linear"], ["get", "min"],
-          b.hailFill[0], b.hailFill[1],
-          b.hailFill[2], b.hailFill[3],
-          b.hailFill[4], b.hailFill[5],
-        ],
-        "fill-emissive-strength": 1,
-      },
-    });
-    /* The stroke is what keeps one band readable against the next over
-       imagery, where the fills alone stop separating. */
-    map.addLayer({
-      id: "hail-bands-line",
-      type: "line",
-      source: "hail-bands",
-      slot: "top",
-      paint: {
-        "line-color": [
-          "interpolate", ["linear"], ["get", "min"],
-          1.0, b.hailLine.lo,
-          2.5, b.hailLine.hi,
-        ],
-        "line-width": b.hailLine.width,
-        "line-opacity": b.hailLine.opacity,
-        "line-emissive-strength": 1,
-      },
+    /* One layer per band, not one layer for all five.
+
+       The stagger needs a different delay per band, and a paint transition
+       applies to a whole layer — a data-driven fill-opacity expression would
+       move every band at once however it is written. Five fills and five
+       lines is the cost of the effect; the filter on each keeps them fed from
+       the single source. */
+    HAIL_BANDS.forEach(function (min, i) {
+      /* Nested by construction: each band contains every band above it, so
+         bigger hail always sits inside smaller. Larger sizes read deeper, on
+         the same ramp as the legend. Lowest threshold added first so the
+         cores paint over their surrounds. */
+      map.addLayer({
+        id: "hail-band-" + i,
+        type: "fill",
+        source: "hail-bands",
+        slot: "top",
+        filter: ["==", ["get", "min"], min],
+        paint: {
+          "fill-color": HAIL_COLORS[i],
+          /* Starts hidden. paintDate raises it to bandOpacity(i) once the
+             geometry for the day is in. */
+          "fill-opacity": 0,
+          "fill-opacity-transition": { duration: FADE_MS, delay: i * STAGGER_MS },
+          "fill-emissive-strength": 1,
+        },
+      });
+      /* The stroke is what keeps one band readable against the next over
+         imagery, where the fills alone stop separating. It rides the same
+         delay as its own fill so an outline never arrives ahead of it. */
+      map.addLayer({
+        id: "hail-band-line-" + i,
+        type: "line",
+        source: "hail-bands",
+        slot: "top",
+        filter: ["==", ["get", "min"], min],
+        paint: {
+          "line-color": lineColorFor(i, b),
+          "line-width": b.hailLine.width,
+          "line-opacity": 0,
+          "line-opacity-transition": { duration: FADE_MS, delay: i * STAGGER_MS },
+          "line-emissive-strength": 1,
+        },
+      });
     });
 
     map.addLayer({
@@ -471,6 +533,10 @@
       filter: ["==", ["get", "kind"], "wind"],
       paint: {
         "circle-emissive-strength": 1,
+        "circle-opacity": 0,
+        "circle-opacity-transition": { duration: FADE_MS, delay: 0 },
+        "circle-stroke-opacity": 0,
+        "circle-stroke-opacity-transition": { duration: FADE_MS, delay: 0 },
         "circle-radius": [
           "interpolate", ["linear"], ["coalesce", ["get", "val"], 45],
           45, 4,
@@ -500,7 +566,10 @@
       paint: {
         "circle-color": b.glow,
         "circle-blur": 1,
-        "circle-opacity": b.glowOpacity,
+        /* Last in, once the bands have settled — it answers "and here is you",
+           which only means something after the shape exists. */
+        "circle-opacity": 0,
+        "circle-opacity-transition": { duration: GLOW_MS, delay: GLOW_DELAY },
         "circle-emissive-strength": 1,
         "circle-radius": [
           "interpolate", ["exponential", 2], ["zoom"],
@@ -517,7 +586,10 @@
       paint: {
         "circle-color": "#ffffff",
         "circle-radius": 3.5,
-        "circle-opacity": 0.95,
+        "circle-opacity": 0,
+        "circle-opacity-transition": { duration: GLOW_MS, delay: GLOW_DELAY },
+        "circle-stroke-opacity": 0,
+        "circle-stroke-opacity-transition": { duration: GLOW_MS, delay: GLOW_DELAY },
         "circle-stroke-width": 1.5,
         "circle-stroke-color": b.coreStroke,
         "circle-emissive-strength": 1,
@@ -528,7 +600,8 @@
   /* One chip, several layers: a hazard is a band plus its outline, or an
      envelope plus the points inside it. */
   var CHIP_LAYERS = {
-    hail: ["hail-bands", "hail-bands-line"],
+    hail: HAIL_BANDS.map(function (_, i) { return "hail-band-" + i; })
+      .concat(HAIL_BANDS.map(function (_, i) { return "hail-band-line-" + i; })),
     reports: ["wind-env", "wind-env-line", "reports"],
   };
 
@@ -640,6 +713,10 @@
     eventsEl.innerHTML = "";
     emptyEl.hidden = true;
     if (map) {
+      /* Nothing is drawn any more, so the next selection is a first draw and
+         should fade straight in rather than fading out an empty map first. */
+      cancelFade();
+      drawnDate = null;
       ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
         var src = map.getSource(id);
         if (src) src.setData(EMPTY);
@@ -835,6 +912,8 @@
         b.setAttribute("aria-pressed", "false");
       });
       if (map) {
+        cancelFade();
+        drawnDate = null;
         ["hail-bands", "wind-env", "reports", "addr-glow"].forEach(function (id) {
           var src = map.getSource(id);
           if (src) src.setData(EMPTY);
@@ -861,9 +940,77 @@
     fitToStorm();
   }
 
+  /* Geometry currently on the map, or null. Not the same as current.date: it
+     is what has actually been drawn, which is what decides whether a switch
+     needs to fade the old shape out first. */
+  var drawnDate = null;
+  var fadeTimer = null;
+
+  function cancelFade() {
+    if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
+  }
+
+  /* Raise or drop every geometry layer. `stagger` is false for the way out and
+     for reduced motion, so the shape leaves as one piece. */
+  function setGeomOpacity(on, dur, stagger) {
+    var b = BASEMAPS[basemap];
+    var t = function (delay) { return { duration: dur, delay: stagger ? delay : 0 }; };
+    var set = function (id, prop, value, delay) {
+      if (!map.getLayer(id)) return;
+      map.setPaintProperty(id, prop + "-transition", t(delay));
+      map.setPaintProperty(id, prop, value);
+    };
+
+    HAIL_BANDS.forEach(function (_, i) {
+      set("hail-band-" + i, "fill-opacity", on ? bandOpacity(i, b) : 0, i * STAGGER_MS);
+      set("hail-band-line-" + i, "line-opacity", on ? b.hailLine.opacity : 0, i * STAGGER_MS);
+    });
+    set("wind-env", "fill-opacity", on ? b.windFill : 0, 0);
+    set("wind-env-line", "line-opacity", on ? b.windLine.opacity : 0, 0);
+    set("reports", "circle-opacity", on ? 1 : 0, 0);
+    set("reports", "circle-stroke-opacity", on ? 1 : 0, 0);
+
+    var glowDur = stagger ? GLOW_MS : dur;
+    var glowT = { duration: glowDur, delay: stagger ? GLOW_DELAY : 0 };
+    ["addr-glow", "addr-core"].forEach(function (id) {
+      if (!map.getLayer(id)) return;
+      map.setPaintProperty(id, "circle-opacity-transition", glowT);
+      map.setPaintProperty(id, "circle-opacity",
+        on ? (id === "addr-glow" ? b.glowOpacity : 0.95) : 0);
+      if (id === "addr-core") {
+        map.setPaintProperty(id, "circle-stroke-opacity-transition", glowT);
+        map.setPaintProperty(id, "circle-stroke-opacity", on ? 1 : 0);
+      }
+    });
+  }
+
   /* Drawing only — no camera. Called by selectDate, and again after a basemap
      switch to restore the geometry onto the rebuilt style. */
   function paintDate(date) {
+    if (!map || !current) return;
+    /* A selection mid-fade replaces it outright rather than queueing behind
+       it — the pending timer is the only thing that could stack. */
+    cancelFade();
+
+    if (reducedMotion || drawnDate === null) {
+      drawGeometry(date);
+      setGeomOpacity(true, reducedMotion ? 0 : FADE_MS, !reducedMotion);
+      drawnDate = date;
+      return;
+    }
+
+    /* Out, then in. Cross-fading two swaths would put a shape on screen that
+       belongs to neither day. */
+    setGeomOpacity(false, FADE_OUT_MS, false);
+    fadeTimer = setTimeout(function () {
+      fadeTimer = null;
+      drawGeometry(date);
+      setGeomOpacity(true, FADE_MS, true);
+      drawnDate = date;
+    }, FADE_OUT_MS);
+  }
+
+  function drawGeometry(date) {
     if (!map || !current) return;
     var lon = current.lon;
     var lat = current.lat;

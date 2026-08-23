@@ -64,21 +64,6 @@ done
 # directories copied above.
 node tools/inject-partials.mjs || exit 1
 
-# Cache-bust styles.css and script.js by content hash.
-#
-# Without this the browser serves a stale stylesheet after a rebuild and the
-# page renders old CSS with no error — a card edge and a glow were "verified"
-# against a cached file this way. Netlify fingerprints nothing here either, so
-# returning visitors hit the same problem on a real deploy.
-CSS_V=$(shasum -a256 dist/styles.css | cut -c1-8)
-JS_V=$(shasum -a256 dist/script.js | cut -c1-8)
-find dist -name '*.html' -print0 | while IFS= read -r -d '' f; do
-  sed -i '' -e "s|\(href=\"[^\"]*styles\.css\)\"|\1?v=${CSS_V}\"|g" \
-             -e "s|\(src=\"[^\"]*script\.js\)\"|\1?v=${JS_V}\"|g" "$f" 2>/dev/null \
-    || sed -i -e "s|\(href=\"[^\"]*styles\.css\)\"|\1?v=${CSS_V}\"|g" \
-              -e "s|\(src=\"[^\"]*script\.js\)\"|\1?v=${JS_V}\"|g" "$f"
-done
-echo "  asset versions: styles ${CSS_V}, script ${JS_V}"
 
 # Drag-and-drop bundle
 rm -f rise-roofing-site.zip
@@ -99,3 +84,27 @@ if [ -n "${MAPBOX_TOKEN:-}" ]; then
 else
   echo "  WARNING: MAPBOX_TOKEN unset — the storm history map will show as unconfigured"
 fi
+
+# Cache-bust every versioned asset by content hash. Runs LAST, after the token
+# injection, so the hash covers the file as actually served.
+#
+# Without this the browser serves a stale asset after a rebuild and the page
+# runs old code or old CSS with no error — a card edge and a glow were
+# "verified" against a cached stylesheet this way, and getComputedStyle cannot
+# detect it because it reads from the same stale sheet that is painting.
+# Netlify fingerprints nothing here either, so returning visitors hit the same
+# problem on a real deploy.
+stamp() {
+  local file="$1" pattern="$2" v
+  v=$(shasum -a256 "dist/$file" | cut -c1-8)
+  find dist -name '*.html' -print0 | while IFS= read -r -d '' f; do
+    sed -i '' -E "s|($pattern)\"|\1?v=${v}\"|g" "$f" 2>/dev/null \
+      || sed -i -E "s|($pattern)\"|\1?v=${v}\"|g" "$f"
+  done
+  printf '%s' "$v"
+}
+CSS_V=$(stamp styles.css 'href="[^"]*styles\.css')
+JS_V=$(stamp script.js 'src="[^"]*script\.js')
+SH_V=$(stamp storm-history.js 'src="[^"]*storm-history\.js')
+GRID_V=$(stamp storm-grid.js 'src="[^"]*storm-grid\.js')
+echo "  asset versions: styles ${CSS_V}, script ${JS_V}, storm-history ${SH_V}, storm-grid ${GRID_V}"
