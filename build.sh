@@ -64,6 +64,22 @@ done
 # directories copied above.
 node tools/inject-partials.mjs || exit 1
 
+# Cache-bust styles.css and script.js by content hash.
+#
+# Without this the browser serves a stale stylesheet after a rebuild and the
+# page renders old CSS with no error — a card edge and a glow were "verified"
+# against a cached file this way. Netlify fingerprints nothing here either, so
+# returning visitors hit the same problem on a real deploy.
+CSS_V=$(shasum -a256 dist/styles.css | cut -c1-8)
+JS_V=$(shasum -a256 dist/script.js | cut -c1-8)
+find dist -name '*.html' -print0 | while IFS= read -r -d '' f; do
+  sed -i '' -e "s|\(href=\"[^\"]*styles\.css\)\"|\1?v=${CSS_V}\"|g" \
+             -e "s|\(src=\"[^\"]*script\.js\)\"|\1?v=${JS_V}\"|g" "$f" 2>/dev/null \
+    || sed -i -e "s|\(href=\"[^\"]*styles\.css\)\"|\1?v=${CSS_V}\"|g" \
+              -e "s|\(src=\"[^\"]*script\.js\)\"|\1?v=${JS_V}\"|g" "$f"
+done
+echo "  asset versions: styles ${CSS_V}, script ${JS_V}"
+
 # Drag-and-drop bundle
 rm -f rise-roofing-site.zip
 ( cd dist && zip -r -X ../rise-roofing-site.zip . -x '.*' >/dev/null )

@@ -4826,9 +4826,10 @@ blockquote.card cite {
      putting anything inside the card.
 
      Both run at the same 152deg as each other, so the edge is brightest at the
-     top-left corner where the interior gradient is lightest and has faded to
-     almost nothing by the bottom-right — it reinforces the light direction
-     already there rather than outlining the shape.
+     top-left corner where the interior gradient is lightest and falls to a
+     fifth of that by the bottom-right — it reinforces the light direction
+     already there rather than outlining the shape. The first pass ran
+     0.5 to 0.04, which was a falloff in theory and invisible in practice.
 
      Interior stops are existing brand navies: --color-primary-dark is the
      lighter one already used for button hovers, so the gradient can only ever
@@ -4837,9 +4838,9 @@ blockquote.card cite {
     linear-gradient(152deg, var(--color-primary-dark) 0%, var(--color-navy) 62%) padding-box,
     linear-gradient(
         152deg,
-        rgba(157, 185, 220, 0.5) 0%,
-        rgba(157, 185, 220, 0.18) 38%,
-        rgba(157, 185, 220, 0.04) 72%
+        rgba(157, 185, 220, 0.9) 0%,
+        rgba(157, 185, 220, 0.42) 38%,
+        rgba(157, 185, 220, 0.18) 100%
       )
       border-box;
   border: 1px solid transparent;
@@ -4847,10 +4848,15 @@ blockquote.card cite {
   /* Three layers, front to back: the 1px inner highlight along the top edge,
      the lift, then an ambient glow. The glow is not a shadow — no offset, far
      wider spread, far lower opacity — so instead of the card casting downward
-     it reads as the card putting a little light onto the page around it. */
+     it reads as the card putting a little light onto the page around it.
+
+     60px rather than 90: at 90 the glow reached ~102px while the gap above the
+     card on the city pages is 64px, so its top ran under the navy hero and was
+     lost. 60px fits inside the gap, which makes it whole on all five pages and
+     visible rather than merely wide. */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07),
     var(--shadow-lift),
-    0 0 90px 12px rgba(44, 91, 140, 0.13);
+    0 0 60px 8px rgba(44, 91, 140, 0.26);
   text-align: center;
 }
 
