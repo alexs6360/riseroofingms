@@ -204,8 +204,14 @@ if (prefersReducedMotion) {
     });
   });
 
+  // Set by the first callback of any kind, intersecting or not. An
+  // IntersectionObserver delivers an initial callback for every target shortly
+  // after observe(), so in a working browser this flips almost immediately.
+  let observerDelivered = false;
+
   const observer = new IntersectionObserver(
     (entries) => {
+      observerDelivered = true;
       entries.forEach((entry) => {
         // isIntersecting covers the normal case; the boundingClientRect check
         // catches an element that was already scrolled past before it was
@@ -251,6 +257,25 @@ if (prefersReducedMotion) {
 
   window.addEventListener("scroll", onSweep, { passive: true });
   window.addEventListener("load", sweep);
+
+  // Dead-observer fallback. Everything wearing .reveal starts at opacity 0 and
+  // is only made visible by JavaScript, so if callbacks never arrive the page
+  // stays blank — 45 elements on the homepage alone, including the storm
+  // lookup copy. The existing sweep is not a safety net for this: it queues
+  // through requestAnimationFrame, so it dies in exactly the conditions that
+  // kill the observer.
+  //
+  // This checks whether the observer has delivered anything at all, rather
+  // than whether anything is in view — most pages legitimately have every
+  // .reveal below the fold at load, so "nothing revealed yet" is normal and
+  // "nothing delivered yet" is not. If it has not, the effect is abandoned and
+  // the content is shown, which is always the right trade: a missing fade
+  // costs nothing, missing copy costs the page.
+  setTimeout(() => {
+    if (observerDelivered) return;
+    revealEls.forEach(show);
+    observer.disconnect();
+  }, 2000);
 }
 
 // Header state is independent of the reveals — it must track scroll on every
