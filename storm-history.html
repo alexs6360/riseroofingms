@@ -185,6 +185,16 @@
               Nothing turned up for this address in the last ten years. Damage
               doesn't always show up in the data &mdash; an inspection is how you know.
             </p>
+            <!-- Currency, in the panel rather than only in the small print
+                 under the search box. Someone who watched a storm come over
+                 last night and sees an empty map needs to be told the archive
+                 does not reach that far yet — otherwise the absence reads as
+                 an answer. Filled by storm-history.js from the index. -->
+            <div class="sh-freshness" id="sh-freshness" hidden>
+              <p class="sh-freshness-lead" id="sh-freshness-lead"></p>
+              <p class="sh-freshness-detail" id="sh-freshness-detail"></p>
+            </div>
+
             <div class="sh-panel-cta">
               <a href="/#contact" class="btn btn-primary">Schedule Inspection</a>
             </div>

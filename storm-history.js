@@ -72,6 +72,9 @@
   var chips = Array.prototype.slice.call(document.querySelectorAll(".sh-chip"));
   var listEl = document.getElementById("sh-suggest");
   var currencyEl = document.getElementById("sh-currency");
+  var freshEl = document.getElementById("sh-freshness");
+  var freshLeadEl = document.getElementById("sh-freshness-lead");
+  var freshDetailEl = document.getElementById("sh-freshness-detail");
 
   /* The service area, and the box the generator pulled data for. Searches
      outside it get told so rather than returning a confident "nothing found"
@@ -712,6 +715,7 @@
     panelSub.textContent = "Results will appear here.";
     eventsEl.innerHTML = "";
     emptyEl.hidden = true;
+    if (freshEl) freshEl.hidden = true;
     if (map) {
       /* Nothing is drawn any more, so the next selection is a first draw and
          should fade straight in rather than fading out an empty map first. */
@@ -726,9 +730,39 @@
     if (mapNote) { mapNote.textContent = "Select a date to see that storm."; mapNote.hidden = false; }
   }
 
+  /* How far the archive reaches, said in the panel where the answer is.
+
+     The wording is measured against the data, not assumed. Both feeds are
+     current to within a few days — wind is NOT months behind, because the
+     NWS Local Storm Report feed fills the gap ahead of the verified Storm
+     Events release. What actually keeps a storm from last night off this map
+     is the combination of a short source lag and a weekly refresh, so that is
+     what it says. */
+  function showFreshness(events) {
+    if (!freshEl || !index) return;
+    var hail = index.hail && index.hail.through;
+    var wind = index.wind && index.wind.through;
+    if (!hail && !wind) { freshEl.hidden = true; return; }
+
+    freshLeadEl.textContent = events.length
+      ? "A storm in the last few days may not be here yet."
+      : "An empty map is not the same as nothing happened.";
+
+    var through = hail && wind && hail !== wind
+      ? "Hail data reaches " + prettyDate(hail) + " and wind reports " + prettyDate(wind) + "."
+      : "Hail and wind data both reach " + prettyDate(hail || wind) + ".";
+
+    freshDetailEl.textContent = through +
+      " The archive is rebuilt weekly, so anything more recent than that has not been added." +
+      " If you saw a storm come over your house, that is a reason to have someone look at the" +
+      " roof \u2014 not a reason to wait for it to show up here.";
+    freshEl.hidden = false;
+  }
+
   function render(address, events) {
     panelAddress.textContent = address;
     eventsEl.innerHTML = "";
+    showFreshness(events);
 
     if (!events.length) {
       panelSub.textContent = "No recorded events in the last ten years.";

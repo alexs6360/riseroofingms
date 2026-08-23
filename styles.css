@@ -4737,6 +4737,36 @@ blockquote.card cite {
   color: var(--color-text-muted);
 }
 
+/* Currency, stated in the panel rather than only in the small print under the
+   search box. A homeowner who watched a storm come over last night and finds an
+   empty map has to be told the archive does not reach that far yet — otherwise
+   the absence reads as an answer, which is the one thing this page must never
+   let happen.
+
+   Weighted like a notice, not like a footnote: its own surface, an accent rule
+   down the leading edge, and the lead line at full text colour. */
+.sh-freshness {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border-left: 3px solid var(--accent-deep);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.sh-freshness-lead {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.sh-freshness-detail {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
 .sh-panel-cta {
   margin-top: auto;
   padding-top: var(--space-4);
