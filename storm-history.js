@@ -72,6 +72,9 @@
   var chips = Array.prototype.slice.call(document.querySelectorAll(".sh-chip"));
   var listEl = document.getElementById("sh-suggest");
   var currencyEl = document.getElementById("sh-currency");
+  var collapsedEl = document.getElementById("sh-collapsed");
+  var collapsedAddrEl = document.getElementById("sh-collapsed-address");
+  var collapsedChangeEl = document.getElementById("sh-collapsed-change");
   var freshEl = document.getElementById("sh-freshness");
   var freshLeadEl = document.getElementById("sh-freshness-lead");
   var freshDetailEl = document.getElementById("sh-freshness-detail");
@@ -716,6 +719,7 @@
     eventsEl.innerHTML = "";
     emptyEl.hidden = true;
     if (freshEl) freshEl.hidden = true;
+    setCollapsed(false);
     if (map) {
       /* Nothing is drawn any more, so the next selection is a first draw and
          should fade straight in rather than fading out an empty map first. */
@@ -760,8 +764,35 @@
     freshEl.hidden = false;
   }
 
+  /* Once a lookup has succeeded, the heading, the lead and the search box are
+     instructions the reader has already followed — and on a phone they are most
+     of a screen standing between them and the answer. The class goes on the
+     root element; the mobile breakpoint is what acts on it, so desktop keeps
+     the full intro whatever this is set to.
+
+     Reversible on purpose: "change" puts the input back, prefilled, rather
+     than making the reader reload to search again. */
+  function setCollapsed(on, address) {
+    document.documentElement.classList.toggle("sh-has-results", !!on);
+    if (on && collapsedAddrEl) collapsedAddrEl.textContent = address || "";
+  }
+
+  if (collapsedChangeEl) {
+    collapsedChangeEl.addEventListener("click", function () {
+      setCollapsed(false);
+      if (input) {
+        /* Prefilled with what is being shown, so "change" means edit rather
+           than start over. */
+        if (current && current.address) input.value = current.address;
+        input.focus();
+        input.select();
+      }
+    });
+  }
+
   function render(address, events) {
     panelAddress.textContent = address;
+    setCollapsed(true, address);
     eventsEl.innerHTML = "";
     showFreshness(events);
 
@@ -1148,7 +1179,10 @@
 
     addrBucket = window.StormGrid.bucketOf(lat, lon);
     var events = eventsAt(lon, lat);
-    current = { lon: lon, lat: lat, date: null };
+    /* `typed` is what the reader actually chose or wrote, which is what the
+       "change" control puts back in the field — not the geocoder's expanded
+       form, which is longer and not what they typed. */
+    current = { lon: lon, lat: lat, date: null, address: typed };
     render(name, events);
 
     /* Chosen once, used twice: the date the map opens on is the date the

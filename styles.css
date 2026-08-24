@@ -5088,6 +5088,13 @@ blockquote.card cite {
   color: var(--color-text-muted);
 }
 
+/* The collapsed intro bar. Display:none at every width — the mobile
+   breakpoint is the only thing that turns it on, so desktop cannot show it
+   however .sh-has-results is set. */
+.sh-collapsed {
+  display: none;
+}
+
 /* Storm history at phone widths.
    -------------------------------------------------------------------------
    Everything here is furniture sitting ON the map, and at 390px the map is
@@ -5186,6 +5193,69 @@ blockquote.card cite {
 
   .sh-panel {
     padding: var(--space-3);
+  }
+
+  /* ---- collapsed intro, after a successful lookup ---------------------- */
+
+  /* The heading, the lead and the search block are instructions already
+     followed. On a 390px screen they were 520px of the 947px standing between
+     the reader and the answer. */
+  .sh-has-results .sh-intro h1,
+  .sh-has-results .sh-lead,
+  .sh-has-results .sh-lookup-row,
+  .sh-has-results .sh-consent,
+  .sh-has-results .sh-currency {
+    display: none;
+  }
+
+  /* The intro's top padding exists to clear the fixed header, so it stays —
+     only the space that belonged to the hidden copy goes. */
+  .sh-has-results .sh-intro {
+    padding-bottom: 0;
+  }
+
+  .sh-has-results .sh-lookup {
+    margin-bottom: var(--space-3);
+  }
+
+  .sh-has-results .sh-collapsed {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    text-align: left;
+  }
+
+  .sh-collapsed-address {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-navy);
+    /* One line, whatever the geocoder returns — a wrapped address here would
+       rebuild the block this replaces. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sh-collapsed-change {
+    flex: none;
+    /* 44px of tap target without 44px of visible chrome. */
+    min-height: 44px;
+    padding: 0 var(--space-1);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--accent-deep);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-decoration: underline;
   }
 }
 

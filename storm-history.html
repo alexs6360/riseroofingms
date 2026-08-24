@@ -101,6 +101,18 @@
 
     <section class="sh-tool">
       <div class="container">
+        <!-- Shown in place of the heading, lead and search box once a lookup
+             has succeeded — phone widths only, where those three are most of
+             a screen the reader has already acted on. Hidden at every width by
+             default so desktop can never see it; the mobile breakpoint is the
+             only thing that reveals it. -->
+        <div class="sh-collapsed" id="sh-collapsed">
+          <p class="sh-collapsed-address" id="sh-collapsed-address"></p>
+          <button type="button" class="sh-collapsed-change" id="sh-collapsed-change">
+            Change<span class="visually-hidden"> the address being checked</span>
+          </button>
+        </div>
+
         <form class="sh-lookup" id="sh-lookup" autocomplete="off">
           <label class="visually-hidden" for="sh-address">Street address</label>
           <div class="sh-lookup-row">
