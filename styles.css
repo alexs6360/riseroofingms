@@ -5088,6 +5088,107 @@ blockquote.card cite {
   color: var(--color-text-muted);
 }
 
+/* Storm history at phone widths.
+   -------------------------------------------------------------------------
+   Everything here is furniture sitting ON the map, and at 390px the map is
+   only ~350px wide — so controls sized for a desktop pane were eating the
+   thing they annotate. Measured before: the legend covered 25.7% of the map
+   and sat on top of the Mapbox logo.
+
+   Desktop is untouched; this is all inside the breakpoint. */
+@media (max-width: 767.98px) {
+  /* Chips: same shape, roughly two-thirds the size. 32px keeps a usable tap
+     target while giving the map back ~8px of height and a lot of width. */
+  .sh-chips {
+    gap: 5px;
+  }
+
+  .sh-chip {
+    min-height: 32px;
+    gap: 5px;
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+
+  .sh-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  /* Legend, shrunk hard rather than hidden or moved — option (a). A homeowner
+     needs the colour ramp beside the colours, not underneath the map where it
+     is read separately from the thing it explains. */
+  .sh-legend {
+    /* Clears the Mapbox logo, which sits bottom-left in this corner. The
+       attribution is a licensing requirement, so the legend moves rather than
+       the attribution. */
+    bottom: 30px;
+    left: 10px;
+    padding: 7px 9px;
+    border-radius: 9px;
+  }
+
+  .sh-legend h2 {
+    margin: 0 0 5px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .sh-legend-row {
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 9px;
+  }
+
+  .sh-swatch {
+    width: 30px;
+    height: 7px;
+  }
+
+  /* The note is dropped, not shrunk. It reads "Hail radar-estimated · wind NWS
+     reports", which is the same claim the disclaimer under the map makes at
+     length — and it was the widest line in the box, driving the legend to 57%
+     of the map's width on its own. */
+  .sh-legend-note {
+    display: none;
+  }
+
+  /* Shorter map. The panel is the answer and the map illustrates it, so the
+     top of the panel should be reachable without the map having to be scrolled
+     past first. */
+  .sh-mapwrap {
+    min-height: 250px;
+  }
+
+  /* The currency line sat --space-6 clear of the map on a screen with no room
+     to spare. Tightened to the group value, since the line and the map it
+     describes belong together. */
+  .sh-workspace {
+    gap: var(--space-4);
+  }
+
+  /* The 48px under the search block was the actual gap above the map — not the
+     workspace gap, which is why shrinking that alone did nothing. */
+  .sh-lookup {
+    margin-bottom: var(--space-3);
+  }
+
+  .sh-intro {
+    padding-bottom: var(--space-4);
+  }
+
+  /* The address wrapped to two lines at 18px and pushed the first result down
+     with it. */
+  .sh-panel-head h2 {
+    font-size: var(--text-base);
+    line-height: 1.3;
+  }
+
+  .sh-panel {
+    padding: var(--space-3);
+  }
+}
+
 /* Address autocomplete
    ------------------------------------------------------------------------- */
 .sh-combo {
