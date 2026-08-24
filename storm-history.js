@@ -772,69 +772,60 @@
     }
     emptyEl.hidden = true;
 
-    /* Two questions, two sections. Recency-first buried twelve in-cell hail
-       dates under a couple of nearby wind reports, which is the wrong answer
-       to "what happened at my house". */
-    /* Both sections newest first. Ranking the in-cell list by size put a 2016
-       hailstorm above a 2025 one, which reads as "we have nothing recent". */
-    var here = events.filter(function (e) { return e.here; })
-      .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
-    var near = events.filter(function (e) { return !e.here; })
-      .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    /* One list, strictly newest first, in-cell and nearby together.
+
+       The split used to be two headed sections. The distinction still matters,
+       but it already lives on the row — "in your area" versus "2.6 mi SE" —
+       and saying it twice cost the thing a storm list is actually for, which
+       is reading down it in time order. The count line above keeps the split
+       visible as a summary.
+
+       Sorted on a parsed timestamp rather than on the string. These dates are
+       ISO, so lexical order happens to agree, but that is a property of the
+       format and not of the data — the moment anything upstream hands over a
+       formatted date, a string sort silently produces "April, August,
+       December". This is the third time the order has had to be fixed; sorting
+       the actual value is what stops it being fixed a fourth. */
+    var ts = function (e) { return Date.parse(e.date + "T00:00:00Z"); };
+    var rows = events.slice().sort(function (a, b) { return ts(b) - ts(a); });
+
+    var here = events.filter(function (e) { return e.here; }).length;
+    var near = events.length - here;
 
     panelSub.textContent =
-      here.length
-        ? here.length + (here.length === 1 ? " event at this address" : " events at this address")
-          + ", " + near.length + " nearby — select one to see that day"
+      here
+        ? here + (here === 1 ? " event at this address" : " events at this address")
+          + ", " + near + " nearby — select one to see that day"
         : "No detections in the cell containing this address; "
-          + near.length + " nearby — select one to see that day";
+          + near + " nearby — select one to see that day";
 
-    section("At your address", here, "Nothing was detected in the cell containing this address.");
-    section("Nearby", near, "Nothing else was recorded within a few miles.");
+    rows.forEach(addEventRow);
   }
 
-  function section(title, rows, emptyText) {
-    var head = document.createElement("li");
-    head.className = "sh-section";
-    head.setAttribute("role", "presentation");
-    head.textContent = title;
-    eventsEl.appendChild(head);
+  function addEventRow(e) {
+    var li = document.createElement("li");
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sh-event";
+    btn.dataset.date = e.date;
+    btn.setAttribute("aria-pressed", "false");
 
-    if (!rows.length) {
-      /* Say it plainly. A hidden heading reads as "we found nothing anywhere",
-         which is a different claim. */
-      var none = document.createElement("li");
-      none.className = "sh-section-empty";
-      none.textContent = emptyText;
-      eventsEl.appendChild(none);
-      return;
-    }
+    var d = document.createElement("span");
+    d.className = "sh-event-date";
+    d.textContent = prettyDate(e.date);
+    var v = document.createElement("span");
+    v.className = "sh-event-value";
+    v.textContent = e.label;
+    var src = document.createElement("span");
+    src.className = "sh-event-source";
+    src.textContent = e.source;
+    btn.appendChild(d);
+    btn.appendChild(v);
+    btn.appendChild(src);
+    btn.addEventListener("click", function () { selectDate(btn.dataset.date); });
 
-    rows.forEach(function (e) {
-      var li = document.createElement("li");
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "sh-event";
-      btn.dataset.date = e.date;
-      btn.setAttribute("aria-pressed", "false");
-
-      var d = document.createElement("span");
-      d.className = "sh-event-date";
-      d.textContent = prettyDate(e.date);
-      var v = document.createElement("span");
-      v.className = "sh-event-value";
-      v.textContent = e.label;
-      var src = document.createElement("span");
-      src.className = "sh-event-source";
-      src.textContent = e.source;
-      btn.appendChild(d);
-      btn.appendChild(v);
-      btn.appendChild(src);
-      btn.addEventListener("click", function () { selectDate(btn.dataset.date); });
-
-      li.appendChild(btn);
-      eventsEl.appendChild(li);
-    });
+    li.appendChild(btn);
+    eventsEl.appendChild(li);
   }
 
   /* Contours only ever represent one storm day, so a date is always selected

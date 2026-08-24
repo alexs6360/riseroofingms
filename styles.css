@@ -5171,23 +5171,3 @@ blockquote.card cite {
 }
 
 /* Results panel sections */
-.sh-section {
-  margin: var(--space-3) 0 var(--space-1);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--color-text-muted);
-}
-
-.sh-events li:first-child .sh-section,
-.sh-events > .sh-section:first-child {
-  margin-top: 0;
-}
-
-.sh-section-empty {
-  margin: 0 0 var(--space-2);
-  padding: 0 var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
