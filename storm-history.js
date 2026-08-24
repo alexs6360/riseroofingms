@@ -736,8 +736,8 @@
      current to within a few days — wind is NOT months behind, because the
      NWS Local Storm Report feed fills the gap ahead of the verified Storm
      Events release. What actually keeps a storm from last night off this map
-     is the combination of a short source lag and a weekly refresh, so that is
-     what it says. */
+     is the radar feed's own ~1 day lag — SWDI publishes in daily batches — now
+     that the archive refreshes every six hours rather than weekly. */
   function showFreshness(events) {
     if (!freshEl || !index) return;
     var hail = index.hail && index.hail.through;
@@ -753,7 +753,8 @@
       : "Hail and wind data both reach " + prettyDate(hail || wind) + ".";
 
     freshDetailEl.textContent = through +
-      " The archive is rebuilt weekly, so anything more recent than that has not been added." +
+      " We refresh several times a day, and the radar feed itself runs about a day" +
+      " behind, so a storm from the last day or two may not be here yet." +
       " If you saw a storm come over your house, that is a reason to have someone look at the" +
       " roof \u2014 not a reason to wait for it to show up here.";
     freshEl.hidden = false;

@@ -1,17 +1,42 @@
 name: Refresh storm data
 
-# Weekly. SWDI already carries a ~4 day floor of its own, so a daily run buys
-# little for hail; Local Storm Reports move faster, and a week-old wind layer
-# still beats the four months Storm Events runs behind.
+# Two schedules, one job.
 #
-# Free on this repository: Actions minutes are unlimited for public repos.
+# INCREMENTAL, every six hours. WINDOW_MONTHS=2 fetches only the last two
+# calendar months and merges them into the committed archive: 4 HTTP requests
+# and ~5 seconds, against 133 requests and ~95 seconds for a full pull. All but
+# a handful of those 133 return data that cannot have changed.
+#
+# Six hours rather than hourly because that is what the sources support. SWDI
+# publishes hail in daily batches with roughly a day of lag — probed on
+# 2026-08-24, it held data through the 23rd and nothing at all for the 24th, so
+# an hourly poll would re-fetch the same rows twenty-three times for nothing.
+# Local Storm Reports do move continuously, and six hours is close enough to
+# them that a homeowner searching the morning after a storm finds the wind
+# report already there.
+#
+# FULL, weekly. NCEI revises older records — Storm Events files carry a _c
+# revision stamp and get reissued — and an incremental window never looks back
+# far enough to see that. The Monday run is what catches it.
+#
+# Free on this repository: Actions minutes are unlimited for public repos, and
+# a run only commits when the data actually moved. North Mississippi averages
+# 55 event-days a year, so this is roughly five commits a month regardless of
+# how often the job runs, and Netlify deploys the site in about 11 seconds.
+#
 # GitHub disables cron on repositories with no activity for 60 days, so if the
 # data ever stops moving, check that first.
 on:
   schedule:
-    - cron: "17 8 * * 1"      # Mondays, 08:17 UTC — off the hour, which is when
-                              # every other scheduled job on the platform fires
-  workflow_dispatch:           # and a button, for when a storm just happened
+    # Off the hour and off the quarter — shared runners queue hardest at :00.
+    - cron: "23 2,8,14,20 * * *"   # incremental, every six hours
+    - cron: "47 7 * * 1"           # full rebuild, Mondays
+  workflow_dispatch:                # and a button, for when a storm just happened
+    inputs:
+      full:
+        description: "Full 10-year rebuild instead of the 2-month window"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -26,7 +51,24 @@ jobs:
         with:
           node-version: "24"
 
+      # A full rebuild on the weekly cron, on a manual run asking for one, and
+      # on anything unexpected. Defaulting the unknown case to "full" means a
+      # mistake here costs 90 seconds, not a silently under-refreshed archive.
+      - name: Choose the window
+        id: mode
+        run: |
+          if [ "${{ github.event.schedule }}" = "23 2,8,14,20 * * *" ] \
+             || [ "${{ inputs.full }}" = "false" ]; then
+            echo "window=2" >> "$GITHUB_OUTPUT"
+            echo "mode: incremental (last 2 months)"
+          else
+            echo "window=0" >> "$GITHUB_OUTPUT"
+            echo "mode: full 10-year rebuild"
+          fi
+
       - name: Regenerate the storm archive
+        env:
+          WINDOW_MONTHS: ${{ steps.mode.outputs.window }}
         run: node tools/build-storm-data.mjs data
 
       - name: Commit only if something actually changed

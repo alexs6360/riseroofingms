@@ -36,7 +36,37 @@ const BBOX = { minLon: -91.0, minLat: 33.9, maxLon: -88.4, maxLat: 35.05 };
 const BBOX_STR = [BBOX.minLon, BBOX.minLat, BBOX.maxLon, BBOX.maxLat].join(",");
 
 const YEARS = Number(process.env.YEARS || 10);
+
+/* Incremental mode. WINDOW_MONTHS=n fetches only the last n calendar months
+   and
+   merges the result into the committed archive, instead of pulling the whole
+   ten-year window.
+
+   A full run is 133 HTTP requests to NOAA and ~95 seconds, and all but a
+   handful of those requests return data that cannot have changed. At several
+   runs a day that is a lot of traffic for nothing. WINDOW_MONTHS=2 is 4
+   requests.
+
+   The merge is safe because every record is keyed by day and the dedupe is
+   per-day: days inside the window are replaced wholesale, days outside are
+   kept untouched. Nothing is merged at finer granularity than a day, so an
+   incremental run cannot produce a half-updated day.
+
+   It is still only an optimisation, not a replacement — SWDI and Storm Events
+   both revise older records, so a periodic full rebuild is what catches those.
+   The workflow runs one weekly. tools/verify-incremental.mjs checks that an
+   incremental run and a full run agree byte for byte. */
+const WINDOW_MONTHS = Number(process.env.WINDOW_MONTHS || 0);
+const INCREMENTAL = WINDOW_MONTHS > 0;
+
 const END = new Date(Number(process.env.END_MS) || Date.now());
+
+/* First day of the window, or null for a full build. Declared here because it
+   reads END, which is set just above. */
+const windowStart = INCREMENTAL
+  ? new Date(Date.UTC(END.getUTCFullYear(), END.getUTCMonth() - (WINDOW_MONTHS - 1), 1))
+      .toISOString().slice(0, 10)
+  : null;
 const OUT = process.argv[2];
 
 const BUFFER_KM = 1.5;      // stated on the page; the circle is a radar cell, not a footprint
@@ -105,7 +135,7 @@ function monthsBack(n, end) {
 
 async function hail() {
   const raw = [];
-  for (const [s, e] of monthsBack(YEARS, END)) {
+  for (const [s, e] of monthsBack(INCREMENTAL ? WINDOW_MONTHS / 12 : YEARS, END)) {
     /* SWDI silently returns nothing for ranges over ~31 days, so this is
        chunked by month rather than pulled a year at a time. */
     const res = await get(`https://www.ncei.noaa.gov/swdiws/csv/nx3hail/${s}:${e}?bbox=${BBOX_STR}`);
@@ -163,7 +193,11 @@ async function stormEvents() {
   const idx = await get("https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/");
   const listing = idx ? await idx.text() : "";
   const out = [];
-  const first = END.getUTCFullYear() - YEARS;
+  /* Incremental runs only need the years the window touches. Older yearly
+     files are large, static, and already in the archive. */
+  const first = INCREMENTAL
+    ? Number(windowStart.slice(0, 4))
+    : END.getUTCFullYear() - YEARS;
   for (let y = first; y <= END.getUTCFullYear(); y++) {
     /* NCEI stamps each file with a _c revision date. Taking the first match in
        HTML listing order would pin us to whichever the directory happened to
@@ -296,6 +330,65 @@ const reports = dedupe([...se, ...lsr]).sort((a, b) =>
   : (a.val || 0) - (b.val || 0));
 
 fs.mkdirSync(OUT, { recursive: true });
+
+/* Merge an incremental window into what is already committed.
+
+   Days inside the window are dropped from the existing archive and replaced by
+   what was just fetched; days outside are carried through untouched. Records
+   are keyed by day and deduped per day, so this cannot leave a day half from
+   one run and half from another.
+
+   The comparators mirror the full-build sorts exactly — hail by day desc then
+   lon, lat; reports by day desc then kind, lon, lat, val — so a merged file
+   sorts identically to a rebuilt one. verify-incremental.mjs enforces that. */
+function mergeWindow(freshCells, freshReports) {
+  if (!INCREMENTAL) return { cells: freshCells, reports: freshReports };
+
+  const keptCells = [];
+  const keptReports = [];
+  for (const f of fs.readdirSync(OUT)) {
+    const m = /^(hail|reports)-(\d{4})\.json$/.exec(f);
+    if (!m) continue;
+    const j = JSON.parse(fs.readFileSync(`${OUT}/${f}`, "utf8"));
+    if (m[1] === "hail") {
+      for (const c of j.cells) if (c[0] < windowStart) keptCells.push(c);
+    } else {
+      for (const r of j.reports) {
+        if (r[0] < windowStart) {
+          keptReports.push({ date: r[0], kind: r[1], val: r[2], lon: r[3], lat: r[4], src: r[5] });
+        }
+      }
+    }
+  }
+
+  /* The window is authoritative for dates inside it and the archive for dates
+     outside — so BOTH sides are filtered on the same boundary. Storm Events is
+     fetched a whole year at a time, so a fresh pull carries records from
+     before the window that the archive already holds; without this filter they
+     arrive twice and the file doubles. */
+  const inWindow = (d) => d >= windowStart;
+  freshCells = freshCells.filter((c) => inWindow(c[0]));
+  freshReports = freshReports.filter((r) => inWindow(r.date));
+
+  const cells = keptCells.concat(freshCells).sort((a, b) =>
+    a[0] !== b[0] ? (a[0] < b[0] ? 1 : -1)
+    : a[2] !== b[2] ? a[2] - b[2]
+    : a[3] - b[3]);
+
+  const merged = keptReports.concat(freshReports).sort((a, b) =>
+    a.date !== b.date ? (a.date < b.date ? 1 : -1)
+    : a.kind !== b.kind ? (a.kind < b.kind ? -1 : 1)
+    : a.lon !== b.lon ? a.lon - b.lon
+    : a.lat !== b.lat ? a.lat - b.lat
+    : (a.val || 0) - (b.val || 0));
+
+  return { cells: cells, reports: merged };
+}
+
+const mergedData = mergeWindow(h.cells, reports);
+h.cells = mergedData.cells;
+const allReports = mergedData.reports;
+
 const years = new Set();
 const byYear = (rows, key) => {
   const m = new Map();
@@ -309,7 +402,7 @@ const byYear = (rows, key) => {
 };
 
 const hailYears = byYear(h.cells, (c) => c[0]);
-const repYears = byYear(reports, (r) => r.date);
+const repYears = byYear(allReports, (r) => r.date);
 
 let totalRaw = 0, totalGz = 0;
 const write = (name, obj) => {
@@ -329,7 +422,7 @@ for (const y of [...years].sort()) {
    homeowner should never read "no wind" when the truth is "no wind data that
    recent". */
 const hailThrough = h.cells.length ? h.cells[0][0] : null;
-const windRows = reports.filter((r) => r.kind === "wind");
+const windRows = allReports.filter((r) => r.kind === "wind");
 const windThrough = windRows.length ? windRows[0].date : null;
 
 /* No build timestamp here. It changed on every run whether or not any storm
