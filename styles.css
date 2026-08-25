@@ -705,81 +705,55 @@ img {
   z-index: 50;
 }
 
-/* The hero control is an outlined bar, not a white pill with a button in it.
+/* The hero control is a white pill: a light surface with a navy submit button
+   inset at its right.
 
-   Same border weight and radius as .btn-hero-call below it, so the two read as
-   the same family of control on the navy — but see the size note there: the
-   bar is deliberately much larger, because it is the primary action.
+   The outlined-on-navy variants all blended into the panel and read as a third
+   button rather than the primary action. White is what separates it.
 
-   The white-underneath legibility floor from the previous round is gone with
-   the white pill, and the contrast direction inverts with it. Light text on a
-   navy-tinted surface fails against a BRIGHT frame, not a dark one — the same
-   direction as the tagline scrim, and the opposite of what the white pill
-   needed.
+   Opaque, and that removes the contrast question entirely. The earlier white
+   pill was translucent and had to be bounded against the brightest video frame;
+   measuring since showed the bar sits wholly over the opaque navy panel at
+   every width from 768 to 1920, and an opaque surface makes even that
+   irrelevant. Navy typed text is 16.94:1 on white and 16.42:1 on the warm top
+   stop — fixed, with no frame or backdrop variable in it.
 
-   Bounded rather than sampled, as before. At 0.86 navy the brightest frame a
-   clip could contain composites to rgb(42,61,83): white typed text measures
-   11.16:1 against it and the 80%-white placeholder 7.80:1. Both AAA, at the
-   worst frame the video can produce.
-
-   The blur stays. It has the same job it had over the white pill — softening
-   the moving texture behind the control — and works the same tinted dark as
-   tinted light. */
+   No backdrop-filter: there is nothing behind the pill to blur, so it would be
+   cost with no effect. That also means no @supports fallback is needed. */
 .hero-panel .hero-lookup .lookup-cta-field {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 0;
-  padding: 0;
-  overflow: hidden;
-  /* Navy fill is the mobile case and the safe default — see the light glass
-     scoped to >=768px below.
-
-     No backdrop-filter, deliberately. Measured across 768-1920px the bar sits
-     entirely over .hero-panel with zero video overlap, always 56px of panel
-     padding to spare, and that panel is opaque navy: there is nothing behind
-     the bar to blur. Below 768px the backdrop is .hero::before, a static
-     poster at 0.3 opacity — texture, but not moving and already faint. The
-     tint is doing all of the work, so shipping a blur would be cost with no
-     effect, the same conclusion the card edge and ambient glow reached.
-
-     It also means no @supports fallback is needed: with no blur to degrade,
-     an rgba fill renders identically in every browser rather than collapsing
-     to a flat translucent panel. */
-  background: rgba(7, 29, 55, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  padding: 7px;
+  overflow: visible;
+  background: linear-gradient(180deg, #fffbf4 0%, var(--color-bg) 58%);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 #fff,
+    0 4px 14px rgba(7, 29, 55, 0.34),
+    0 1px 3px rgba(7, 29, 55, 0.2);
+  transition: box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 
-/* Light glass, desktop and tablet only.
-
-   Safe here because the backdrop is provably flat navy: white at 0.14 gives a
-   deterministic rgb(42,61,83), so white text is 11.16:1 and the 80% white
-   placeholder 7.80:1 — both AAA, with no frame or image variable involved.
-
-   Deliberately NOT applied below 768px. There the poster shows through at 0.3
-   and lifts the backdrop to rgb(81,97,115) at its brightest, where even a 0.10
-   white tint drops the placeholder to 3.88:1. The bar keeps its navy fill on
-   phones, where the photographic ground already separates it anyway. */
-@media (min-width: 768px) {
-  .hero-panel .hero-lookup .lookup-cta-field {
-    background: rgba(255, 255, 255, 0.14);
-    /* Brighter than .btn-hero-call's 0.55, so the two are not the same weight. */
-    border-color: rgba(255, 255, 255, 0.85);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  }
+.hero-panel .hero-lookup .lookup-cta-field:focus-within {
+  border-color: var(--accent-light);
+  box-shadow: inset 0 1px 0 #fff,
+    0 8px 22px rgba(7, 29, 55, 0.4),
+    0 2px 6px rgba(7, 29, 55, 0.24),
+    0 0 0 4px rgba(157, 185, 220, 0.32);
 }
 
 .hero-field-icon {
   display: flex;
   align-items: center;
-  padding-left: 12px;
-  color: rgba(255, 255, 255, 0.75);
+  padding-left: 10px;
+  color: #5b6070;
 }
 
 .hero-field-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -790,60 +764,56 @@ img {
 .hero-panel .hero-lookup .lookup-cta-field input {
   flex: 1;
   min-width: 0;
-  min-height: 64px;
+  min-height: 52px;
   padding: 0 10px;
-  /* 16px, not 18. The hero panel caps this bar at 389px on a ~1100px viewport
-     — .hero-panel is 45% of the page less 56px of padding each side, so the
-     600px max-width is never reached — and at 18px "Enter your home address"
-     needed 201px against 148px of room and clipped mid-word. */
   font-size: var(--text-base);
-  /* Degrades to an ellipsis rather than a hard cut if a narrower panel ever
-     squeezes it again. */
   text-overflow: ellipsis;
-  /* White, not the shared pill's navy. The surface is dark now — navy on navy
-     is the failure this whole rule exists to prevent. */
-  color: #fff;
+  color: var(--color-navy);
   background: transparent;
   border: 0;
 }
 
+/* Darker than --color-text-muted, which is 6.27:1 on white — AA, not AAA. The
+   hint holds the same standard as the value someone types. */
 .hero-panel .hero-lookup .lookup-cta-field input::placeholder {
-  color: rgba(255, 255, 255, 0.8);
+  color: #3f4453;
 }
 
-/* The trailing segment of the bar, not a button sitting inside it: no
-   background or radius of its own, a divider rather than an edge, and it
-   stretches to the full height of the bar so the whole end is tappable. */
+.hero-panel .hero-lookup .lookup-cta-field input:focus {
+  outline: none;
+}
+
+/* The action, inset in the pill rather than being the pill's end. */
 .hero-field-go {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: none;
-  align-self: stretch;
+  min-height: 46px;
   padding: 0 var(--space-2);
   font: inherit;
   font-size: var(--text-sm);
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   color: #fff;
-  /* Brighter than the field beside it — the divider alone read as a label
-     boundary rather than an action. On navy this is rgb(62,79,99): white text
-     measures 7.85:1, still AAA. */
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--color-primary);
   border: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.32);
-  border-radius: 0;
+  border-radius: 9px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color var(--dur-hover) var(--ease-out),
-    color var(--dur-hover) var(--ease-out);
+  transition: background-color var(--dur-hover) var(--ease-out);
 }
 
 .hero-field-go:hover {
-  background: rgba(255, 255, 255, 0.34);
+  background: var(--color-primary-dark);
 }
 
 .hero-field-go:hover .hero-field-arrow {
   transform: translateX(2px);
+}
+
+.hero-field-go:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
 }
 
 .hero-field-arrow {
@@ -856,11 +826,6 @@ img {
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: transform var(--dur-hover) var(--ease-out);
-}
-
-.hero-field-go:focus-visible {
-  outline: 2px solid var(--accent-light);
-  outline-offset: -3px;
 }
 
 /* Below the buttons now, and smaller. It used to sit between the lookup and
@@ -1082,16 +1047,33 @@ img {
   border-color: #fff;
 }
 
-/* A link, not a button. Schedule Inspection is the header's standing CTA, so
-   it does not need a second solid button below the field. */
+/* An outlined button matching Call, not a text link.
+
+   This reverses the earlier demotion to a link, which existed so the lookup
+   would dominate. The white pill above does that job now on its own — these
+   two are matched to each other and clearly subordinate to it, rather than one
+   being subordinate to the other. */
 .hero-secondary-link {
-  color: rgba(255, 255, 255, 0.78);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
   font-size: var(--text-sm);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  font-weight: 600;
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--dur-hover) var(--ease-out),
+    border-color var(--dur-hover) var(--ease-out);
 }
 
 .hero-secondary-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #fff;
   color: #fff;
 }
 
@@ -5351,32 +5333,27 @@ blockquote.card cite {
   .hero-panel .hero-lookup .lookup-cta-field {
     flex-direction: column;
     align-items: stretch;
-    padding: 0;
-    /* The icon is positioned against this. */
+    padding: 7px;
     position: relative;
   }
 
   .hero-panel .hero-lookup .lookup-cta-field input {
-    min-height: 56px;
-    padding-left: 38px;
+    min-height: 48px;
+    padding-left: 32px;
   }
 
   .hero-field-go {
     width: 100%;
-    min-height: 52px;
-    /* Centred once it spans the bar — left-aligned it read as a caption under
-       the field rather than the action at the end of it. */
+    min-height: 48px;
     justify-content: center;
-    border-left: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.32);
   }
 
   /* Sits on the input's row rather than becoming a row of its own. */
   .hero-field-icon {
     position: absolute;
-    top: 0;
-    left: 0;
-    height: 56px;
+    top: 7px;
+    left: 7px;
+    height: 48px;
   }
 }
 
