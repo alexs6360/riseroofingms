@@ -731,16 +731,42 @@ img {
   gap: 0;
   padding: 0;
   overflow: hidden;
+  /* Navy fill is the mobile case and the safe default — see the light glass
+     scoped to >=768px below.
+
+     No backdrop-filter, deliberately. Measured across 768-1920px the bar sits
+     entirely over .hero-panel with zero video overlap, always 56px of panel
+     padding to spare, and that panel is opaque navy: there is nothing behind
+     the bar to blur. Below 768px the backdrop is .hero::before, a static
+     poster at 0.3 opacity — texture, but not moving and already faint. The
+     tint is doing all of the work, so shipping a blur would be cost with no
+     effect, the same conclusion the card edge and ambient glow reached.
+
+     It also means no @supports fallback is needed: with no blur to degrade,
+     an rgba fill renders identically in every browser rather than collapsing
+     to a flat translucent panel. */
   background: rgba(7, 29, 55, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: var(--radius);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+/* Light glass, desktop and tablet only.
+
+   Safe here because the backdrop is provably flat navy: white at 0.14 gives a
+   deterministic rgb(42,61,83), so white text is 11.16:1 and the 80% white
+   placeholder 7.80:1 — both AAA, with no frame or image variable involved.
+
+   Deliberately NOT applied below 768px. There the poster shows through at 0.3
+   and lifts the backdrop to rgb(81,97,115) at its brightest, where even a 0.10
+   white tint drops the placeholder to 3.88:1. The bar keeps its navy fill on
+   phones, where the photographic ground already separates it anyway. */
+@media (min-width: 768px) {
   .hero-panel .hero-lookup .lookup-cta-field {
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
-    backdrop-filter: blur(20px) saturate(120%);
+    background: rgba(255, 255, 255, 0.14);
+    /* Brighter than .btn-hero-call's 0.55, so the two are not the same weight. */
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
 }
 
@@ -795,8 +821,14 @@ img {
   font: inherit;
   font-size: var(--text-sm);
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #fff;
-  background: transparent;
+  /* Brighter than the field beside it — the divider alone read as a label
+     boundary rather than an action. On navy this is rgb(62,79,99): white text
+     measures 7.85:1, still AAA. */
+  background: rgba(255, 255, 255, 0.24);
   border: 0;
   border-left: 1px solid rgba(255, 255, 255, 0.32);
   border-radius: 0;
@@ -807,7 +839,23 @@ img {
 }
 
 .hero-field-go:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.hero-field-go:hover .hero-field-arrow {
+  transform: translateX(2px);
+}
+
+.hero-field-arrow {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--dur-hover) var(--ease-out);
 }
 
 .hero-field-go:focus-visible {
@@ -5316,6 +5364,9 @@ blockquote.card cite {
   .hero-field-go {
     width: 100%;
     min-height: 52px;
+    /* Centred once it spans the bar — left-aligned it read as a caption under
+       the field rather than the action at the end of it. */
+    justify-content: center;
     border-left: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.32);
   }
