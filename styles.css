@@ -626,37 +626,84 @@ img {
 /* Sized by width, not height — the lockup is wider than it is tall and the
    width is what has to read. No background, border, padding or radius: the
    art carries its own transparency now. */
+/* Smaller than it was, and closer to what follows. The logo shared the panel
+   with four short values before; it now shares it with a headline, a lookup and
+   two buttons, and at 340px with 40px beneath it the buttons fell below the
+   fold. It is still the first thing seen — it no longer has to be the biggest
+   thing on the page. */
 .hero-logo {
   display: block;
-  width: 340px;
+  width: 272px;
   max-width: 100%;
   height: auto;
-  margin-bottom: 40px;
+  margin-bottom: var(--space-4);
 }
 
 /* Steps back from the logo rather than competing with it: smaller than the
    wordmark it sits under, and the tracking pulled in. */
-.hero-acronym {
-  margin: 0 0 var(--space-3);
+/* The hero headline. The h1 used to be visually-hidden above the section,
+   which left the logo as the largest thing on the page and "R.I.S.E." as the
+   first words read. */
+.hero-headline {
+  margin: 0 0 var(--space-2);
   color: #fff;
-  font-size: var(--text-lg);
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: var(--text-h1);
+  line-height: 1.12;
+  text-wrap: balance;
 }
 
+.hero-sub {
+  margin: 0 0 var(--space-4);
+  max-width: 46ch;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: var(--text-lg);
+  line-height: 1.5;
+}
+
+/* The lookup, now the hero's primary action. .lookup-cta-field carries the
+   pill treatment already — this only sets the width it lives in and the space
+   around it. */
+.hero-lookup {
+  margin: 0 0 var(--space-2);
+  max-width: 520px;
+}
+
+.hero-lookup-note {
+  margin: 0 0 var(--space-4);
+  max-width: 46ch;
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.hero-lookup-note a {
+  color: var(--accent-light);
+}
+
+/* The values band, below the hero. Navy so the four white icons still read,
+   and so the band is visibly the same family as the hero it supports rather
+   than a new section competing with it. */
+.values {
+  padding: var(--space-8) 0;
+  background: var(--color-navy);
+}
+
+/* Four columns, not four rows. As stacked rows in the hero they took the
+   vertical space the lookup now needs; as columns they read as scaffolding,
+   which is what they are once the address field leads. */
 .rise-values {
   list-style: none;
-  margin: 0 0 var(--space-5);
+  margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
 .rise-values li {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 14px;
+  gap: var(--space-2);
 }
 
 .rise-icon {
@@ -816,14 +863,20 @@ img {
   background: rgba(255, 255, 255, 0.88);
 }
 
+/* Equal weight, not a ghost. For a roofer the phone is usually the higher
+   converting path, and now that the lookup is the primary action these two are
+   siblings — a solid fill against an outline would rank them. Filled with the
+   accent rather than white so the pair reads as two options rather than one
+   button and its shadow. */
 .hero-actions .btn-outline {
-  border: 1px solid #fff;
+  background: var(--accent-deep);
+  border: 1px solid var(--accent-deep);
   color: #fff;
 }
 
 .hero-actions .btn-outline:hover {
-  border-color: #fff;
-  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 /* Left-aligned in the panel rather than centred on the page. Wraps rather than
@@ -4170,14 +4223,12 @@ blockquote.card cite {
     display: block;
   }
 
-  /* Four tiles rather than a list: the names alone carry the acronym on a
-     phone, and dropping the descriptions is what makes the 2x2 fit without
-     the hero running long. */
+  /* 2x2. Four columns do not fit at 390px, and the values are a band of their
+     own now rather than four rows inside the hero. */
   .rise-values {
-    display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: var(--space-4);
+    margin-bottom: 0;
   }
 
   .rise-values li {
@@ -4191,8 +4242,11 @@ blockquote.card cite {
     padding: 8px 16px;
   }
 
+  /* Shown again. They were hidden to stop the hero running long, and the
+     values are not in the hero any more — without them the band is four
+     abstract nouns. */
   .rise-desc {
-    display: none;
+    font-size: 0.8125rem;
   }
 
   /* Soft halo rather than a hard ring — it separates the white disc from the
@@ -4201,40 +4255,23 @@ blockquote.card cite {
     box-shadow: 0 0 14px 2px rgba(255, 255, 255, 0.1);
   }
 
-  /* display:none, not visibility or opacity — the element leaves the flow
-     entirely and its box collapses, so no space is left behind. The element
-     itself stays in the markup because the same node renders the heading on
-     desktop, which is to be left alone. */
-  .hero-acronym {
-    display: none;
-  }
-
-  /* 14px is the floor. The line is allowed to wrap to two rather than shrink
-     past it, so the band grows instead of the type getting smaller. */
-  .hero-tagline {
-    font-size: 0.875rem;
-    letter-spacing: 0.06em;
-  }
-
-  /* Only one button remains here, so the column and gap just make it span the
-     panel. Call Now is dropped — the sticky bar carries the same action, in
-     view at all times. Scoped to .hero-actions so the city pages' own
-     Call Now button in .city-cta-actions is untouched. */
-  .hero-actions .btn-outline {
-    display: none;
-  }
-
+  /* Both buttons, side by side rather than stacked. Call Now used to be hidden
+     here because the sticky bar carries the same action — but the two are
+     peers now, and stacking them full-width would put three phone-sized CTAs
+     in a row down the panel. A 50/50 pair reads as a choice and costs one row
+     instead of two. */
   .hero-actions {
-    flex-direction: column;
+    flex-direction: row;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
   }
 
   .hero-actions .btn {
-    flex: none;
-    width: 100%;
+    flex: 1 1 0;
     min-width: 0;
     max-width: none;
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
   }
 
   .btn {

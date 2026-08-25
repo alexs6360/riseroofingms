@@ -16,11 +16,13 @@ const partial = fs.readFileSync("partials/lookup-cta.html", "utf8").replace(/\n$
 
 /* One line of copy per page. City pages name their city: this tool is locally
    specific in a way a generic inspection CTA is not, and that is the whole
-   reason it belongs on high-intent local traffic. */
+   reason it belongs on high-intent local traffic.
+
+   The homepage is deliberately absent. The lookup is its hero now, so a second
+   copy of the same control further down the page would compete with it. The
+   other four pages are unaffected — this map is what decides, and the build
+   fails if a page listed here has lost its marker. */
 const LEAD = {
-  "index.html":
-    "Type an address and we'll show you the hail and wind events that radar and " +
-    "the National Weather Service recorded near it over the last ten years.",
   "storm-damage/index.html":
     "If a storm came through, start by seeing what was actually recorded near " +
     "your address — ten years of hail and wind, before anyone gets on the roof.",

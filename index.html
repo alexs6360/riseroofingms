@@ -170,8 +170,6 @@
   </header>
 
   <main id="top">
-    <h1 class="visually-hidden">RISE Roofing Solutions &mdash; roof repair, replacement, and inspection in Northeast Mississippi</h1>
-
     <section class="hero">
       <div class="hero-panel">
         <div class="hero-panel-inner">
@@ -184,68 +182,58 @@
             fetchpriority="high"
           />
 
-          <p class="hero-acronym hero-anim hero-anim-2">R.I.S.E.</p>
+          <!-- The page's h1. It was a visually-hidden line above the hero, which
+               meant the largest text a homeowner actually read was the logo,
+               followed by four abstract values. -->
+          <h1 class="hero-headline hero-anim hero-anim-2">
+            Storm damage is rarely obvious from the ground
+          </h1>
 
-          <!-- TAGLINE, COPY 1 of 2 — mobile.
-               The other copy is in .hero-tagline-scrim, overlaid on the foot
-               of the video panel below. Edit both together or they will
-               disagree.
-               Only one is ever in the layout (the other is display:none), so
-               it is never announced twice. -->
-          <p class="hero-tagline hero-tagline-inline hero-anim hero-anim-2">
-            <span>Raising the standard.</span> <span>Protecting your home.</span>
+          <p class="hero-sub hero-anim hero-anim-2">
+            See what's passed over your address, then have someone get up there
+            and look properly.
           </p>
 
-          <ul class="rise-values hero-anim hero-anim-2">
-            <li>
-              <span class="rise-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-              </span>
-              <span class="rise-text">
-                <strong class="rise-name">Reliability</strong>
-                <span class="rise-desc">We do what we say we'll do.</span>
-              </span>
-            </li>
-            <li>
-              <span class="rise-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="m11 17 2 2a1 1 0 1 0 3-3" />
-                  <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" />
-                  <path d="M3 4h8L2 14l6.5 6.5a1 1 0 1 0 3-3" />
-                </svg>
-              </span>
-              <span class="rise-text">
-                <strong class="rise-name">Integrity</strong>
-                <span class="rise-desc">Honest communication and ethical business practices.</span>
-              </span>
-            </li>
-            <li>
-              <span class="rise-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </span>
-              <span class="rise-text">
-                <strong class="rise-name">Service</strong>
-                <span class="rise-desc">Customers come first in every decision we make.</span>
-              </span>
-            </li>
-            <li>
-              <span class="rise-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2l-5-4.9 6.9-1L12 2z" />
-                </svg>
-              </span>
-              <span class="rise-text">
-                <strong class="rise-name">Excellence</strong>
-                <span class="rise-desc">Quality craftsmanship without compromise.</span>
-              </span>
-            </li>
-          </ul>
+          <!-- Same ids and classes as the shared lookup partial, deliberately:
+               script.js binds the Search Box autocomplete to #lookup-cta-address
+               and #lookup-cta-suggest, so this markup picks it up with no new
+               code. The dropdown treatment already works on navy.
+
+               A GET form, so it still works with JavaScript off — the browser
+               builds /storm-history?address=… and the storm page runs the
+               lookup from the query string. -->
+          <form class="lookup-cta-form hero-lookup hero-anim hero-anim-3" action="/storm-history" method="get">
+            <label class="visually-hidden" for="lookup-cta-address">Street address</label>
+            <div class="lookup-cta-field">
+              <input
+                type="text"
+                id="lookup-cta-address"
+                name="address"
+                placeholder="123 Main St, Tupelo"
+                autocomplete="off"
+                enterkeyhint="search"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="lookup-cta-suggest"
+                aria-autocomplete="list"
+                required
+              />
+              <button type="submit" class="btn btn-primary">See storm history</button>
+              <ul
+                class="sh-suggest lookup-cta-suggest"
+                id="lookup-cta-suggest"
+                role="listbox"
+                aria-label="Address suggestions"
+                hidden
+              ></ul>
+            </div>
+          </form>
+
+          <p class="hero-lookup-note hero-anim hero-anim-3">
+            We keep addresses searched here so we can follow up about a free
+            inspection. See our <a href="/privacy">Privacy Policy</a>.
+          </p>
+
 
           <div class="hero-actions hero-anim hero-anim-4">
             <a href="#contact" class="btn btn-primary">Schedule Inspection</a>
@@ -291,7 +279,64 @@
          The other copy is .hero-tagline-inline, inside .hero-panel-inner
          above. Edit both together or they will disagree. -->
 
-    <!-- lookup-cta -->
+    <!-- The R.I.S.E. values, moved out of the hero. They are supporting
+         content now that the address lookup leads, and four columns rather
+         than four stacked rows is what makes them read as scaffolding instead
+         of the main event. -->
+    <section class="values" aria-label="How we work">
+      <div class="container">
+    <ul class="rise-values">
+      <li>
+        <span class="rise-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+        </span>
+        <span class="rise-text">
+          <strong class="rise-name">Reliability</strong>
+          <span class="rise-desc">We do what we say we'll do.</span>
+        </span>
+      </li>
+      <li>
+        <span class="rise-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="m11 17 2 2a1 1 0 1 0 3-3" />
+            <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" />
+            <path d="M3 4h8L2 14l6.5 6.5a1 1 0 1 0 3-3" />
+          </svg>
+        </span>
+        <span class="rise-text">
+          <strong class="rise-name">Integrity</strong>
+          <span class="rise-desc">Honest communication and ethical business practices.</span>
+        </span>
+      </li>
+      <li>
+        <span class="rise-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </span>
+        <span class="rise-text">
+          <strong class="rise-name">Service</strong>
+          <span class="rise-desc">Customers come first in every decision we make.</span>
+        </span>
+      </li>
+      <li>
+        <span class="rise-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2l-5-4.9 6.9-1L12 2z" />
+          </svg>
+        </span>
+        <span class="rise-text">
+          <strong class="rise-name">Excellence</strong>
+          <span class="rise-desc">Quality craftsmanship without compromise.</span>
+        </span>
+      </li>
+    </ul>
+      </div>
+    </section>
     <section class="service-line">
       <div class="container">
         <p>Serving Tupelo, Oxford, Southaven and across North Mississippi</p>
