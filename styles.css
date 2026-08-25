@@ -860,87 +860,73 @@ img {
   max-width: 960px;
 }
 
+/* A label, not a headline — the four letters below are the display type now. */
 .values-title {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-xl);
-  color: var(--color-navy);
+  margin: 0 0 var(--space-6);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
   text-align: center;
 }
 
-/* The acronym is the point, so the letters that spell it are the emphasis. */
 .values-title span {
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
-/* Four columns, not four rows. As stacked rows in the hero they took the
-   vertical space the lookup now needs; as columns they read as scaffolding,
-   which is what they are once the address field leads.
-
-   Tighter gap than the old --space-4: the space between them was competing
-   with the space inside them. */
+/* Four columns, no cards. The letter carries the weight, so the borders,
+   radius, fill and circle icons the cards needed are all gone. */
 .rise-values {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--space-4);
 }
 
-/* Cards, not bare columns. Four items on a flat ground had nothing holding
-   them together; the same white-on-surface treatment the mobile tiles already
-   used is what makes them read as a set. */
 .rise-values li {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
-  padding: var(--space-3);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  /* Matches .storm-card on the storm-damage page: a 3px rule across the top
-     with the card's full radius kept, rather than squaring the top corners.
-     Checked rather than assumed — .storm-card sets only the border and leaves
-     .card's --radius intact. */
-  border-top: 3px solid var(--accent-deep);
-  border-radius: var(--radius);
 }
 
-/* The letter is the anchor now — R, I, S, E — so the acronym is legible in
-   the cards themselves rather than only in the heading. aria-hidden in the
-   markup: the title beside it already says the word, so a screen reader
-   reading "R Reliability" would be noise.
-
-   Decorative by construction, which is why accent-light is acceptable here at
-   1.98:1 on white — it carries no information the title does not. */
 .rise-letter {
-  font-size: 34px;
+  font-size: 84px;
   font-weight: 500;
-  line-height: 1;
-  color: var(--accent-light);
+  line-height: 0.85;
+  color: var(--color-navy);
+}
+
+.rise-rule {
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin: 14px 0;
+  background: var(--accent-deep);
+  transform-origin: left;
 }
 
 .rise-text {
   display: block;
 }
 
-/* Tight line-height binds the title to its own description, so each value
-   reads as one unit rather than four evenly spaced lines. */
 .rise-name {
   display: block;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.25;
   color: var(--color-navy);
-  font-size: 1.125rem;
-  font-weight: 700;
-  line-height: 1.2;
 }
 
 .rise-desc {
   display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.45;
   /* Two roughly even lines rather than a full line plus an orphan word. */
   text-wrap: balance;
   color: var(--color-text-muted);
-  font-size: 0.95rem;
-  line-height: 1.4;
 }
 
 /* The in-hero copy of the tagline is mobile only; the band below the hero
@@ -4435,21 +4421,21 @@ blockquote.card cite {
     margin-bottom: 0;
   }
 
+  /* No card treatment here either — the columns are bare at every width now,
+     so the fill, borders, radius and padding are gone rather than being
+     re-declared for phones. */
   .rise-values li {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 8px;
-    background: var(--color-bg);
-    /* Longhands, not the `border` shorthand. The shorthand reset border-top and
-       silently dropped the 3px accent rule on phones, because this rule sits
-       later in the file than the desktop one that sets it. */
-    border-right: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-    border-left: 1px solid var(--color-border);
-    border-radius: 12px;
-    /* Vertical padding down another third; the sides keep their 16px */
-    padding: 8px 16px;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .rise-letter {
+    font-size: 56px;
+  }
+
+  .rise-rule {
+    margin: 10px 0;
   }
 
   /* Shown again. They were hidden to stop the hero running long, and the
@@ -5385,6 +5371,74 @@ blockquote.card cite {
     left: 7px;
     height: 48px;
   }
+}
+
+/* The values band's three-beat reveal.
+
+   It rides the existing observer rather than adding a parallel one: the <li>
+   carries .reveal, so script.js groups the four columns and toggles .in-view on
+   each exactly as before. What changed is that the column is no longer the
+   thing that animates — it is only the carrier, and its three children stage
+   off its .in-view.
+
+   That indirection is necessary. script.js assigns delay by sibling index
+   within a parent, so three beats inside one column would all get the same
+   column-level delay and every column would fire identically. The per-column
+   offsets are declared here with :nth-child instead, which keeps the timing in
+   one readable place.
+
+   The hidden state lives inside prefers-reduced-motion: no-preference, exactly
+   as the rest of .reveal does, so a reduced-motion visitor never has a hidden
+   element — no JS check involved. Everything is also behind .js, so with
+   scripting off nothing is hidden either. */
+@media (prefers-reduced-motion: no-preference) {
+  /* The column itself must not inherit .reveal's fade — it would move the whole
+     stack as one block and there would be no beats. Two classes plus a type
+     selector, so this outranks `.js .reveal`. */
+  .js .rise-values li.reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .js .rise-values li .rise-letter,
+  .js .rise-values li .rise-text {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 450ms var(--ease-out), transform 450ms var(--ease-out);
+  }
+
+  .js .rise-values li .rise-rule {
+    transform: scaleX(0);
+    transition: transform 500ms var(--ease-out);
+  }
+
+  .js .rise-values li.in-view .rise-letter,
+  .js .rise-values li.in-view .rise-text {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .js .rise-values li.in-view .rise-rule {
+    transform: scaleX(1);
+  }
+
+  /* letter at the column delay, rule +200ms, text +300ms */
+  .rise-values li:nth-child(1) .rise-letter { transition-delay: 0ms; }
+  .rise-values li:nth-child(1) .rise-rule   { transition-delay: 200ms; }
+  .rise-values li:nth-child(1) .rise-text   { transition-delay: 300ms; }
+
+  .rise-values li:nth-child(2) .rise-letter { transition-delay: 50ms; }
+  .rise-values li:nth-child(2) .rise-rule   { transition-delay: 250ms; }
+  .rise-values li:nth-child(2) .rise-text   { transition-delay: 350ms; }
+
+  .rise-values li:nth-child(3) .rise-letter { transition-delay: 100ms; }
+  .rise-values li:nth-child(3) .rise-rule   { transition-delay: 300ms; }
+  .rise-values li:nth-child(3) .rise-text   { transition-delay: 400ms; }
+
+  .rise-values li:nth-child(4) .rise-letter { transition-delay: 150ms; }
+  .rise-values li:nth-child(4) .rise-rule   { transition-delay: 350ms; }
+  .rise-values li:nth-child(4) .rise-text   { transition-delay: 450ms; }
 }
 
 /* Storm history at phone widths.
