@@ -675,6 +675,36 @@ img {
   max-width: 600px;
 }
 
+/* The hero panel is pinned at z-index 1, which caps everything inside it —
+   .hero-panel and .hero-panel-inner both set position: relative; z-index: 1,
+   so the whole subtree sits at 1 in the root stacking context and no inner
+   z-index, however large, can reach past the sticky call bar at 30.
+
+   Lifted only while focus is inside the panel, which in practice means while
+   someone is using the lookup. At rest the panel drops back to 1 and the bar
+   sits above the hero as before. */
+.hero-panel:focus-within {
+  z-index: 40;
+}
+
+/* The dropdown's own z-index is not enough here.
+
+   .hero-anim animates transform with fill-mode: both, so the transform
+   persists after the animation ends — and a non-none transform creates a
+   stacking context. That traps the dropdown's z-index inside .hero-lookup,
+   where it can never rise above .hero-actions, a later sibling with a
+   stacking context of its own. The result was that the first suggestion was
+   covered by "or schedule an inspection" and the second by the sticky call
+   bar: tapping an address dialled the phone.
+
+   Raising the form itself lifts the whole context, dropdown included. Only
+   while focus is inside it, so the form does not paint over the sticky bar
+   as it scrolls past at rest. */
+.hero-panel .hero-lookup:focus-within {
+  position: relative;
+  z-index: 50;
+}
+
 /* Taller and heavier than the shared pill. On this panel it is competing with
    a 44px headline rather than sitting inside a card. */
 .hero-panel .hero-lookup .lookup-cta-field {
@@ -5345,7 +5375,10 @@ blockquote.card cite {
 
 .sh-suggest {
   position: absolute;
-  z-index: 20;
+  /* Above the sticky call bar, which is fixed at z-index 30. At 20 the bar
+     painted over the lower suggestions, so tapping one dialled the phone
+     instead of choosing an address. */
+  z-index: 40;
   top: calc(100% + 6px);
   left: 0;
   right: 0;
