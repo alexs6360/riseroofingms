@@ -4277,18 +4277,12 @@ blockquote.card cite {
     box-shadow: none;
   }
 
-  /* Stacked, not side by side. The pair is a button and a text link now rather
-     than two buttons, and at 390px "Call (662) 213-4797" beside "or schedule
-     an inspection" ran past the panel edge and clipped. Different weights
-     stacked read as a primary and an alternative, which is what they are. */
+  /* Only the text link remains here — see the .btn-hero-call rule keyed to the
+     sticky bar's own breakpoint below. */
   .hero-actions {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-2);
-  }
-
-  .btn-hero-call {
-    width: 100%;
   }
 
   .hero-secondary-link {
@@ -5153,6 +5147,24 @@ blockquote.card cite {
    however .sh-has-results is set. */
 .sh-collapsed {
   display: none;
+}
+
+/* The hero's Call button, dropped wherever the sticky call bar is showing —
+   the bar is fixed to the bottom of the viewport with the same number, so the
+   two are the same action twice on one screen, and the hero is where the
+   vertical space above the fold matters most.
+
+   Keyed to max-width: 768px deliberately, matching the sticky bar's own query
+   rather than the 767.98px the rest of the hero's mobile rules use. Those two
+   are not the same: at exactly 768px — iPad portrait — the bar is showing and
+   a rule at 767.98 would not have applied, leaving both on screen. That is the
+   one viewport where this change had to work and would silently have failed.
+
+   Desktop keeps the button; there is no sticky bar above 768. */
+@media (max-width: 768px) {
+  .btn-hero-call {
+    display: none;
+  }
 }
 
 /* Storm history at phone widths.
