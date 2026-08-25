@@ -705,68 +705,114 @@ img {
   z-index: 50;
 }
 
-/* Glass, hero only.
+/* The hero control is an outlined bar, not a white pill with a button in it.
 
-   The pill sits over playing video here, so a blur has real texture to work
-   with. It is scoped to the hero deliberately: on the four card pages the same
-   pill sits on flat navy, where a blur has nothing to soften and transparency
-   would only tint the surface and cost contrast for no visual gain. Those keep
-   the fully opaque white pill they already had.
+   Same border weight and radius as .btn-hero-call below it, so the two read as
+   the same family of control on the navy — but see the size note there: the
+   bar is deliberately much larger, because it is the primary action.
 
-   The blur is the look; the white underneath is the legibility floor. Because
-   the footage changes brightness frame to frame, the text must never depend on
-   which frame is showing — so the white is set high enough that the worst
-   possible frame still clears AAA, and the contrast is a property of the design
-   rather than of the video.
+   The white-underneath legibility floor from the previous round is gone with
+   the white pill, and the contrast direction inverts with it. Light text on a
+   navy-tinted surface fails against a BRIGHT frame, not a dark one — the same
+   direction as the tagline scrim, and the opposite of what the white pill
+   needed.
 
-   Bounded rather than sampled, like the tagline scrim: at 0.90 the darkest
-   frame a clip could contain composites to rgb(230,230,230) and the brightest
-   to pure white. Navy input text is 13.51:1 against the first and 16.94:1
-   against the second — AAA at both ends with room to spare. Note the failing
-   direction is the opposite of the scrim's: that is white text, so a bright
-   frame is its enemy; this is navy text, so a dark frame is. */
+   Bounded rather than sampled, as before. At 0.86 navy the brightest frame a
+   clip could contain composites to rgb(42,61,83): white typed text measures
+   11.16:1 against it and the 80%-white placeholder 7.80:1. Both AAA, at the
+   worst frame the video can produce.
+
+   The blur stays. It has the same job it had over the white pill — softening
+   the moving texture behind the control — and works the same tinted dark as
+   tinted light. */
+.hero-panel .hero-lookup .lookup-cta-field {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: rgba(7, 29, 55, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .hero-panel .hero-lookup .lookup-cta-field {
-    background: linear-gradient(
-      180deg,
-      rgba(255, 251, 244, 0.9) 0%,
-      rgba(255, 255, 255, 0.9) 58%
-    );
     -webkit-backdrop-filter: blur(20px) saturate(120%);
     backdrop-filter: blur(20px) saturate(120%);
   }
-
-  /* --color-text-muted only reaches 5.00:1 on the darkest composite, which is
-     AA and not AAA. Darkened just for the hero so the placeholder holds the
-     same standard as the value the visitor types: 7.74:1 at worst. */
-  .hero-panel .hero-lookup .lookup-cta-field input::placeholder {
-    color: #3f4453;
-  }
 }
 
-/* Never see-through — it is the action, and it sits on top of the glass. */
-.hero-panel .hero-lookup .lookup-cta-field .btn {
-  background: var(--color-primary);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+.hero-field-icon {
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  color: rgba(255, 255, 255, 0.75);
 }
 
-/* Taller and heavier than the shared pill. On this panel it is competing with
-   a 44px headline rather than sitting inside a card. */
-.hero-panel .hero-lookup .lookup-cta-field {
-  padding: 8px;
+.hero-field-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .hero-panel .hero-lookup .lookup-cta-field input {
-  min-height: 66px;
-  padding: 0 var(--space-3);
-  font-size: var(--text-lg);
+  flex: 1;
+  min-width: 0;
+  min-height: 64px;
+  padding: 0 10px;
+  /* 16px, not 18. The hero panel caps this bar at 389px on a ~1100px viewport
+     — .hero-panel is 45% of the page less 56px of padding each side, so the
+     600px max-width is never reached — and at 18px "Enter your home address"
+     needed 201px against 148px of room and clipped mid-word. */
+  font-size: var(--text-base);
+  /* Degrades to an ellipsis rather than a hard cut if a narrower panel ever
+     squeezes it again. */
+  text-overflow: ellipsis;
+  /* White, not the shared pill's navy. The surface is dark now — navy on navy
+     is the failure this whole rule exists to prevent. */
+  color: #fff;
+  background: transparent;
+  border: 0;
 }
 
-.hero-panel .hero-lookup .lookup-cta-field .btn {
-  min-height: 54px;
-  padding: 0 var(--space-3);
-  font-size: var(--text-base);
+.hero-panel .hero-lookup .lookup-cta-field input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* The trailing segment of the bar, not a button sitting inside it: no
+   background or radius of its own, a divider rather than an edge, and it
+   stretches to the full height of the bar so the whole end is tappable. */
+.hero-field-go {
+  flex: none;
+  align-self: stretch;
+  padding: 0 var(--space-2);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--dur-hover) var(--ease-out),
+    color var(--dur-hover) var(--ease-out);
+}
+
+.hero-field-go:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.hero-field-go:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: -3px;
 }
 
 /* Below the buttons now, and smaller. It used to sit between the lookup and
@@ -5240,6 +5286,46 @@ blockquote.card cite {
 @media (max-width: 768px) {
   .btn-hero-call {
     display: none;
+  }
+}
+
+/* The hero bar stacks below 1200px, not just on phones.
+
+   The hero panel is 45% of the viewport less 112px of padding, so the bar is
+   389px at a 1113px viewport and 293px at 900px. Side by side that leaves the
+   input 84-180px of content width against the 182px "Enter your home address"
+   needs, and it clipped mid-word. Stacked, the input gets the bar's full
+   width at every size.
+
+   It stays one bar rather than splitting into a field and a button: the
+   trailing segment goes full width with its divider moved to the top edge. */
+@media (max-width: 1199.98px) {
+  .hero-panel .hero-lookup .lookup-cta-field {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    /* The icon is positioned against this. */
+    position: relative;
+  }
+
+  .hero-panel .hero-lookup .lookup-cta-field input {
+    min-height: 56px;
+    padding-left: 38px;
+  }
+
+  .hero-field-go {
+    width: 100%;
+    min-height: 52px;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.32);
+  }
+
+  /* Sits on the input's row rather than becoming a row of its own. */
+  .hero-field-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 56px;
   }
 }
 

@@ -204,12 +204,18 @@
                lookup from the query string. -->
           <form class="lookup-cta-form hero-lookup hero-anim hero-anim-3" action="/storm-history" method="get">
             <label class="visually-hidden" for="lookup-cta-address">Street address</label>
-            <div class="lookup-cta-field">
+            <div class="lookup-cta-field hero-field">
+              <span class="hero-field-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </span>
               <input
                 type="text"
                 id="lookup-cta-address"
                 name="address"
-                placeholder="123 Main St, Tupelo"
+                placeholder="Enter your home address"
                 autocomplete="off"
                 enterkeyhint="search"
                 role="combobox"
@@ -218,7 +224,7 @@
                 aria-autocomplete="list"
                 required
               />
-              <button type="submit" class="btn btn-primary">See storm history</button>
+              <button type="submit" class="hero-field-go">See storm history</button>
               <ul
                 class="sh-suggest lookup-cta-suggest"
                 id="lookup-cta-suggest"
