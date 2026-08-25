@@ -846,29 +846,59 @@ img {
 /* Light ground, not navy. On navy it butted straight against the navy hero
    with no seam and read as part of it — the band needs to announce that the
    hero has ended. Everything inside inverts to suit. */
+/* --space-6, not --space-8. 64px top and bottom was section-sized padding
+   around four short cards, which is part of what made them float. */
 .values {
-  padding: var(--space-8) 0;
+  padding: var(--space-6) 0;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
 
+/* Narrower than the page container. At full width the four sat far enough
+   apart to read as four separate things rather than one group. */
+.values-inner {
+  max-width: 960px;
+}
+
+.values-title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-xl);
+  color: var(--color-navy);
+  text-align: center;
+}
+
+/* The acronym is the point, so the letters that spell it are the emphasis. */
+.values-title span {
+  letter-spacing: 0.06em;
+}
+
 /* Four columns, not four rows. As stacked rows in the hero they took the
    vertical space the lookup now needs; as columns they read as scaffolding,
-   which is what they are once the address field leads. */
+   which is what they are once the address field leads.
+
+   Tighter gap than the old --space-4: the space between them was competing
+   with the space inside them. */
 .rise-values {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
+/* Cards, not bare columns. Four items on a flat ground had nothing holding
+   them together; the same white-on-surface treatment the mobile tiles already
+   used is what makes them read as a set. */
 .rise-values li {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
 }
 
 .rise-icon {
