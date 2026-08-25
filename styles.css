@@ -894,31 +894,30 @@ img {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-2);
+  gap: 10px;
   padding: var(--space-3);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
+  /* Matches .storm-card on the storm-damage page: a 3px rule across the top
+     with the card's full radius kept, rather than squaring the top corners.
+     Checked rather than assumed — .storm-card sets only the border and leaves
+     .card's --radius intact. */
+  border-top: 3px solid var(--accent-deep);
   border-radius: var(--radius);
 }
 
-.rise-icon {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-navy);
-  display: grid;
-  place-items: center;
-}
+/* The letter is the anchor now — R, I, S, E — so the acronym is legible in
+   the cards themselves rather than only in the heading. aria-hidden in the
+   markup: the title beside it already says the word, so a screen reader
+   reading "R Reliability" would be noise.
 
-.rise-icon svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: #fff;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+   Decorative by construction, which is why accent-light is acceptable here at
+   1.98:1 on white — it carries no information the title does not. */
+.rise-letter {
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--accent-light);
 }
 
 .rise-text {
@@ -937,6 +936,8 @@ img {
 
 .rise-desc {
   display: block;
+  /* Two roughly even lines rather than a full line plus an orphan word. */
+  text-wrap: balance;
   color: var(--color-text-muted);
   font-size: 0.95rem;
   line-height: 1.4;
@@ -4440,7 +4441,12 @@ blockquote.card cite {
     text-align: center;
     gap: 8px;
     background: var(--color-bg);
-    border: 1px solid var(--color-border);
+    /* Longhands, not the `border` shorthand. The shorthand reset border-top and
+       silently dropped the 3px accent rule on phones, because this rule sits
+       later in the file than the desktop one that sets it. */
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    border-left: 1px solid var(--color-border);
     border-radius: 12px;
     /* Vertical padding down another third; the sides keep their 16px */
     padding: 8px 16px;
@@ -4451,12 +4457,6 @@ blockquote.card cite {
      abstract nouns. */
   .rise-desc {
     font-size: 0.8125rem;
-  }
-
-  /* The halo existed to separate a white disc from navy behind it. The disc is
-     navy on white now, so it separates itself. */
-  .rise-icon {
-    box-shadow: none;
   }
 
   /* Only the text link remains here — see the .btn-hero-call rule keyed to the
