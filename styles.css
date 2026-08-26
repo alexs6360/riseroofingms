@@ -867,30 +867,15 @@ img {
 /* Below the buttons now, and smaller. It used to sit between the lookup and
    the CTAs, splitting the two things a reader might act on with a line that is
    neither. */
-/* The services line above the buttons and the privacy line below them are the
-   same treatment — small, muted, no surface of their own. Shared here rather
-   than restated so the two cannot drift apart. */
-.hero-lookup-note,
-.hero-services-note {
+.hero-lookup-note {
+  margin: var(--space-3) 0 0;
   max-width: 46ch;
   font-size: var(--text-xs);
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Only the margins differ, because one sits above the buttons and one below.
-   The lookup card already carries space-5 beneath it, so the services line
-   takes no top margin of its own. */
-.hero-lookup-note {
-  margin: var(--space-3) 0 0;
-}
-
-.hero-services-note {
-  margin: 0 0 var(--space-4);
-}
-
-.hero-lookup-note a,
-.hero-services-note a {
+.hero-lookup-note a {
   color: var(--accent-light);
 }
 
@@ -4482,7 +4467,7 @@ blockquote.card cite {
      needs on desktop, and at 260 it took a quarter of a 390x844 screen before
      the headline had said anything.
 
-     The top margin drops from space-4 to space-1 as well. .hero-panel's top
+     The top margin drops from space-4 to space-2 as well. .hero-panel's top
      padding is exactly --header-h, which clears the fixed header and no more,
      so this margin is the whole visible gap beneath the bar — 32px of it read
      as a hole. 16px halves it and still leaves the mark clear of the bar. */
