@@ -310,13 +310,19 @@ img {
   }
 }
 
-/* About and Testimonials drop out through this band — they are homepage-only
-   anchors and both are still in the footer. The ceiling sits at 920 rather
-   than 900 because the two of them reappearing is the tightest moment in the
-   nav: at 900 the container has not yet grown enough to seat them alongside
-   Roof System, leaving 3px of slack. Twenty more pixels of viewport is enough
-   to seat all seven comfortably. */
-@media (min-width: 769px) and (max-width: 919.98px) {
+/* About and Testimonials are out of the desktop bar at every width, not just
+   through a narrow band. With them in, the row needed 1279.9px against the
+   1152px content box of the 1200px container — 127.9px over, at every viewport
+   from 1150 up, because the container stops growing at 1200. A centred nowrap
+   flex row can only overflow at its end edge, so the bar kept its 24px of left
+   padding while the CTA hung past the right one and, below 1408, past the
+   window itself. Dropping these two reclaims 170.3px (39.8 + 82.5 of label
+   plus two 24px gaps) and the row fits with room to spare.
+
+   Both are homepage-only anchors and both remain in the footer and in the
+   mobile menu, so nothing becomes unreachable. No other page's nav carries
+   them — the city and storm pages lead with Home instead. */
+@media (min-width: 769px) {
   .nav-secondary {
     display: none;
   }
