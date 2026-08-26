@@ -21,11 +21,9 @@
   --accent-deep: #2c5b8c;
 
   --color-surface: #f5f5f7;
-  /* The values band's own ground — a cooler, bluer grey than --color-surface,
-     so the band reads as its own thing between the navy hero and the white
-     services section. Declared here with the other section colours rather than
-     inline on the rule. */
-  --color-values-bg: #edf2f8;
+  /* The values band's own ground. Declared here with the other section colours
+     rather than inline on the rule. */
+  --color-values-bg: #ffffff;
   --color-border: #e3e4ea;
 
   /* One radius for every card, button, and input */
