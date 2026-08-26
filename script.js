@@ -201,8 +201,7 @@ if (prefersReducedMotion) {
        than one gesture. The service-area pills stay at 30 — there are far
        more of them per row. */
     const isPills = parent.classList.contains("area-list");
-    const isValues = parent.classList.contains("rise-values");
-    const step = isPills ? 30 : isValues ? 50 : 80;
+    const step = isPills ? 30 : 80;
     const cap = isPills ? 9 : 5;
     els.forEach((el, i) => {
       el.style.transitionDelay = `${Math.min(i, cap) * step}ms`;

@@ -21,6 +21,11 @@
   --accent-deep: #2c5b8c;
 
   --color-surface: #f5f5f7;
+  /* The values band's own ground — a cooler, bluer grey than --color-surface,
+     so the band reads as its own thing between the navy hero and the white
+     services section. Declared here with the other section colours rather than
+     inline on the rule. */
+  --color-values-bg: #edf2f8;
   --color-border: #e3e4ea;
 
   /* One radius for every card, button, and input */
@@ -846,32 +851,20 @@ img {
 /* Light ground, not navy. On navy it butted straight against the navy hero
    with no seam and read as part of it — the band needs to announce that the
    hero has ended. Everything inside inverts to suit. */
-/* --space-6, not --space-8. 64px top and bottom was section-sized padding
-   around four short cards, which is part of what made them float. */
+/* Extra top padding now that the visible heading is gone — without it the
+   letters sat tight under the section above with nothing introducing them.
+   The heading still exists for the outline, as a visually-hidden h2. */
 .values {
-  padding: var(--space-6) 0;
-  background: var(--color-surface);
+  padding: var(--space-8) 0 var(--space-6);
+  background: var(--color-values-bg);
   border-bottom: 1px solid var(--color-border);
 }
 
-/* Narrower than the page container. At full width the four sat far enough
-   apart to read as four separate things rather than one group. */
+/* 640px, not the 1200px container. The four letters have to sit close enough
+   together to be read as R.I.S.E. rather than as four unrelated initials —
+   that adjacency is the whole point of the band. */
 .values-inner {
-  max-width: 960px;
-}
-
-/* A label, not a headline — the four letters below are the display type now. */
-.values-title {
-  margin: 0 0 var(--space-6);
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.values-title span {
-  letter-spacing: 0.08em;
+  max-width: 640px;
 }
 
 /* Four columns, no cards. The letter carries the weight, so the borders,
@@ -888,23 +881,44 @@ img {
 .rise-values li {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
+}
+
+/* The mask. Its height is what the letter is clipped against, so it is set at
+   every width — including under reduced motion, where only the overflow and
+   the transform are dropped. Leaving the height out there would change the
+   band's layout between the two modes. */
+.rise-letter-mask {
+  display: block;
+  height: 66px;
 }
 
 .rise-letter {
-  font-size: 84px;
-  font-weight: 500;
-  line-height: 0.85;
+  display: block;
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  /* Deliberately below the font-size, and below the 66px mask. A capital sits
+     low in its line box -- the box reserves room for descenders and accents
+     that R/I/S/E never use -- so at line-height 66px the glyph bottom fell
+     outside the mask and S, which overshoots the baseline, was clipped by
+     ~2px. Pulling the line box up 10px lifts the cap by half that and clears
+     the bottom edge. Measured against rendered ink via TextMetrics, not
+     derived from the font size. */
+  line-height: 56px;
   color: var(--color-navy);
 }
 
+/* Fixed width, centred under the letter — a rule spanning the column read as a
+   divider between rows rather than as part of the letter above it. */
 .rise-rule {
   display: block;
-  width: 100%;
+  width: 52px;
   height: 3px;
   margin: 14px 0;
   background: var(--accent-deep);
-  transform-origin: left;
+  transform-origin: center;
 }
 
 .rise-text {
@@ -4421,17 +4435,21 @@ blockquote.card cite {
     margin-bottom: 0;
   }
 
-  /* No card treatment here either — the columns are bare at every width now,
-     so the fill, borders, radius and padding are gone rather than being
-     re-declared for phones. */
-  .rise-values li {
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-  }
+  /* Alignment is inherited from the desktop rule, not restated. These used to
+     force flex-start/left for the card layout; leaving them in kept the
+     columns left-aligned on phones while desktop centred, which is exactly the
+     kind of stale override that survives a rebuild unnoticed. */
 
+  /* Both the mask height and the line-height scale with the letter — 66/72 and
+     56/72 of 56px, rounded — so the glyph sits in the same place relative to
+     the clip as it does on desktop. */
   .rise-letter {
     font-size: 56px;
+    line-height: 44px;
+  }
+
+  .rise-letter-mask {
+    height: 51px;
   }
 
   .rise-rule {
@@ -5377,22 +5395,22 @@ blockquote.card cite {
 
    It rides the existing observer rather than adding a parallel one: the <li>
    carries .reveal, so script.js groups the four columns and toggles .in-view on
-   each exactly as before. What changed is that the column is no longer the
-   thing that animates — it is only the carrier, and its three children stage
-   off its .in-view.
+   each exactly as before. The column is only the carrier — its three children
+   stage off its .in-view.
 
-   That indirection is necessary. script.js assigns delay by sibling index
-   within a parent, so three beats inside one column would all get the same
-   column-level delay and every column would fire identically. The per-column
-   offsets are declared here with :nth-child instead, which keeps the timing in
-   one readable place.
+   That indirection is necessary rather than stylistic: script.js assigns delay
+   by sibling index within a parent, so three beats inside one column would all
+   inherit that column's delay and every column would fire identically. The
+   per-column offsets are declared here with :nth-child instead.
 
-   The hidden state lives inside prefers-reduced-motion: no-preference, exactly
-   as the rest of .reveal does, so a reduced-motion visitor never has a hidden
-   element — no JS check involved. Everything is also behind .js, so with
-   scripting off nothing is hidden either. */
+   BOTH the mask's overflow and the letter's transform sit inside
+   prefers-reduced-motion: no-preference, deliberately. Gating only the
+   transform would leave a reduced-motion visitor with a clipping mask over a
+   letter that never moves — a permanently cropped R. Gating both means the
+   letter is simply an unclipped letter there. Everything is also behind .js,
+   so a scripting failure leaves nothing hidden either. */
 @media (prefers-reduced-motion: no-preference) {
-  /* The column itself must not inherit .reveal's fade — it would move the whole
+  /* The column must not inherit .reveal's own fade — it would move the whole
      stack as one block and there would be no beats. Two classes plus a type
      selector, so this outranks `.js .reveal`. */
   .js .rise-values li.reveal {
@@ -5401,7 +5419,19 @@ blockquote.card cite {
     transition: none;
   }
 
-  .js .rise-values li .rise-letter,
+  /* The clip. Without this the letter's translateY is just a letter sliding
+     over its neighbours. */
+  .js .rise-letter-mask {
+    overflow: hidden;
+  }
+
+  /* No opacity on the letter — the mask does the reveal, so it rises out of a
+     hard edge rather than fading through one. */
+  .js .rise-values li .rise-letter {
+    transform: translateY(100%);
+    transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   .js .rise-values li .rise-text {
     opacity: 0;
     transform: translateY(18px);
@@ -5413,7 +5443,10 @@ blockquote.card cite {
     transition: transform 500ms var(--ease-out);
   }
 
-  .js .rise-values li.in-view .rise-letter,
+  .js .rise-values li.in-view .rise-letter {
+    transform: translateY(0);
+  }
+
   .js .rise-values li.in-view .rise-text {
     opacity: 1;
     transform: translateY(0);
@@ -5423,22 +5456,22 @@ blockquote.card cite {
     transform: scaleX(1);
   }
 
-  /* letter at the column delay, rule +200ms, text +300ms */
+  /* letter at the column delay, rule +300ms, text +400ms */
   .rise-values li:nth-child(1) .rise-letter { transition-delay: 0ms; }
-  .rise-values li:nth-child(1) .rise-rule   { transition-delay: 200ms; }
-  .rise-values li:nth-child(1) .rise-text   { transition-delay: 300ms; }
+  .rise-values li:nth-child(1) .rise-rule   { transition-delay: 300ms; }
+  .rise-values li:nth-child(1) .rise-text   { transition-delay: 400ms; }
 
-  .rise-values li:nth-child(2) .rise-letter { transition-delay: 50ms; }
-  .rise-values li:nth-child(2) .rise-rule   { transition-delay: 250ms; }
-  .rise-values li:nth-child(2) .rise-text   { transition-delay: 350ms; }
+  .rise-values li:nth-child(2) .rise-letter { transition-delay: 80ms; }
+  .rise-values li:nth-child(2) .rise-rule   { transition-delay: 380ms; }
+  .rise-values li:nth-child(2) .rise-text   { transition-delay: 480ms; }
 
-  .rise-values li:nth-child(3) .rise-letter { transition-delay: 100ms; }
-  .rise-values li:nth-child(3) .rise-rule   { transition-delay: 300ms; }
-  .rise-values li:nth-child(3) .rise-text   { transition-delay: 400ms; }
+  .rise-values li:nth-child(3) .rise-letter { transition-delay: 160ms; }
+  .rise-values li:nth-child(3) .rise-rule   { transition-delay: 460ms; }
+  .rise-values li:nth-child(3) .rise-text   { transition-delay: 560ms; }
 
-  .rise-values li:nth-child(4) .rise-letter { transition-delay: 150ms; }
-  .rise-values li:nth-child(4) .rise-rule   { transition-delay: 350ms; }
-  .rise-values li:nth-child(4) .rise-text   { transition-delay: 450ms; }
+  .rise-values li:nth-child(4) .rise-letter { transition-delay: 240ms; }
+  .rise-values li:nth-child(4) .rise-rule   { transition-delay: 540ms; }
+  .rise-values li:nth-child(4) .rise-text   { transition-delay: 640ms; }
 }
 
 /* Storm history at phone widths.
