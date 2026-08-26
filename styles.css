@@ -1701,6 +1701,17 @@ img {
   border-bottom: 1px solid var(--color-slate);
 }
 
+/* Inline link inside a symptom list — same treatment as .area-note a, which
+   is how this site marks a link inside body copy: navy, 600, and a rule
+   underneath drawn with border-bottom rather than text-decoration. Without it
+   the link carried only the global a colour, #1a2f57 against the list's
+   #5b6070, which is a shade apart and reads as plain text. */
+.storm-list a {
+  color: var(--color-navy);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-slate);
+}
+
 /* Storm step link: navy and bold, but no rule beneath it. The site's other
    inline phone links draw their underline with border-bottom rather than
    text-decoration, so both have to be off here or the border survives.
