@@ -735,8 +735,22 @@ img {
    cost with no effect. That also means no @supports fallback is needed. */
 .hero-panel .hero-lookup .lookup-cta-field {
   display: flex;
-  align-items: center;
-  gap: 0;
+  /* Stacked at every width, desktop included: the input takes the full width
+     of the white surface and the button sits beneath it.
+
+     This was the sub-1200 treatment only, for a real reason — the hero panel
+     is 45% of the viewport less 112px of padding, so the bar is 389px at a
+     1113px viewport and 293px at 900px, and side by side that left the input
+     84-180px against the 182px "Enter your home address" needs, clipping
+     mid-word. It is now the only treatment, so the control no longer
+     rearranges itself halfway down the viewport range.
+
+     Anchoring for the suggestion list comes from .lookup-cta-field's own
+     position: relative further down the file; the list is a child of this
+     element, so it hangs off the whole surface rather than off the input. */
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
   padding: 7px;
   overflow: visible;
   background: linear-gradient(180deg, #fffbf4 0%, var(--color-bg) 58%);
@@ -757,7 +771,12 @@ img {
     0 0 0 4px rgba(157, 185, 220, 0.32);
 }
 
+/* Sits on the input's row rather than becoming a row of its own. */
 .hero-field-icon {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  height: 52px;
   display: flex;
   align-items: center;
   padding-left: 10px;
@@ -778,7 +797,9 @@ img {
   flex: 1;
   min-width: 0;
   min-height: 52px;
-  padding: 0 10px;
+  /* Left padding clears the absolutely-placed pin rather than sitting beside
+     it in flow — in a column the icon would otherwise stack above the input. */
+  padding: 0 10px 0 32px;
   font-size: var(--text-base);
   text-overflow: ellipsis;
   color: var(--color-navy);
@@ -800,9 +821,11 @@ img {
 .hero-field-go {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   flex: none;
-  min-height: 46px;
+  width: 100%;
+  min-height: 48px;
   padding: 0 var(--space-2);
   font: inherit;
   font-size: var(--text-sm);
@@ -5389,44 +5412,6 @@ blockquote.card cite {
 @media (max-width: 768px) {
   .btn-hero-call {
     display: none;
-  }
-}
-
-/* The hero bar stacks below 1200px, not just on phones.
-
-   The hero panel is 45% of the viewport less 112px of padding, so the bar is
-   389px at a 1113px viewport and 293px at 900px. Side by side that leaves the
-   input 84-180px of content width against the 182px "Enter your home address"
-   needs, and it clipped mid-word. Stacked, the input gets the bar's full
-   width at every size.
-
-   It stays one bar rather than splitting into a field and a button: the
-   trailing segment goes full width with its divider moved to the top edge. */
-@media (max-width: 1199.98px) {
-  .hero-panel .hero-lookup .lookup-cta-field {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 7px;
-    position: relative;
-  }
-
-  .hero-panel .hero-lookup .lookup-cta-field input {
-    min-height: 48px;
-    padding-left: 32px;
-  }
-
-  .hero-field-go {
-    width: 100%;
-    min-height: 48px;
-    justify-content: center;
-  }
-
-  /* Sits on the input's row rather than becoming a row of its own. */
-  .hero-field-icon {
-    position: absolute;
-    top: 7px;
-    left: 7px;
-    height: 48px;
   }
 }
 
