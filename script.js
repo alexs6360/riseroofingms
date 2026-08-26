@@ -15,6 +15,73 @@ if (form) {
   });
 }
 
+/* Service-card intent.
+
+   The four cards under "What's going on with your roof?" each carry a
+   ?need= value. Both paths that act on it — clicking a card, and landing on
+   a shared or bookmarked link — resolve the text through this one table, so
+   the two can never say different things for the same value.
+
+   Nothing here touches submission. The form still posts natively so Netlify
+   processes it and redirects to /thanks. All this does is put a first line in
+   a textarea that is already declared on every quote form, which is why it
+   needs no change to the form schema. */
+const NEED_MESSAGES = {
+  repair: "I'd like a quote for a roof repair.",
+  replacement: "I'd like a quote for a roof replacement.",
+  inspection: "I'd like to book a roof inspection.",
+  claim: "I'd like help with a storm or insurance claim.",
+};
+
+/* hasOwnProperty rather than a bare lookup: ?need=constructor would otherwise
+   resolve to a function off the prototype chain and stringify into the box. */
+function needMessageFor(value) {
+  if (typeof value !== "string") return null;
+  return Object.prototype.hasOwnProperty.call(NEED_MESSAGES, value)
+    ? NEED_MESSAGES[value]
+    : null;
+}
+
+/* Returns quietly on an unknown value, a missing field, or a field the
+   visitor has already typed in. Never overwrites. */
+function fillNeedMessage(value) {
+  const text = needMessageFor(value);
+  if (!text) return false;
+  const field = document.querySelector("#contact [name=message]");
+  if (!field || field.value.trim() !== "") return false;
+  field.value = text;
+  return true;
+}
+
+function needFromHref(href) {
+  try {
+    return new URL(href, window.location.href).searchParams.get("need");
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Click path. Bound on the anchors themselves, so it runs in the target phase
+   — before the delegated smooth-scroll listener on document sees the event and
+   before the scroll starts. It never calls preventDefault; scrolling stays the
+   scroll handler's job. */
+document.querySelectorAll("#services a[href*='need=']").forEach(function (a) {
+  a.addEventListener("click", function () {
+    fillNeedMessage(needFromHref(a.getAttribute("href")));
+  });
+});
+
+/* Load path, for links that arrive from outside — shared, bookmarked, or an
+   ad. The browser does the scrolling itself from the #contact fragment;
+   html { scroll-padding-top } already clears the fixed header. */
+(function () {
+  try {
+    fillNeedMessage(new URLSearchParams(window.location.search).get("need"));
+  } catch (e) {
+    /* URLSearchParams is unavailable — the field simply stays empty. */
+  }
+})();
+
 const prefersReducedMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 ).matches;
@@ -434,8 +501,13 @@ updateHeader();
     event.preventDefault();
     scrollToAnchor(target);
     // Keep the URL and the back button honest, without a second jump.
+    // search as well as hash: the services CTAs carry ?need=, and pushing the
+    // hash alone silently dropped it, so the value never reached the address
+    // bar and nothing downstream could read it. url is resolved against the
+    // current page, so a plain "#section" link inherits whatever search is
+    // already there rather than clearing it.
     if (window.history && window.history.pushState) {
-      window.history.pushState(null, "", url.hash);
+      window.history.pushState(null, "", url.search + url.hash);
     }
   });
 
