@@ -4478,9 +4478,17 @@ blockquote.card cite {
   /* One rhythm down the panel: 32px between every block — logo, grid, tagline,
      buttons — with the same 32px clearing the header at the top and the panel
      padding at the foot, so nothing sits flush against either edge. */
+  /* 60% of the 260px it was. The mark is recognisable well below the size it
+     needs on desktop, and at 260 it took a quarter of a 390x844 screen before
+     the headline had said anything.
+
+     The top margin drops from space-4 to space-1 as well. .hero-panel's top
+     padding is exactly --header-h, which clears the fixed header and no more,
+     so this margin is the whole visible gap beneath the bar — 32px of it read
+     as a hole. 16px halves it and still leaves the mark clear of the bar. */
   .hero-logo {
-    width: 260px;
-    margin: var(--space-4) auto;
+    width: 156px;
+    margin: var(--space-2) auto var(--space-4);
   }
 
   /* The band belongs to desktop; on a phone the tagline sits inside the hero
