@@ -40,7 +40,7 @@ if (heroVideo) {
 // collapses any accordion inside it, so reopening the menu starts clean.
 const dropdownClosers = [];
 
-// Collapsed nav (below 768px)
+// Collapsed nav (below 1024px)
 const navToggle = document.getElementById("nav-toggle");
 const nav = document.getElementById("site-nav");
 
@@ -65,7 +65,7 @@ if (navToggle && nav) {
   });
 
   // Leaving mobile widths with the panel open would otherwise strand the class
-  window.matchMedia("(min-width: 769px)").addEventListener("change", function (e) {
+  window.matchMedia("(min-width: 1024px)").addEventListener("change", function (e) {
     if (e.matches) setNav(false);
   });
 }
@@ -75,7 +75,7 @@ if (navToggle && nav) {
 // Every open/close path — hover, click, keyboard — goes through setOpen, so
 // aria-expanded and the visual state can never disagree. That is why hover is
 // wired in JS rather than left to a CSS :hover rule.
-const isDesktopNav = window.matchMedia("(min-width: 769px)");
+const isDesktopNav = window.matchMedia("(min-width: 1024px)");
 
 document.querySelectorAll("[data-nav-dropdown]").forEach((group) => {
   const toggle = group.querySelector(".nav-group-toggle");

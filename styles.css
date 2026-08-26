@@ -282,17 +282,21 @@ img {
 /* Below 1100 the gap tightens further still. Measured: labels 625px, logo 79,
    CTA 189, two 16px flex gaps — at 18px between items the row needs 1051px
    against the 1052px available at 1100. */
-@media (min-width: 769px) and (max-width: 1099.98px) {
+@media (min-width: 1024px) and (max-width: 1099.98px) {
   .nav {
     gap: 18px;
   }
 }
 
-/* Below 1150 the CTA no longer clears the edge, so it drops out the way it
+/* Below 1180 the CTA no longer clears the edge, so it drops out the way it
    already does on mobile. The phone number and Contact both stay, and the hero
-   still carries the button. Threshold found by sweeping, not by arithmetic —
-   the calculated 1100 still overflowed at 1109. */
-@media (min-width: 769px) and (max-width: 1149.98px) {
+   still carries the button. Threshold found by sweeping, not by arithmetic.
+   1150 was too low even after the nav lost About and Testimonials: the row
+   needs 1109.6px, the container below 1200 gives vw - 48, so the two only
+   balance at 1157.6 and the button hung past the padding from 1150 to 1156.
+   1180 leaves 22.4px of slack, in line with the twenty-odd this file leaves
+   at its other thresholds. */
+@media (min-width: 1024px) and (max-width: 1179.98px) {
   /* Qualified with .site-header because .btn sets display:inline-flex further
      down the file — media queries add no specificity, so a bare .nav-cta here
      would lose on source order. */
@@ -304,7 +308,7 @@ img {
 /* Contact duplicates the Schedule Inspection button beside it — same anchor,
    same destination — so the desktop nav drops it and keeps the button. The
    mobile menu has no header button, so it keeps the link. */
-@media (min-width: 769px) {
+@media (min-width: 1024px) {
   .nav-mobile-only {
     display: none;
   }
@@ -322,7 +326,7 @@ img {
    Both are homepage-only anchors and both remain in the footer and in the
    mobile menu, so nothing becomes unreachable. No other page's nav carries
    them — the city and storm pages lead with Home instead. */
-@media (min-width: 769px) {
+@media (min-width: 1024px) {
   .nav-secondary {
     display: none;
   }
@@ -3826,9 +3830,17 @@ blockquote.card cite {
 
 /* Responsive
    ---------------------------------------------------------------------------
-   768px is the nav breakpoint: below it the links collapse into a hamburger
-   panel and the phone number becomes the primary action. */
-@media (max-width: 768px) {
+   1024px is the nav breakpoint: below it the links collapse into a hamburger
+   panel. It sits here rather than at 768 because the desktop row cannot be
+   made to fit the band beneath it — at 769px the nav needs 868.4px against
+   721px of container, and no amount of trimming closes a 147px gap. The panel
+   already holds every link comfortably, so the whole band goes to it.
+
+   Only the header lives in this query. The rest of the mobile layout — the
+   footer, the founder block, the section rhythm — stays at 768 in the block
+   below, because a tablet at 900px wants the desktop page with a hamburger,
+   not a phone layout stretched wide. */
+@media (max-width: 1023.98px) {
   /* Collapsed nav panel. margin-left:auto pushes it to the right edge now that
      the phone number no longer sits between it and the logo. */
   .nav-toggle {
@@ -3984,11 +3996,19 @@ blockquote.card cite {
   }
 
   /* The sticky call bar is on screen at all times, so a second phone number in
-     the header bar is redundant. It stays inside the menu. */
-  .header-phone {
-    display: none;
-  }
+  /* No sticky call bar above 768, so the number rides in the header bar
+     through this band. The 768 block below hides it again, where the bar
+     takes over.
 
+     order matters: .logo is order 1 and .nav-toggle order 2, so leaving this
+     at the initial 0 put the phone number to the LEFT of the logo. Matching
+     the logo's order sits it just after, since source order breaks the tie,
+     and the toggle's margin-left:auto still holds the hamburger at the far
+     edge. */
+  .header-phone {
+    display: flex;
+    order: 1;
+  }
   .nav-cta {
     display: none;
   }
@@ -3996,6 +4016,21 @@ blockquote.card cite {
   /* Shown in the menu now that the header bar no longer carries it */
   .nav .nav-phone {
     display: flex;
+  }
+
+}
+
+/* Responsive
+   ---------------------------------------------------------------------------
+   768px and below is the phone layout proper. The nav has already collapsed
+   by here — see the block above. */
+@media (max-width: 768px) {
+  /* The sticky call bar is on screen at all times below 768, so a second
+     phone number in the header bar is redundant. This overrides the
+     display:flex set in the block above, which covers 769-1023 where there
+     is no bar. */
+  .header-phone {
+    display: none;
   }
 
   /* Roughly half the desktop rhythm (96px → 48px) */
