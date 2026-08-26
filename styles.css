@@ -867,15 +867,30 @@ img {
 /* Below the buttons now, and smaller. It used to sit between the lookup and
    the CTAs, splitting the two things a reader might act on with a line that is
    neither. */
-.hero-lookup-note {
-  margin: var(--space-3) 0 0;
+/* The services line above the buttons and the privacy line below them are the
+   same treatment — small, muted, no surface of their own. Shared here rather
+   than restated so the two cannot drift apart. */
+.hero-lookup-note,
+.hero-services-note {
   max-width: 46ch;
   font-size: var(--text-xs);
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.5);
 }
 
-.hero-lookup-note a {
+/* Only the margins differ, because one sits above the buttons and one below.
+   The lookup card already carries space-5 beneath it, so the services line
+   takes no top margin of its own. */
+.hero-lookup-note {
+  margin: var(--space-3) 0 0;
+}
+
+.hero-services-note {
+  margin: 0 0 var(--space-4);
+}
+
+.hero-lookup-note a,
+.hero-services-note a {
   color: var(--accent-light);
 }
 
