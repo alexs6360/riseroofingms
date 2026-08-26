@@ -1156,8 +1156,104 @@ img {
   scroll-margin-top: var(--space-3);
 }
 
+/* Services over a photograph.
+   -------------------------------------------------------------------------
+   The photo is one of David's own completed jobs, not stock. The navy sits at
+   0.82 rather than a round number because it was derived, not picked: the
+   image's brightest 12px block is rgb(219,216,219) — the white trailer at the
+   bottom-left — and at 0.82 white clears 10.8:1 against it, white at 70%
+   clears 6.2:1, and accent-light clears 5.4:1. Accent-light is the binding
+   constraint; below 0.78 the eyebrow drops under 4.5:1 over that block. */
 .services {
-  background: var(--color-bg);
+  position: relative;
+  /* Keeps the ::before's negative z-index inside this section rather than
+     letting it slide behind the page background. */
+  isolation: isolate;
+  background-color: var(--color-navy);
+  background-image: url("images/work/tupelo-replacement-aerial.jpg");
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+}
+
+.services::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(7, 29, 55, 0.82);
+}
+
+.services-eyebrow {
+  margin: 0 0 var(--space-1);
+  color: var(--accent-light);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.services-lead {
+  max-width: 46ch;
+  margin: 0 auto var(--space-6);
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* The panels. No shadow — a drop shadow over a photograph reads as a sticker,
+   and the border is what separates them from the image. */
+.services .card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+.services .card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: none;
+}
+
+.services .card h3 {
+  color: #fff;
+}
+
+.services .card-link {
+  color: var(--accent-light);
+}
+
+/* Same outline treatment as every other icon on the site: 24x24 box, no fill,
+   currentColor stroke at 1.8, round caps and joins. */
+.service-icon {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--accent-light);
+}
+
+.service-icon svg {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.services-call {
+  margin: var(--space-6) 0 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.services-call a {
+  color: var(--accent-light);
+  font-weight: 600;
 }
 
 /* Headlines centre; body copy stays left-aligned so the eye keeps its
@@ -1176,6 +1272,13 @@ img {
   font-weight: 800;
   margin: 0 auto var(--space-heading);
   max-width: 20ch;
+}
+
+/* White, and it has to sit *after* the group above: both are one class and one
+   element, so the group would win the tie on source order. .why-us h2 further
+   down solves the same problem the same way. */
+.services h2 {
+  color: #fff;
 }
 
 .cards {
