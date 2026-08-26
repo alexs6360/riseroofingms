@@ -1601,6 +1601,22 @@ img {
   text-wrap: balance;
 }
 
+/* The same inline-link treatment .footer-bottom and .form-consent use: take
+   the sentence's colour and mark the link with an underline. The global
+   a { color: --color-primary } would be wrong here — #1a2f57 against this
+   line's #071d37 is barely a shade apart, so the three cities would read as
+   plain text and nobody would know they were links. */
+.service-line p a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.service-line p a:hover,
+.service-line p a:focus-visible {
+  color: var(--accent-deep);
+}
+
 /* Service area — the full pill grid, near the foot of the page */
 .service-area {
   background: var(--color-bg);
