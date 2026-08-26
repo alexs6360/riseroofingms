@@ -1158,21 +1158,33 @@ img {
 
 /* Services over a photograph.
    -------------------------------------------------------------------------
-   The photo is one of David's own completed jobs, not stock. The navy sits at
-   0.82 rather than a round number because it was derived, not picked: the
-   image's brightest 12px block is rgb(219,216,219) — the white trailer at the
-   bottom-left — and at 0.82 white clears 10.8:1 against it, white at 70%
-   clears 6.2:1, and accent-light clears 5.4:1. Accent-light is the binding
-   constraint; below 0.78 the eyebrow drops under 4.5:1 over that block. */
+   Overlay opacity is derived from the image, not picked. Scanning the source
+   at 16px blocks, the brightest are the sunlit grass on the right
+   (rgb(235,213,173), L 0.68) and the pale siding and concrete bottom-left
+   (rgb(224,212,200), L 0.67). At 48px blocks — closer to the area a line of
+   text actually covers — the brightest drops to L 0.61, and at 96px to 0.39,
+   so the hot spots are small.
+
+   At 0.82 over the worst 16px block the ground is rgb(48,62,76), where white
+   clears 10.9:1, white at 70% clears 6.3:1 and accent-light clears 5.4:1.
+   Accent-light is the binding constraint everywhere; it is the reason this is
+   0.82 and not lower.
+
+   Position is 50% 35%: at 1440 that crops the tree line off the top and the
+   siding and steps off the bottom, leaving the card band over source rows
+   44-66%, which is unbroken shingle (0.1% green pixels, 1.2% pale). Below
+   about 1100 the section is tall enough that the image fits vertically and
+   the crop turns horizontal, so the Y term stops doing anything and the strip
+   on view is the middle fifth of the frame — also shingle. */
 .services {
   position: relative;
   /* Keeps the ::before's negative z-index inside this section rather than
      letting it slide behind the page background. */
   isolation: isolate;
   background-color: var(--color-navy);
-  background-image: url("images/work/tupelo-replacement-aerial.jpg");
+  background-image: url("images/services-roof-bg.jpg");
   background-size: cover;
-  background-position: center;
+  background-position: 50% 35%;
   color: #fff;
 }
 
