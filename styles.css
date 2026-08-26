@@ -2090,8 +2090,13 @@ blockquote.card cite {
 }
 
 /* Contact — closes the alternating sequence, so the form inverts to white */
+/* White, not --color-surface. The FAQ section directly above is already
+   #F5F5F7 and neither carries a border, so the two ran together as one
+   continuous block roughly 1,600px tall. This is the only adjacent pair on the
+   page sharing a ground with nothing between them — every other neighbour
+   either changes ground or has a 1px rule. */
 .contact {
-  background: var(--color-surface);
+  background: var(--color-bg);
 }
 
 .contact-inner {
