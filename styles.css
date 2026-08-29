@@ -669,7 +669,11 @@ img {
     grid-template-columns: 1fr;
   }
 
-  .hero-media {
+  /* Qualified with .hero for the same reason as the two rules below it: the
+     base .hero-media rule sits later in this file, so at one class it would
+     win the tie on source order the moment anyone adds one of these three
+     properties to it. tools/check-css-order.mjs fails the build on this. */
+  .hero .hero-media {
     grid-column: 1;
     grid-row: 1;
     margin-left: 0;

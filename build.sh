@@ -48,6 +48,13 @@ if [ -n "$MISSING" ]; then
 fi
 echo "  storm-grid.js exposes all $(echo "$GRID_USED" | wc -w | tr -d ' ') members the page calls"
 
+# A media query adds no specificity, and this stylesheet interleaves its media
+# queries with its base rules rather than gathering them at the end — so an
+# override written inside one can be silently beaten by a base rule further
+# down. That has shipped four times. Fails the build rather than warning:
+# a warning in build output is a warning nobody reads.
+node tools/check-css-order.mjs styles.css || exit 1
+
 # Inject that same list as the page's runtime contract.
 GRID_API_CSV=$(echo "$GRID_USED" | tr '\n' ',' | sed 's/,$//')
 sed -i '' "s|__GRID_API__|${GRID_API_CSV}|" dist/storm-history.js 2>/dev/null \
