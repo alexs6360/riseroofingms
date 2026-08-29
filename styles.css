@@ -675,45 +675,6 @@ img {
     margin-left: 0;
   }
 
-  /* The tagline moves to the bottom-right corner, inside the footage.
-
-     It stays at 22px and wraps to two lines instead of shrinking. On one line
-     it is 622px, and the room to the right of full transparency at its own
-     rows is only 517px at 1440 — it would not fit. The two sentences are
-     already inline-block, so capping the box at 340px breaks them at the
-     sentence, and the widest is 316px. Dropping to 18px to keep one line was
-     the alternative; the file's own note on this element says 1rem read as a
-     caption, so the wrap is the cheaper concession. */
-  /* Qualified with .hero-media because the base .hero-tagline-scrim and
-     .hero-tagline rules sit LATER in this file than this media query. As bare
-     single-class selectors they would win the tie on source order, and the
-     scrim would stay anchored to the left edge — which is exactly what it did
-     on the first attempt. */
-  .hero-media .hero-tagline-scrim {
-    left: auto;
-    width: 700px;
-    height: 700px;
-    min-height: 0;
-    justify-content: flex-end;
-    padding: 0 var(--space-6) var(--space-5);
-    /* Corner-anchored, not a band. A circle rather than an ellipse so the px
-       stops are unambiguous distances from the corner: solid to 240px, gone by
-       620px. The box is 700px on both sides so the gradient reaches zero
-       before any edge of it — at 620px radius a shorter box would cut the fade
-       mid-ramp and put a hard line across the footage. */
-    background-image: radial-gradient(
-      circle 620px at 100% 100%,
-      rgba(7, 29, 55, 0.94) 0,
-      rgba(7, 29, 55, 0.94) 240px,
-      rgba(7, 29, 55, 0) 620px
-    );
-  }
-
-  .hero-media .hero-tagline {
-    max-width: 340px;
-    text-align: right;
-  }
-
   /* Constant copy width at every width from 1100 up, which is what lets the
      mask stops below be real px rather than something that drifts. */
   /* Qualified with .hero-panel because the base .hero-panel-inner rule sits
@@ -747,17 +708,55 @@ img {
 
        78deg leans the boundary the opposite way to the old clip-path: narrow
        at the top, widening toward the bottom, 191px of travel over a 900px
-       hero, which is 12 degrees off vertical. */
+       hero, which is 12 degrees off vertical.
+
+       The ramp is 220px, down from 320. The solid stop is unchanged at 640px,
+       so the copy keeps the clearance it had; shortening only the far end
+       pulls full transparency left and hands the right of the frame back to
+       the footage. */
     -webkit-mask-image: linear-gradient(#000, #000),
-      linear-gradient(78deg, #000 0, #000 640px, rgba(0, 0, 0, 0) 960px);
+      linear-gradient(78deg, #000 0, #000 640px, rgba(0, 0, 0, 0) 860px);
     mask-image: linear-gradient(#000, #000),
-      linear-gradient(78deg, #000 0, #000 640px, rgba(0, 0, 0, 0) 960px);
+      linear-gradient(78deg, #000 0, #000 640px, rgba(0, 0, 0, 0) 860px);
     -webkit-mask-size: var(--fade-origin) 100%, 1200px 100%;
     mask-size: var(--fade-origin) 100%, 1200px 100%;
     -webkit-mask-position: left top, var(--fade-origin) top;
     mask-position: left top, var(--fade-origin) top;
     -webkit-mask-repeat: no-repeat, no-repeat;
     mask-repeat: no-repeat, no-repeat;
+  }
+}
+
+/* The tagline, in the brand lockup rather than over the footage. Hidden by
+   default and shown only from 768 up: the mobile hero never displayed it — the
+   .hero-tagline-inline rules that used to target it had no element left in the
+   markup — and it stays that way. */
+.hero-lockup-tagline {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hero-lockup-tagline {
+    display: block;
+    /* Tight to the mark above, generous below, so the two read as one lockup
+       and the H1 starts a new thought. */
+    margin: 0 0 var(--space-6);
+    color: var(--accent-light);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  .hero-lockup-tagline span {
+    display: inline-block;
+  }
+
+  /* Was 48px; the tagline's own bottom margin carries that distance now.
+     Qualified because the base .hero-logo rule sits later in this file. */
+  .hero-panel .hero-logo {
+    margin-bottom: var(--space-2);
   }
 }
 
@@ -1112,74 +1111,6 @@ img {
   color: var(--color-text-muted);
 }
 
-/* The in-hero copy of the tagline is mobile only; the band below the hero
-   covers desktop. */
-.hero-tagline-inline {
-  display: none;
-}
-
-/* inline-block, not block: the two sentences sit on one line wherever there is
-   room and break as whole units when there is not. The in-hero copy uses block
-   for the same reason, but it is always two lines on a phone. */
-.hero-tagline span {
-  display: inline-block;
-}
-
-/* The tagline overlaid on the foot of the video, desktop only.
-
-   The scrim is load-bearing, not decoration. The footage changes brightness
-   frame to frame — pale sky in some, dark shingle in others — so white text
-   laid straight on it would be legible in one second of the loop and gone in
-   the next. The gradient reaches FULL navy well above the text, so the type
-   sits on an opaque surface and its contrast is a fixed property of the
-   design rather than something that depends on which frame is showing.
-
-   Left and right are flush with the video panel: .hero-overlay already
-   dissolves navy across the left 29% of this panel, so the scrim meets it in
-   the same colour and the existing seam treatment is unchanged. */
-.hero-tagline-scrim {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  display: flex;
-  align-items: flex-end;
-  min-height: 200px;
-  padding: 0 var(--space-6) var(--space-5);
-  background-image: linear-gradient(
-    to bottom,
-    rgba(7, 29, 55, 0) 0%,
-    rgba(7, 29, 55, 0.72) 42%,
-    var(--color-navy) 72%,
-    var(--color-navy) 100%
-  );
-  pointer-events: none;
-}
-
-.hero-tagline {
-  margin: 0;
-  color: #fff;
-  /* --text-xl. It was 1rem, which read as a caption; --text-h2 was the first
-     attempt and overshot badly — it is a clamp topping out at 40px, which put
-     the tagline at the same size as "Our Services" and had it spanning nearly
-     the full viewport.
-
-     The token ladder is 18 / 22 / 28-40, so xl is the only existing step in
-     between, and the only one that stays under the h1's 32px at every width.
-     A statement, not a headline. */
-  font-size: var(--text-xl);
-  font-weight: 700;
-  /* Set in sentence case in the markup so screen readers do not spell it out */
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  line-height: 1.35;
-  text-align: center;
-  /* Balanced rather than ragged when it does take two lines. */
-  text-wrap: balance;
-  text-wrap: balance;
-}
-
 /* Right panel — the footage */
 .hero-media {
   position: relative;
@@ -1202,22 +1133,6 @@ img {
 /* Two jobs in one layer: the left-edge gradient that dissolves the navy panel
    into the footage, and a light navy wash over the whole frame so the video
    sits in the site palette rather than beside it. */
-/* Blend only — no wash. The 12% navy tint that used to sit here darkened the
-   whole frame, muting the shingle detail and the trees; the left-edge gradient
-   is what joins the two halves, so the footage itself is left alone. The fade
-   runs across 29% of the panel rather than 20%, which is long enough that the
-   seam between navy and video stops reading as an edge. */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(
-    to right,
-    #071d37 0%,
-    rgba(7, 29, 55, 0) 29%
-  );
-}
-
 /* Buttons have to invert to stay readable on the navy */
 /* Secondary to the lookup. Two solid buttons at full size read as the main
    action and pulled attention off the field above them. */
@@ -4818,29 +4733,10 @@ blockquote.card cite {
      instead, so there is no white block between the hero and the service line. */
   /* The in-panel copy takes over here; the overlay is desktop only, and the
      video is not even loaded at this width. */
-  .hero-tagline-scrim {
-    display: none;
-  }
-
-  .hero-tagline-inline {
-    display: block;
-    margin: 0 0 var(--space-4);
-    color: var(--accent-light);
-    font-size: 0.875rem;
-    /* Tighter than the desktop band: 0.08em pushed this past the panel width */
-    letter-spacing: 0.04em;
-    line-height: 1.5;
-    text-align: center;
-  }
-
-  /* Even at 0.04em the line still wrapped, so the break is placed rather than
+      /* Even at 0.04em the line still wrapped, so the break is placed rather than
      left to chance: one sentence per line instead of "Protecting your" /
      "home." splitting mid-phrase. */
-  .hero-tagline-inline span {
-    display: block;
-  }
-
-  /* 2x2. Four columns do not fit at 390px, and the values are a band of their
+    /* 2x2. Four columns do not fit at 390px, and the values are a band of their
      own now rather than four rows inside the hero. */
   .rise-values {
     grid-template-columns: 1fr 1fr;

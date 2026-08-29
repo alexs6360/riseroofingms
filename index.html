@@ -182,6 +182,13 @@
             fetchpriority="high"
           />
 
+          <!-- The tagline belongs with the mark, not floating over the footage.
+               Desktop only: below 768 the hero has no room for it, and the
+               mobile hero is deliberately left exactly as it was. -->
+          <p class="hero-lockup-tagline">
+            <span>Raising the standard.</span> <span>Protecting your home.</span>
+          </p>
+
           <!-- The page's h1. It was a visually-hidden line above the hero, which
                meant the largest text a homeowner actually read was the logo,
                followed by four abstract values. -->
@@ -275,24 +282,10 @@
           aria-hidden="true"
           tabindex="-1"
         ></video>
-        <span class="hero-overlay" aria-hidden="true"></span>
-
-        <!-- TAGLINE, COPY 2 of 2 — desktop. Overlaid on the foot of the video
-             rather than in a band beneath it. Hidden below 768px, where the
-             in-panel copy above takes over; only one is ever in the layout, so
-             it is never announced twice. Edit both together. -->
-        <div class="hero-tagline-scrim">
-          <p class="hero-tagline">
-            <span>Raising the standard.</span> <span>Protecting your home.</span>
-          </p>
-        </div>
       </div>
 
     </section>
 
-    <!-- TAGLINE, COPY 2 of 2 — desktop.
-         The other copy is .hero-tagline-inline, inside .hero-panel-inner
-         above. Edit both together or they will disagree. -->
 
     <!-- The R.I.S.E. values, moved out of the hero. They are supporting
          content now that the address lookup leads, and four columns rather
