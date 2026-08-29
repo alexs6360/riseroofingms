@@ -646,10 +646,15 @@ img {
    thing on the page. */
 .hero-logo {
   display: block;
-  width: 240px;
+  /* 320px, up from 240. The panel is 45% of the viewport less its padding, so
+     at 1440 this is roughly half the panel's width — large enough to read as
+     the hero's opening statement rather than as a label above the headline. */
+  width: 320px;
   max-width: 100%;
   height: auto;
-  margin-bottom: var(--space-4);
+  /* 48px, up from 32. At 240px wide a 32px gap held; at 320 the mark is 161px
+     tall and the headline started to look attached to it. */
+  margin-bottom: var(--space-6);
 }
 
 /* Steps back from the logo rather than competing with it: smaller than the
@@ -4667,8 +4672,13 @@ blockquote.card cite {
      so this margin is the whole visible gap beneath the bar — 32px of it read
      as a hole. 16px halves it and still leaves the mark clear of the bar. */
   .hero-logo {
+    /* Width deliberately unchanged. At 390 the address tool is the thing that
+       has to stay above the fold, and every pixel the mark gains pushes the
+       card down. The presence comes from the space around it instead: 16 -> 24
+       above, 32 -> 40 below, which costs 16px total rather than the 40px a
+       proportional width increase would have. */
     width: 156px;
-    margin: var(--space-2) auto var(--space-4);
+    margin: var(--space-3) auto var(--space-5);
   }
 
   /* The band belongs to desktop; on a phone the tagline sits inside the hero
