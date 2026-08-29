@@ -1188,12 +1188,64 @@ img {
   color: #fff;
 }
 
-.services::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: rgba(7, 29, 55, 0.82);
+/* No flat overlay. The photo runs at full colour and the only darkening is a
+   pair of scrims — one behind the heading block, one behind the call line.
+
+   Both sit on wrappers outside .container so the gradients are full-bleed;
+   inside the container they would stop at 1200px and leave a vertical seam
+   against the photo. Both size themselves to their own content, which is what
+   makes them work at every width: the heading band is 18-44% of the section at
+   1440 but only 6.5-20% at 390, so no fixed percentage gradient serves both.
+
+   Stops are in px rather than percentages for the same reason. With percentage
+   stops the lead fell inside the top fade at 1440 and sat on a scrim of about
+   0.47 instead of 0.85.
+
+   0.85 is measured, not chosen: against the brightest 16px block inside the
+   heading band — rgb(174,178,173) at 1440, the sunlit grass rgb(146,185,3) at
+   390 — the floor where the eyebrow still clears 4.5:1 is 0.70, and it lands
+   on 4.53 there. 0.85 leaves real margin. */
+.services-head {
+  padding-top: var(--space-12);
+  /* The fade needs somewhere to happen: at the tightened spacing the lead sits
+     16px above the cards, which is not enough room to reach transparent. */
+  padding-bottom: 80px;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 29, 55, 0.85) 0,
+    rgba(7, 29, 55, 0.85) calc(100% - 80px),
+    rgba(7, 29, 55, 0) 100%
+  );
+}
+
+/* The mirror of the head, rising from the section's bottom edge. Without it
+   the call line is white-at-70% on bare photo, and the worst pixel behind it
+   is the near-white siding at rgb(252,255,255) — a contrast of 1.00:1, which
+   is invisible rather than merely weak. */
+.services-foot {
+  padding-top: 80px;
+  padding-bottom: var(--space-section);
+  background: linear-gradient(
+    180deg,
+    rgba(7, 29, 55, 0) 0,
+    rgba(7, 29, 55, 0.85) 80px,
+    rgba(7, 29, 55, 0.85) 100%
+  );
+}
+
+/* Their own vertical margins would push the fade zones off the text they
+   belong to. The horizontal auto stays — .services-lead is a 46ch column that
+   centres itself, and a bare `margin: 0` left it hanging on the left edge. */
+.services-head .services-lead,
+.services-foot .services-call {
+  margin: 0 auto;
+}
+
+/* The section's own padding moves into the two wrappers, so each scrim reaches
+   the edge it is anchored to. */
+.services {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .services-eyebrow {
@@ -4271,6 +4323,15 @@ blockquote.card cite {
   .contact,
   .storm-section {
     padding: 48px 0;
+  }
+
+  /* The shorthand above resets both padding longhands, and it sits later in
+     the file than the .services rule that zeroes them, so it wins the tie and
+     the scrims stop short of the section's edges. Same trap as the border
+     shorthand elsewhere in this file. */
+  .services {
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   .services h2,
