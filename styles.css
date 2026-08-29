@@ -1188,70 +1188,35 @@ img {
   color: #fff;
 }
 
-/* No flat overlay. The photo runs at full colour and the only darkening is a
-   pair of scrims — one behind the heading block, one behind the call line.
+/* One flat overlay across the whole section. Two scrims anchored to the top
+   and bottom edges left an undarkened band across the middle, which read as
+   stripes rather than as a photograph.
 
-   Both sit on wrappers outside .container so the gradients are full-bleed;
-   inside the container they would stop at 1200px and leave a vertical seam
-   against the photo. Both size themselves to their own content, which is what
-   makes them work at every width: the heading band is 18-44% of the section at
-   1440 but only 6.5-20% at 390, so no fixed percentage gradient serves both.
+   0.74 is derived. Every text element over the photo is now white at some
+   alpha — nothing out here is accent-light any more — so the binding
+   constraint is white at 70%, the supporting and call lines. Against the
+   brightest 16px block, rgb(235,213,173), those clear 4.5:1 from 0.676 up;
+   against the single brightest pixel found behind live text,
+   rgb(252,255,255), from 0.735 up. 0.74 clears the stricter of the two.
 
-   Stops are in px rather than percentages for the same reason. With percentage
-   stops the lead fell inside the top fade at 1440 and sat on a scrim of about
-   0.47 instead of 0.85.
-
-   0.85 is measured, not chosen: against the brightest 16px block inside the
-   heading band — rgb(174,178,173) at 1440, the sunlit grass rgb(146,185,3) at
-   390 — the floor where the eyebrow still clears 4.5:1 is 0.70, and it lands
-   on 4.53 there. 0.85 leaves real margin. */
-.services-head {
-  padding-top: var(--space-12);
-  /* The fade needs somewhere to happen: at the tightened spacing the lead sits
-     16px above the cards, which is not enough room to reach transparent. */
-  padding-bottom: 80px;
-  background: linear-gradient(
-    180deg,
-    rgba(7, 29, 55, 0.85) 0,
-    rgba(7, 29, 55, 0.85) calc(100% - 80px),
-    rgba(7, 29, 55, 0) 100%
-  );
+   The eyebrow moving off accent-light is only half of why this sits below the
+   old 0.76 floor. Accent-light did not stop being the constraint, it moved to
+   the phone number — with that still accent-light the floor is 0.801. */
+.services::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(7, 29, 55, 0.74);
 }
 
-/* The mirror of the head, rising from the section's bottom edge. Without it
-   the call line is white-at-70% on bare photo, and the worst pixel behind it
-   is the near-white siding at rgb(252,255,255) — a contrast of 1.00:1, which
-   is invisible rather than merely weak. */
-.services-foot {
-  padding-top: 80px;
-  padding-bottom: var(--space-section);
-  background: linear-gradient(
-    180deg,
-    rgba(7, 29, 55, 0) 0,
-    rgba(7, 29, 55, 0.85) 80px,
-    rgba(7, 29, 55, 0.85) 100%
-  );
-}
-
-/* Their own vertical margins would push the fade zones off the text they
-   belong to. The horizontal auto stays — .services-lead is a 46ch column that
-   centres itself, and a bare `margin: 0` left it hanging on the left edge. */
-.services-head .services-lead,
-.services-foot .services-call {
-  margin: 0 auto;
-}
-
-/* The section's own padding moves into the two wrappers, so each scrim reaches
-   the edge it is anchored to. */
-.services {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
+/* White rather than accent-light. Accent-light is a lighter target than white
+   and runs out of contrast about a full point sooner, which is what held the
+   overlay at 0.76. */
 .services-eyebrow {
   margin: 0 0 var(--space-2);
-  color: var(--accent-light);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1262,6 +1227,9 @@ img {
   max-width: 46ch;
   margin: 0 auto var(--space-5);
   color: rgba(255, 255, 255, 0.7);
+  /* 20px: half the 40px heading — a clear step up from the 16px it was,
+     without starting to compete with it. */
+  font-size: 20px;
   text-align: center;
   text-wrap: balance;
 }
@@ -1331,13 +1299,19 @@ img {
 .services-call {
   margin: var(--space-5) 0 0;
   color: rgba(255, 255, 255, 0.7);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   text-align: center;
 }
 
+/* The number carries the line: full-strength white against the sentence's 70%,
+   a size up, and heavier. That reads as more prominent than accent-light did,
+   because accent-light is dimmer than white rather than brighter. It is also
+   what lets the overlay sit at 0.74 — as accent-light it was the binding
+   constraint and the floor was 0.801. */
 .services-call a {
-  color: var(--accent-light);
-  font-weight: 600;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 /* Headlines centre; body copy stays left-aligned so the eye keeps its
@@ -4325,13 +4299,8 @@ blockquote.card cite {
     padding: 48px 0;
   }
 
-  /* The shorthand above resets both padding longhands, and it sits later in
-     the file than the .services rule that zeroes them, so it wins the tie and
-     the scrims stop short of the section's edges. Same trap as the border
-     shorthand elsewhere in this file. */
-  .services {
-    padding-top: 0;
-    padding-bottom: 0;
+  .services-lead {
+    font-size: 18px;
   }
 
   .services h2,
