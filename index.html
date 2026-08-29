@@ -173,21 +173,14 @@
     <section class="hero">
       <div class="hero-panel">
         <div class="hero-panel-inner">
-          <!-- The hero mark is the 3D render; the header and footer stay on the
-               flat logo.png. WebP first, PNG fallback — the class stays on the
-               <img> so .hero-logo's sizing and the hero-anim entrance still
-               apply, since <picture> is only a source selector. -->
-          <picture>
-            <source srcset="images/hero-logo-3d.webp" type="image/webp" />
-            <img
-              src="images/hero-logo-3d.png"
-              alt="RISE Roofing Solutions"
-              class="hero-logo hero-anim hero-anim-1"
-              width="640"
-              height="318"
-              fetchpriority="high"
-            />
-          </picture>
+          <img
+            src="images/logo.png"
+            alt="RISE Roofing Solutions"
+            class="hero-logo hero-anim hero-anim-1"
+            width="611"
+            height="308"
+            fetchpriority="high"
+          />
 
           <!-- The tagline belongs with the mark, not floating over the footage.
                Desktop only: below 768 the hero has no room for it, and the
