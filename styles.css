@@ -628,6 +628,67 @@ img {
   pointer-events: none;
 }
 
+/* Desktop hero depth. Every rule here is inside a min-width query — the hero
+   below 768px is untouched.
+   ------------------------------------------------------------------------ */
+@media (min-width: 768px) {
+  /* The panel was a flat fill taking the section's navy. A shallow diagonal,
+     lighter toward the upper left and deeper toward the lower right, so the
+     surface reads as lit rather than printed. The range is narrow on purpose —
+     #0d2547 sits just above --color-navy and the far end is --color-navy-deep,
+     which is close enough that it reads as a surface rather than a gradient. */
+  .hero-panel {
+    background-image: linear-gradient(
+      145deg,
+      #0d2547 0%,
+      var(--color-navy) 55%,
+      var(--color-navy-deep) 100%
+    );
+  }
+
+  /* 420x257 to 560x343 at the same 1.634 aspect, opacity 0.05 to 0.08. Kept
+     under a tenth so it stays a texture in the corner rather than a second
+     logo competing with the real one above it. */
+  .hero-panel::before {
+    left: -150px;
+    bottom: -110px;
+    width: 560px;
+    height: 343px;
+    opacity: 0.08;
+  }
+}
+
+/* The angled seam needs room for both the diagonal and the copy, and below
+   about 1100px the panel does not have it — the cut would reach the address
+   card. Between 768 and 1099 the seam stays vertical. */
+@media (min-width: 1100px) {
+  .hero {
+    /* 62/38 rather than 45/55. The panel is widened only to give the diagonal
+       somewhere to cut; the copy's width is held constant by the padding
+       below, so nothing rewraps. */
+    grid-template-columns: 62% 38%;
+  }
+
+  .hero-panel {
+    /* Restores the old content width exactly: the old inner was
+       45%W - padLeft - 56, so the new padding-right is 17%W + 56. Expressed
+       against the panel's own box (17/62 = 27.42%) rather than in vw, so a
+       classic scrollbar cannot shift it. */
+    padding-right: calc(27.42% + 56px);
+    /* Wider at the top, leaning right to left. 191px over a 900px hero is 12
+       degrees. */
+    clip-path: polygon(0 0, 100% 0, calc(100% - 191px) 100%, 0 100%);
+  }
+
+  /* The video has to reach under the cut, or the exposed wedge shows the
+     section's flat navy instead of footage. -44.74% of this column's own width
+     puts its left edge back at 45% of the hero, exactly where it was, so the
+     framing of the footage does not change. */
+  .hero-media {
+    margin-left: -44.74%;
+  }
+}
+
 .hero-panel-inner {
   width: 100%;
   max-width: 520px;
