@@ -658,34 +658,67 @@ img {
   }
 }
 
-/* The angled seam needs room for both the diagonal and the copy, and below
-   about 1100px the panel does not have it — the cut would reach the address
-   card. Between 768 and 1099 the seam stays vertical. */
+/* The angled blend. Below 1100px the panel does not have room for both the
+   copy and a few hundred pixels of fade, so the seam stays vertical there.
+   ------------------------------------------------------------------------ */
 @media (min-width: 1100px) {
+  /* One cell. The footage spans the whole hero and the navy panel lies over
+     it, faded out along an angle. A clip-path could only ever give a hard
+     edge; the fade has to come from alpha. */
   .hero {
-    /* 62/38 rather than 45/55. The panel is widened only to give the diagonal
-       somewhere to cut; the copy's width is held constant by the padding
-       below, so nothing rewraps. */
-    grid-template-columns: 62% 38%;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-media {
+    grid-column: 1;
+    grid-row: 1;
+    margin-left: 0;
+  }
+
+  /* Constant copy width at every width from 1100 up, which is what lets the
+     mask stops below be real px rather than something that drifts. */
+  /* Qualified with .hero-panel because the base .hero-panel-inner rule sits
+     LATER in this file than this media query. Both are one class, so the base
+     would win the tie on source order and the copy column would widen to
+     520px, rewrapping the H1 from three lines to two. */
+  .hero-panel .hero-panel-inner {
+    max-width: 448px;
   }
 
   .hero-panel {
-    /* Restores the old content width exactly: the old inner was
-       45%W - padLeft - 56, so the new padding-right is 17%W + 56. Expressed
-       against the panel's own box (17/62 = 27.42%) rather than in vw, so a
-       classic scrollbar cannot shift it. */
-    padding-right: calc(27.42% + 56px);
-    /* Wider at the top, leaning right to left. 191px over a 900px hero is 12
-       degrees. */
-    clip-path: polygon(0 0, 100% 0, calc(100% - 191px) 100%, 0 100%);
-  }
+    grid-column: 1;
+    grid-row: 1;
+    padding-right: 0;
 
-  /* The video has to reach under the cut, or the exposed wedge shows the
-     section's flat navy instead of footage. -44.74% of this column's own width
-     puts its left edge back at 45% of the hero, exactly where it was, so the
-     framing of the footage does not change. */
-  .hero-media {
-    margin-left: -44.74%;
+    /* Same expression as padding-left: the container's left gutter. */
+    --fade-origin: max(56px, calc((100vw - var(--max-width)) / 2 + 24px));
+
+    /* Two mask layers, composited additively.
+
+       Layer 1 is flat black across the gutter, so the panel is solid from the
+       hero's left edge to where the copy starts.
+
+       Layer 2 is the angled fade, in a box 1200px wide anchored at the gutter.
+       The fixed box is the whole point: a linear-gradient's stops are measured
+       along a gradient line whose length is derived from the box it paints
+       into, so on a full-width element the same px stop lands somewhere
+       different at 1440 than at 2400 — the percentage trap in another form.
+       Pinning the box to 1200px makes 640px and 960px mean the same distance
+       at every viewport.
+
+       78deg leans the boundary the opposite way to the old clip-path: narrow
+       at the top, widening toward the bottom, 191px of travel over a 900px
+       hero, which is 12 degrees off vertical. */
+    -webkit-mask-image: linear-gradient(#000, #000),
+      linear-gradient(78deg, #000 0, #000 640px, rgba(0, 0, 0, 0) 960px);
+    mask-image: linear-gradient(#000, #000),
+      linear-gradient(78deg, #000 0, #000 640px, rgba(0, 0, 0, 0) 960px);
+    -webkit-mask-size: var(--fade-origin) 100%, 1200px 100%;
+    mask-size: var(--fade-origin) 100%, 1200px 100%;
+    -webkit-mask-position: left top, var(--fade-origin) top;
+    mask-position: left top, var(--fade-origin) top;
+    -webkit-mask-repeat: no-repeat, no-repeat;
+    mask-repeat: no-repeat, no-repeat;
   }
 }
 
