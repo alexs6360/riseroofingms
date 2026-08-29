@@ -1274,7 +1274,15 @@ img {
    about 1100 the section is tall enough that the image fits vertically and
    the crop turns horizontal, so the Y term stops doing anything and the strip
    on view is the middle fifth of the frame — also shingle. */
-.services {
+/* Photographic treatment — HOMEPAGE ONLY.
+
+   .services is not a shared partial: the homepage and the three city pages
+   each carry their own copy of the markup under the same class name. So the
+   only thing that was shared here was the CSS, and unscoped it repainted the
+   city pages' service cards navy while leaving their descriptions at
+   --color-text-muted, which measured 1.01:1 — invisible. Everything below is
+   keyed to .services-photo, which only the homepage section carries. */
+.services-photo {
   position: relative;
   /* Keeps the ::before's negative z-index inside this section rather than
      letting it slide behind the page background. */
@@ -1300,7 +1308,7 @@ img {
    The eyebrow moving off accent-light is only half of why this sits below the
    old 0.76 floor. Accent-light did not stop being the constraint, it moved to
    the phone number — with that still accent-light the floor is 0.801. */
-.services::before {
+.services-photo::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1341,7 +1349,7 @@ img {
    The border is accent-light rather than white because it has to hold over
    the photo's brightest areas as well as its darkest; white at 20% dissolved
    into the sunlit grass. */
-.services .card {
+.services-photo .card {
   display: flex;
   flex-direction: column;
   background: rgba(7, 29, 55, 0.88);
@@ -1349,7 +1357,7 @@ img {
   box-shadow: none;
 }
 
-.services .card:hover {
+.services-photo .card:hover {
   background: rgba(7, 29, 55, 0.94);
   border-color: rgba(157, 185, 220, 0.6);
   box-shadow: none;
@@ -1360,19 +1368,19 @@ img {
    descriptions any more, so all it did here was reserve an empty line between
    every one-line title and its link. Scoped off rather than deleted — the city
    pages still have descriptions and still need it. */
-.services .card h3 {
+.services-photo .card h3 {
   min-height: 0;
 }
 
-.services .card-link {
+.services-photo .card-link {
   padding-top: var(--space-1);
 }
 
-.services .card h3 {
+.services-photo .card h3 {
   color: #fff;
 }
 
-.services .card-link {
+.services-photo .card-link {
   color: var(--accent-light);
 }
 
@@ -1433,7 +1441,7 @@ img {
 /* White, and it has to sit *after* the group above: both are one class and one
    element, so the group would win the tie on source order. .why-us h2 further
    down solves the same problem the same way. */
-.services h2 {
+.services-photo h2 {
   color: #fff;
   /* The shared group above sets space-heading (48px) below every section
      heading. With a supporting line directly beneath, that read as a hole. */
