@@ -904,12 +904,40 @@ img {
     border-color var(--dur-fast) var(--ease-out);
 }
 
+/* Focus ring, accent-deep. Deliberately NOT inside the reduced-motion query:
+   a ring is state, not motion, and gating it would leave reduced-motion
+   keyboard users with no visible focus at all. Only the transition below is
+   gated.
+
+   :focus-within rather than :focus-visible on the input, because the ring
+   belongs to the whole white field — the input, the pin and the submit button
+   all sit inside it. It fires for keyboard and pointer alike, which is what
+   makes it survive a Tab as well as a click.
+
+   Drawn with box-shadow, not outline or border-width, so it adds no layout box
+   the Search Box dropdown would have to be repositioned around: the list is
+   absolutely positioned against this element and its top: calc(100% + 6px) is
+   measured from the border edge, which the shadow does not move. */
 .hero-panel .hero-lookup .lookup-cta-field:focus-within {
-  border-color: var(--accent-light);
+  /* Border accent-deep: it sits against the white field, where #2C5B8C is
+     7.04:1 and unmistakable.
+
+     The outer ring is accent-light, not accent-deep. Measured, an accent-deep
+     ring on the navy panel is rgb(14,40,71) against rgb(9,31,59) — 1.11:1,
+     which is invisible. A dark blue ring on a dark navy ground cannot work;
+     the ring has to lighten away from the panel, not darken into it. */
+  border-color: var(--accent-deep);
   box-shadow: inset 0 1px 0 #fff,
     0 8px 22px rgba(7, 29, 55, 0.4),
     0 2px 6px rgba(7, 29, 55, 0.24),
-    0 0 0 4px rgba(157, 185, 220, 0.32);
+    0 0 0 3px rgba(157, 185, 220, 0.75);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-panel .hero-lookup .lookup-cta-field {
+    transition: box-shadow var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
 }
 
 /* Sits on the input's row rather than becoming a row of its own. */
@@ -984,8 +1012,22 @@ img {
   background: var(--color-primary-dark);
 }
 
-.hero-field-go:hover .hero-field-arrow {
-  transform: translateX(2px);
+/* The shift is motion, so it is gated. The transition lives here too — with
+   it on the base rule a reduced-motion visitor would still get an animated
+   colour change on the arrow. --dur-hover/--ease-out are the site's hover
+   timing, the same pair .card-link and .btn already use. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Qualified: the base .hero-field-arrow rule sits below this query, so at
+     one class it would win the tie on source order. check-css-order caught
+     this on the first build. */
+  .hero-field-go .hero-field-arrow {
+    transition: transform var(--dur-hover) var(--ease-out);
+  }
+
+  .hero-field-go:hover .hero-field-arrow,
+  .hero-field-go:focus-visible .hero-field-arrow {
+    transform: translateX(3px);
+  }
 }
 
 .hero-field-go:focus-visible {
@@ -1002,7 +1044,6 @@ img {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform var(--dur-hover) var(--ease-out);
 }
 
 /* Below the buttons now, and smaller. It used to sit between the lookup and
