@@ -1586,7 +1586,10 @@ img {
 
 .founder-role {
   margin: -0.2em 0 1.1em;
-  color: var(--color-slate);
+  /* accent-deep, not slate: slate is #647e9d, which is 4.19:1 on white at this
+     16px/600 and misses AA by a tenth. accent-deep is 7.04:1 and is already the
+     subordinate brand blue elsewhere. */
+  color: var(--accent-deep);
   font-weight: 600;
 }
 
@@ -2370,7 +2373,9 @@ blockquote.card cite {
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-slate);
+  /* Same swap as .founder-role: slate on white is 4.19:1, and at 12px this is
+     not large text, so the floor is 4.5. */
+  color: var(--accent-deep);
 }
 
 .contact-details dd {
@@ -5184,16 +5189,6 @@ blockquote.card cite {
   margin: 10px 0 0;
   font-size: 10px;
   color: #6d829c;
-}
-
-.sh-attrib {
-  position: absolute;
-  right: 10px;
-  bottom: 6px;
-  z-index: 5;
-  margin: 0;
-  font-size: 10px;
-  color: #48607a;
 }
 
 .sh-mapnote {
