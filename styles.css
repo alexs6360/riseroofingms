@@ -1908,6 +1908,21 @@ img {
   gap: 24px;
 }
 
+/* Grey ground for .service-area where the section below it is white.
+
+   On the homepage .service-area is followed by .contact and both are white,
+   but that page is deliberately left alone. On storm-damage and the three city
+   pages the same pair had no divider between them, so ~2,000px of page read as
+   one block. Applied per page in the markup rather than as a global rule keyed
+   off .contact: b7dbd57 made exactly that mistake, changing .contact to white
+   for the homepage and propagating it to five other pages.
+
+   The section above it is navy on all four (.why-us on the city pages,
+   .storm-claims on storm-damage), so this introduces no new same-ground pair. */
+.service-area-alt {
+  background: var(--color-surface);
+}
+
 /* Capped so the pills form a readable block instead of one edge-to-edge line */
 .area-group {
   max-width: 780px;
