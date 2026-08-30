@@ -1288,61 +1288,15 @@ img {
    keyed to .services-photo, which only the homepage section carries. */
 .services-photo {
   position: relative;
-  /* Keeps the ::before's negative z-index inside this section rather than
-     letting it slide behind the page background. */
-  isolation: isolate;
-  background-color: var(--color-navy);
+  /* No background-color and no ::before. Diagnostic state: the photo paints at
+     full strength and nothing sits over it. Text out here does not meet
+     contrast in this state — see the revert in the commit message. */
   background-image: url("images/services-roof-bg.jpg");
   background-size: cover;
-  /* 40% 60%, not 50% 35%. At 35% the section's bottom band landed on the
-     porch's white trim and columns, and the call line — white at 70%, the
-     lightest text out here — sat on rgb(251,255,255). That single region set
-     the overlay floor at 0.69 all by itself; every other element cleared 4.5:1
-     by 0.49 or below.
-
-     75% drops the crop so the roof plane fills the heading block and the bright
-     facade falls behind the cards, which are opaque navy and don't care what's
-     under them. It has to go this far because the section's height is fixed
-     from 1100 up while its width keeps growing: the same percentage maps to a
-     different band of the photo at every width, and at 60% the call line rode
-     back up into the porch trim by 1920. 75% keeps it clear across 320-2400.
-
-     30% on the horizontal only does anything where cover is height-driven —
-     390 through 1023 — and there it moves the supporting line off a bright
-     ridge highlight. Neither value changes what the photo is of. */
+  /* Kept from the overlay work so the crop is the only thing held constant
+     while the overlay is gone: 30% horizontal, 75% vertical. */
   background-position: 30% 75%;
   color: #fff;
-}
-
-/* One flat overlay across the whole section. Two scrims anchored to the top
-   and bottom edges left an undarkened band across the middle, which read as
-   stripes rather than as a photograph.
-
-   0.74 is derived. Every text element over the photo is now white at some
-   alpha — nothing out here is accent-light any more — so the binding
-   constraint is white at 70%, the supporting and call lines. Against the
-   brightest 16px block, rgb(235,213,173), those clear 4.5:1 from 0.676 up;
-   against the single brightest pixel found behind live text,
-   rgb(252,255,255), from 0.735 up. 0.74 clears the stricter of the two.
-
-   The eyebrow moving off accent-light is only half of why this sits below the
-   old 0.76 floor. Accent-light did not stop being the constraint, it moved to
-   the phone number — with that still accent-light the floor is 0.801. */
-.services-photo::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  /* Neutral, not navy. A navy tint recoloured the whole frame blue — the
-     trees and the shingle both went the same hue and the photo read as
-     texture rather than a house. rgb(10,12,14) darkens without a cast.
-
-     0.58 is the floor, and the crop above is what bought it. The binding
-     element is no longer the call line but the supporting line at 390, against
-     rgb(179,197,159). Measured over glyph runs, not element boxes: the call
-     line is a full-width <p> with centred text, so its box sweeps grass no ink
-     ever sits on. Checked at all ten sweep widths, not just two. */
-  background: rgba(10, 12, 14, 0.58);
 }
 
 /* White rather than accent-light. Accent-light is a lighter target than white
