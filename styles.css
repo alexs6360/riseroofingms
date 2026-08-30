@@ -1294,7 +1294,23 @@ img {
   background-color: var(--color-navy);
   background-image: url("images/services-roof-bg.jpg");
   background-size: cover;
-  background-position: 50% 35%;
+  /* 40% 60%, not 50% 35%. At 35% the section's bottom band landed on the
+     porch's white trim and columns, and the call line — white at 70%, the
+     lightest text out here — sat on rgb(251,255,255). That single region set
+     the overlay floor at 0.69 all by itself; every other element cleared 4.5:1
+     by 0.49 or below.
+
+     75% drops the crop so the roof plane fills the heading block and the bright
+     facade falls behind the cards, which are opaque navy and don't care what's
+     under them. It has to go this far because the section's height is fixed
+     from 1100 up while its width keeps growing: the same percentage maps to a
+     different band of the photo at every width, and at 60% the call line rode
+     back up into the porch trim by 1920. 75% keeps it clear across 320-2400.
+
+     30% on the horizontal only does anything where cover is height-driven —
+     390 through 1023 — and there it moves the supporting line off a bright
+     ridge highlight. Neither value changes what the photo is of. */
+  background-position: 30% 75%;
   color: #fff;
 }
 
@@ -1321,10 +1337,12 @@ img {
      trees and the shingle both went the same hue and the photo read as
      texture rather than a house. rgb(10,12,14) darkens without a cast.
 
-     0.69 is the floor: below it white at 70% — the supporting and call lines,
-     the lightest text out here — drops under 4.5:1 against the worst pixel
-     behind live text. */
-  background: rgba(10, 12, 14, 0.69);
+     0.58 is the floor, and the crop above is what bought it. The binding
+     element is no longer the call line but the supporting line at 390, against
+     rgb(179,197,159). Measured over glyph runs, not element boxes: the call
+     line is a full-width <p> with centred text, so its box sweeps grass no ink
+     ever sits on. Checked at all ten sweep widths, not just two. */
+  background: rgba(10, 12, 14, 0.58);
 }
 
 /* White rather than accent-light. Accent-light is a lighter target than white
@@ -1333,7 +1351,7 @@ img {
 .services-eyebrow {
   margin: 0 0 var(--space-2);
   color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1344,7 +1362,7 @@ img {
   max-width: 46ch;
   margin: 0 auto var(--space-5);
   color: rgba(255, 255, 255, 0.7);
-  font-size: 15px;
+  font-size: 22px;
   text-align: center;
   text-wrap: balance;
 }
@@ -1387,7 +1405,7 @@ img {
 
 .services-photo .card h3 {
   color: #fff;
-  font-size: 17px;
+  font-size: 20px;
 }
 
 .services-photo .card-link {
@@ -1415,7 +1433,7 @@ img {
 .services-call {
   margin: var(--space-5) 0 0;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 15px;
+  font-size: 18px;
   text-align: center;
 }
 
@@ -1426,7 +1444,7 @@ img {
    constraint and the floor was 0.801. */
 .services-call a {
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
 }
 
@@ -1451,11 +1469,17 @@ img {
 /* White, and it has to sit *after* the group above: both are one class and one
    element, so the group would win the tie on source order. .why-us h2 further
    down solves the same problem the same way. */
-.services-photo h2 {
+.services.services-photo h2 {
   color: #fff;
-  /* 31px, overriding the shared group's --text-h2 clamp, which tops out at
-     40px. Qualified selector plus later position, so it wins on both. */
-  font-size: 31px;
+  /* Its own clamp, one step above the shared --text-h2 at both ends: 32px at
+     390 against that scale's 28px, 44px from 1440 up against its 40px. Same
+     shape rather than a flat size, so the mobile end doesn't jump. Qualified
+     selector, two classes deep, so it wins on specificity rather than order.
+     It has to: the mobile block near the end of the file re-asserts
+     `.services h2 { font-size: var(--text-h2) }` at equal specificity and
+     later, and a one-class selector here lost that tie silently — 390 was
+     still rendering 28px. */
+  font-size: clamp(2rem, 1.4rem + 2vw, 2.75rem);
   /* The shared group above sets space-heading (48px) below every section
      heading. With a supporting line directly beneath, that read as a hole. */
   margin-bottom: var(--space-2);
