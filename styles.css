@@ -275,7 +275,11 @@ img {
   font-weight: 700;
 }
 
-.nav-cta {
+/* Qualified with .btn because .btn and .btn-primary both sit later in this
+   file at equal specificity, so a bare .nav-cta loses the tie the moment
+   either gains white-space. The element is always class="btn btn-primary
+   nav-cta". Found by tools/check-css-order.mjs. */
+.btn.nav-cta {
   white-space: nowrap;
 }
 
