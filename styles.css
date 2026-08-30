@@ -1288,13 +1288,25 @@ img {
    keyed to .services-photo, which only the homepage section carries. */
 .services-photo {
   position: relative;
-  /* No background-color and no ::before. Diagnostic state: the photo paints at
-     full strength and nothing sits over it. Text out here does not meet
-     contrast in this state — see the revert in the commit message. */
+  /* No background-color, no ::before, no scrim. The photo paints at full
+     strength — chosen deliberately, not a leftover diagnostic.
+
+     Know what this costs before touching it: every text element in this
+     section fails WCAG AA against the photo, at every width from 320 to 2400.
+     Measured over glyph runs: eyebrow 1.61-2.12, heading 1.75-2.22, supporting
+     line 1.57-1.85, call line 1.63-2.01, phone 2.04-2.60, against floors of
+     4.5 (3 for the large text). The four card titles and four card links still
+     pass — they sit on opaque navy, not on the photo.
+
+     Restoring legibility means restoring an overlay. The measured floor for
+     this photo and crop is rgba(10,12,14,0.58); see commit 4195c68 for how
+     that number was derived. */
   background-image: url("images/services-roof-bg.jpg");
   background-size: cover;
-  /* Kept from the overlay work so the crop is the only thing held constant
-     while the overlay is gone: 30% horizontal, 75% vertical. */
+  /* Carried over from the overlay work. It was derived to keep bright ground
+     out from under the text, which no longer buys anything with no overlay to
+     minimise, but it is also the crop that centres the roof plane — an
+     independent derivation from the roof centroid lands at 50% 74%. */
   background-position: 30% 75%;
   color: #fff;
 }
