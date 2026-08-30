@@ -1923,6 +1923,28 @@ img {
   background: var(--color-surface);
 }
 
+/* Grey ground for the injected lookup block.
+
+   .lookup-cta declared no background, so it inherited white from body — and
+   the section below it does the same. That left navy hero, white, white with
+   nothing between the last two on all four pages that include the partial.
+
+   Carried on the partial rather than per page, unlike .service-area-alt,
+   because the section markup does not exist in the source pages: they hold a
+   <!-- lookup-cta --> marker and tools/inject-partials.mjs supplies the
+   section at build time. A per-page class would mean teaching the injector to
+   substitute one, which is machinery for a difference that does not exist —
+   all four pages need the same ground. The partial's inclusion set is exactly
+   the affected set: the three city pages and storm-damage. The homepage does
+   not include it; its lookup lives in the hero and shares only the form
+   classes, not .lookup-cta.
+
+   Navy above and white below on every one of the four, so this separates the
+   pair without creating another. */
+.lookup-cta-alt {
+  background: var(--color-surface);
+}
+
 /* Capped so the pills form a readable block instead of one edge-to-edge line */
 .area-group {
   max-width: 780px;
