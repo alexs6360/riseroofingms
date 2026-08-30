@@ -1945,6 +1945,32 @@ img {
   background: var(--color-surface);
 }
 
+/* Grey ground for the homepage's contact section.
+
+   The homepage pair resolves here, not at .service-area. Above .service-area
+   sits .testimonials, which is already --color-surface, so giving
+   .service-area the alt ground would have traded one same-ground pair for
+   another rather than removing it — testimonials/service-area instead of
+   service-area/contact.
+
+   .contact was white because of b7dbd57, which needed it separated from the
+   grey FAQ section above it. That FAQ is commented out until David supplies
+   the answers, so the reason is gone and the white is now what causes the
+   pair. Reverting .contact globally would re-break the other four pages,
+   where it is correctly white under a grey .service-area-alt — hence a
+   homepage-only modifier.
+
+   Below it is the navy footer, so nothing new is created underneath.
+
+   Qualified with .contact because the base .contact rule sets background at
+   L2440, below this point in the file. As a bare single class this lost the
+   tie on source order and still rendered white. check-css-order did not flag
+   it: that tool only compares media-query rules against later base rules, and
+   both of these are top level. */
+.contact.contact-alt {
+  background: var(--color-surface);
+}
+
 /* Capped so the pills form a readable block instead of one edge-to-edge line */
 .area-group {
   max-width: 780px;
