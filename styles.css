@@ -1317,7 +1317,14 @@ img {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgba(7, 29, 55, 0.74);
+  /* Neutral, not navy. A navy tint recoloured the whole frame blue — the
+     trees and the shingle both went the same hue and the photo read as
+     texture rather than a house. rgb(10,12,14) darkens without a cast.
+
+     0.69 is the floor: below it white at 70% — the supporting and call lines,
+     the lightest text out here — drops under 4.5:1 against the worst pixel
+     behind live text. */
+  background: rgba(10, 12, 14, 0.69);
 }
 
 /* White rather than accent-light. Accent-light is a lighter target than white
@@ -1326,7 +1333,7 @@ img {
 .services-eyebrow {
   margin: 0 0 var(--space-2);
   color: rgba(255, 255, 255, 0.85);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1337,9 +1344,7 @@ img {
   max-width: 46ch;
   margin: 0 auto var(--space-5);
   color: rgba(255, 255, 255, 0.7);
-  /* 20px: half the 40px heading — a clear step up from the 16px it was,
-     without starting to compete with it. */
-  font-size: 20px;
+  font-size: 15px;
   text-align: center;
   text-wrap: balance;
 }
@@ -1382,6 +1387,7 @@ img {
 
 .services-photo .card h3 {
   color: #fff;
+  font-size: 17px;
 }
 
 .services-photo .card-link {
@@ -1409,7 +1415,7 @@ img {
 .services-call {
   margin: var(--space-5) 0 0;
   color: rgba(255, 255, 255, 0.7);
-  font-size: var(--text-base);
+  font-size: 15px;
   text-align: center;
 }
 
@@ -1447,6 +1453,9 @@ img {
    down solves the same problem the same way. */
 .services-photo h2 {
   color: #fff;
+  /* 31px, overriding the shared group's --text-h2 clamp, which tops out at
+     40px. Qualified selector plus later position, so it wins on both. */
+  font-size: 31px;
   /* The shared group above sets space-heading (48px) below every section
      heading. With a supporting line directly beneath, that read as a hole. */
   margin-bottom: var(--space-2);
@@ -4475,10 +4484,6 @@ blockquote.card cite {
   .contact,
   .storm-section {
     padding: 48px 0;
-  }
-
-  .services-lead {
-    font-size: 18px;
   }
 
   .services h2,
