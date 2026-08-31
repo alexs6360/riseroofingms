@@ -1348,6 +1348,39 @@ img {
   background: rgba(7, 29, 55, 0.88);
   border: 1px solid rgba(157, 185, 220, 0.38);
   box-shadow: none;
+  /* Containing block for the stretched hit area below. */
+  position: relative;
+  /* The affordance has to match the hit area, or the whole card is clickable
+     without looking it. */
+  cursor: pointer;
+}
+
+/* The whole card is the click target, not just the CTA line. Measured before
+   this: the link's box was 4,259px2 inside a 55,616px2 card — 7.7% of what
+   reads as clickable actually was.
+
+   A pseudo-element on the existing <a>, not a wrapper: an <a> around the card
+   would nest a link inside a link, which is invalid, and it would swallow the
+   h3 into the link text. This keeps one link, one tab stop, one accessible
+   name, and the ?need= href untouched. ::after is already the arrow glyph, so
+   this is ::before.
+
+   Scoped to .services-photo — the homepage. The city pages' service cards look
+   the same but carry a paragraph of body copy and four links that all point at
+   #contact, so a full-card overlay there would block text selection and buy
+   nothing. */
+.services-photo .card-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* Keyboard parity: the card is one hit area now, so focusing its link has to
+   light the same surface hover does. Without this the ring lands on the CTA
+   text alone and the card underneath stays inert. */
+.services-photo .card:has(.card-link:focus-visible) {
+  background: rgba(7, 29, 55, 0.94);
+  border-color: rgba(157, 185, 220, 0.6);
 }
 
 .services-photo .card:hover {
@@ -1556,6 +1589,20 @@ img {
   color: var(--color-primary);
   font-weight: 600;
   font-size: var(--text-sm);
+}
+
+/* A disabled control should read as blocked, not as a button that ignored the
+   click. The contact form's submit goes disabled and becomes "Sending…" on
+   submit; before this it kept cursor: pointer and a second click looked
+   dropped rather than refused.
+
+   Set on the state, so source order cannot undo it: .btn:disabled is (0,2,0)
+   against .btn's (0,1,0). The bare button:disabled covers the same state on
+   any submit that is not carrying .btn. */
+.btn:disabled,
+.btn[disabled],
+button:disabled {
+  cursor: not-allowed;
 }
 
 .card-link::after {
