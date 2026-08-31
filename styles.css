@@ -80,7 +80,14 @@
   --dur-fast: 200ms;
   --dur-base: 260ms;
   --dur-slow: 380ms;
-  --dur-reveal: 400ms;
+  /* Scroll-reveal motion. These three are the whole vocabulary: change them
+     here and every revealed element on every page follows, because nothing
+     restates a literal. 800ms with a strong ease-out finishes most of its
+     travel early, so it reads deliberate rather than slow. The values band
+     runs the same curve at its own hardcoded 600ms. */
+  --dur-reveal: 800ms;
+  --reveal-travel: 40px;
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.75, 0.3, 1);
 
   /* One card shadow, one lifted variant, one for fixed overlays */
@@ -4996,8 +5003,12 @@ blockquote.card cite {
     }
   }
 
+  /* Same curve as the scroll reveal, so the load sequence and everything that
+     arrives on scroll share one deceleration. Duration stays --dur-slow: only
+     the curve was asked to unify, and 800ms on a four-step load sequence would
+     hold the hero back for over a second. */
   .hero-anim {
-    animation: rise-fade-up var(--dur-slow) var(--ease-out) both;
+    animation: rise-fade-up var(--dur-slow) var(--ease-reveal) both;
   }
 
   .hero-anim-1 {
@@ -5018,14 +5029,15 @@ blockquote.card cite {
      element renders normally. */
   .js .reveal {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity var(--dur-reveal) var(--ease-out),
-      transform var(--dur-reveal) var(--ease-out);
+    transform: translateY(var(--reveal-travel));
+    transition: opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal);
   }
 
-  /* Founder photo enters from the side rather than from below */
+  /* Founder photo enters from the side rather than from below. Negated from
+     the same token so the two directions cannot drift apart. */
   .js .reveal-left {
-    transform: translateX(-24px);
+    transform: translateX(calc(-1 * var(--reveal-travel)));
   }
 
   .js .reveal.in-view,
@@ -5039,8 +5051,8 @@ blockquote.card cite {
      transition shorthand and leave hover with no transition at all. */
   .js .card,
   .js .why-card {
-    transition: opacity var(--dur-reveal) var(--ease-out),
-      transform var(--dur-reveal) var(--ease-out),
+    transition: opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal),
       box-shadow var(--dur-fast) var(--ease-out),
       translate var(--dur-fast) var(--ease-out),
       background-color var(--dur-fast) var(--ease-out),
@@ -5048,8 +5060,8 @@ blockquote.card cite {
   }
 
   .js .area-list li {
-    transition: opacity var(--dur-reveal) var(--ease-out),
-      transform var(--dur-reveal) var(--ease-out),
+    transition: opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal),
       background-color var(--dur-hover) var(--ease-out);
   }
 
