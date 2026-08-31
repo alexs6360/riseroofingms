@@ -1621,9 +1621,7 @@ button:disabled {
    than slides. .card-link:focus-visible::after is kept alongside the :has()
    forms because it also covers links that sit outside a .card. */
 .card:hover .card-link::after,
-.why-card:hover .card-link::after,
 .card:has(.card-link:focus-visible) .card-link::after,
-.why-card:has(.card-link:focus-visible) .card-link::after,
 .card-link:focus-visible::after {
   translate: 3px 0;
 }
@@ -1645,15 +1643,11 @@ button:disabled {
   box-shadow: var(--shadow-card-hover);
 }
 
-/* On the navy band a drop shadow reads as mud, so the lift is paired with a
-   brighter edge instead.
-
-   The :has() branch is inert today and knowingly so: .why-card is an <li>
-   holding an icon, an h3 and a p, with no link in it and nothing to click. It
-   is here so the pair cannot drift if one ever gains a .card-link — which is
-   the whole point of merging these lists. */
-.why-card:hover,
-.why-card:has(.card-link:focus-visible) {
+/* On the navy band a drop shadow reads as mud, so the edge brightens instead.
+   This is the whole of .why-card's hover now — no lift, and no :has() branch.
+   Nothing in a .why-card is focusable, so a focus selector here could only ever
+   be dead weight that reads as intent. */
+.why-card:hover {
   border-color: rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.08);
 }
@@ -5059,14 +5053,19 @@ blockquote.card cite {
       background-color var(--dur-hover) var(--ease-out);
   }
 
-  /* The one rule that had drifted. Adding the :has() branches is what closes
-     the keyboard gap; -4px from -2px is the strengthening. Stays on `translate`
+  /* The one rule that had drifted. Adding the :has() branch is what closes the
+     keyboard gap; -4px from -2px is the strengthening. Stays on `translate`
      because the reveal animation owns `transform`, and stays inside
-     no-preference because it is the only part of this state that moves. */
+     no-preference because it is the only part of this state that moves.
+
+     .why-card is deliberately absent, and absent rather than reverted to -2px.
+     It is a non-interactive <li> — icon, h3, p, no link, nothing to click — so
+     a lift on it promises a press that never happens. On iOS the promise also
+     sticks: a tap raises the hover state and nothing clears it until the next
+     tap elsewhere. Its border and background shift stay as they were, which is
+     enough to show the row is alive without implying a target. */
   .card:hover,
-  .card:has(.card-link:focus-visible),
-  .why-card:hover,
-  .why-card:has(.card-link:focus-visible) {
+  .card:has(.card-link:focus-visible) {
     translate: 0 -4px;
   }
 
