@@ -1375,17 +1375,23 @@ img {
   inset: 0;
 }
 
-/* Keyboard parity: the card is one hit area now, so focusing its link has to
-   light the same surface hover does. Without this the ring lands on the CTA
-   text alone and the card underneath stays inert. */
+/* Hover and keyboard focus are one state in one selector list, not two rules
+   that agree today. They were split before and immediately drifted: the -2px
+   lift lived on :hover alone, so keyboard users got three of the four changes.
+
+   Border goes to 0.85 from 0.6. The whole card is a click target now, and the
+   old delta — +0.06 background alpha on an already-dark navy, +0.22 border,
+   2px — was sized for flagging a small text link. The border is the most
+   legible of the three against the photo, so it takes the largest step.
+
+   box-shadow stays none here: on the photo a drop shadow reads as mud. That is
+   why .card:hover's shadow has to be cancelled, and the cancel now covers both
+   states — :has() is (0,4,0) against the shared rule's (0,3,0), so it wins on
+   specificity rather than on position. */
+.services-photo .card:hover,
 .services-photo .card:has(.card-link:focus-visible) {
   background: rgba(7, 29, 55, 0.94);
-  border-color: rgba(157, 185, 220, 0.6);
-}
-
-.services-photo .card:hover {
-  background: rgba(7, 29, 55, 0.94);
-  border-color: rgba(157, 185, 220, 0.6);
+  border-color: rgba(157, 185, 220, 0.85);
   box-shadow: none;
 }
 
@@ -1610,7 +1616,14 @@ button:disabled {
   transition: translate var(--dur-hover) var(--ease-out);
 }
 
+/* Deliberately not inside the reduced-motion query. It is 3px on a glyph, and
+   the global reduce rule collapses the transition to ~0s so it steps rather
+   than slides. .card-link:focus-visible::after is kept alongside the :has()
+   forms because it also covers links that sit outside a .card. */
 .card:hover .card-link::after,
+.why-card:hover .card-link::after,
+.card:has(.card-link:focus-visible) .card-link::after,
+.why-card:has(.card-link:focus-visible) .card-link::after,
 .card-link:focus-visible::after {
   translate: 3px 0;
 }
@@ -1627,13 +1640,20 @@ button:disabled {
     border-color var(--dur-fast) var(--ease-out);
 }
 
-.card:hover {
+.card:hover,
+.card:has(.card-link:focus-visible) {
   box-shadow: var(--shadow-card-hover);
 }
 
 /* On the navy band a drop shadow reads as mud, so the lift is paired with a
-   brighter edge instead. */
-.why-card:hover {
+   brighter edge instead.
+
+   The :has() branch is inert today and knowingly so: .why-card is an <li>
+   holding an icon, an h3 and a p, with no link in it and nothing to click. It
+   is here so the pair cannot drift if one ever gains a .card-link — which is
+   the whole point of merging these lists. */
+.why-card:hover,
+.why-card:has(.card-link:focus-visible) {
   border-color: rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.08);
 }
@@ -5039,9 +5059,15 @@ blockquote.card cite {
       background-color var(--dur-hover) var(--ease-out);
   }
 
+  /* The one rule that had drifted. Adding the :has() branches is what closes
+     the keyboard gap; -4px from -2px is the strengthening. Stays on `translate`
+     because the reveal animation owns `transform`, and stays inside
+     no-preference because it is the only part of this state that moves. */
   .card:hover,
-  .why-card:hover {
-    translate: 0 -2px;
+  .card:has(.card-link:focus-visible),
+  .why-card:hover,
+  .why-card:has(.card-link:focus-visible) {
+    translate: 0 -4px;
   }
 
   .btn-primary:active,
