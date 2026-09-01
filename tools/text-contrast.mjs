@@ -78,10 +78,21 @@ const PAGE_FN = String.raw`(selector) => {
         const m = img.match(/linear-gradient\(([^]*)\)$/);
         if (!m) return { unmodelled: img.slice(0, 60) };
         const body = m[1];
-        const dir = /to right/.test(body) ? "x" : /to bottom/.test(body) ? "y" : null;
+        // All four keyword axes. Handling only "to right" and "to bottom" is how
+        // a 0.75-alpha scrim went uncomposited and made a passing headline look
+        // like a 1.37:1 failure. Unprefixed gradients default to "to bottom".
+        const dir =
+          /to right/.test(body) ? "x" :
+          /to left/.test(body) ? "-x" :
+          /to top/.test(body) ? "-y" :
+          /to bottom/.test(body) || !/\bto\b/.test(body) ? "y" : null;
         const stops = [...body.matchAll(/rgba?\(([^)]*)\)\s*([\d.]+)%/g)].map((s2) => ({
           c: rgba("rgba(" + s2[1] + ")"), p: parseFloat(s2[2]) / 100 }));
         if (!dir || stops.length !== 2 || stops.some((s2) => !s2.c)) return { unmodelled: img.slice(0, 60) };
+        // A mask on the scrim changes its alpha per pixel and is not modelled.
+        const mask = s.maskImage && s.maskImage !== "none" ? s.maskImage
+                   : s.webkitMaskImage && s.webkitMaskImage !== "none" ? s.webkitMaskImage : null;
+        if (mask) return { unmodelled: "masked scrim: " + mask.slice(0, 50) };
         return { dir, stops };
       }
       if (solid && solid.a > 0) return { dir: "flat", stops: [{ c: solid, p: 0 }, { c: solid, p: 1 }] };
@@ -91,7 +102,7 @@ const PAGE_FN = String.raw`(selector) => {
   const overlayAt = (ov, fx, fy) => {
     if (!ov || ov.unmodelled) return null;
     if (ov.dir === "flat") return ov.stops[0].c;
-    const t = ov.dir === "x" ? fx : fy;
+    const t = ov.dir === "x" ? fx : ov.dir === "-x" ? 1 - fx : ov.dir === "-y" ? 1 - fy : fy;
     const [a, b] = ov.stops;
     const k = t <= a.p ? 0 : t >= b.p ? 1 : (t - a.p) / (b.p - a.p);
     return { c: a.c.c, a: a.c.a + (b.c.a - a.c.a) * k };
@@ -127,7 +138,13 @@ const PAGE_FN = String.raw`(selector) => {
     try { data = ctx.getImageData(0, 0, iw, ih).data; }
     catch (e) { out.push({ err: "canvas tainted (cross-origin image)", el: el.textContent.trim().slice(0, 24) }); continue; }
 
-    const ov = overlayOf(img.parentElement, W, H);
+    // Walk up from the image looking for the scrim. Assuming img.parentElement
+    // finds <picture> on any responsive image and misses the overlay entirely,
+    // which silently drops the scrim from every number.
+    let ov = null;
+    for (let a = img.parentElement; a && a !== document.body && !ov; a = a.parentElement) {
+      ov = overlayOf(a, W, H);
+    }
 
     const fg = rgba(cs.color).c;
     const fs = parseFloat(cs.fontSize), fw = parseInt(cs.fontWeight) || 400;
@@ -196,7 +213,8 @@ const evaluate = (expr) =>
     .then((r) => r.result?.result?.value);
 
 await send("Page.enable");
-let failures = 0, unmodelledSeen = null;
+let failures = 0;
+const unmodelled = [];
 
 for (const w of widths) {
   await send("Emulation.setDeviceMetricsOverride",
@@ -209,7 +227,7 @@ for (const w of widths) {
   console.log("  line                          size  floor    worst      p90   verdict");
   for (const r of rows) {
     if (r.err) { console.log(`  ${r.el.padEnd(30)}  ${r.err}`); failures++; continue; }
-    if (r.unmodelled) unmodelledSeen = r.unmodelled;
+    if (r.unmodelled && !unmodelled.some((u) => u.w === w && u.what === r.unmodelled)) unmodelled.push({ w, what: r.unmodelled });
     const bad = r.p90 < r.floor;
     if (bad) failures++;
     console.log(
@@ -218,10 +236,10 @@ for (const w of widths) {
     );
   }
 }
-if (unmodelledSeen) {
-  console.log(`\n  WARNING: an overlay could not be modelled and was NOT composited in:`);
-  console.log(`           ${unmodelledSeen}`);
-  console.log(`           Every number above is therefore more pessimistic than the render.`);
+if (unmodelled.length) {
+  console.log(`\n  WARNING: an overlay could not be modelled and was NOT composited in.`);
+  console.log(`           Numbers at the listed width are more pessimistic than the render.`);
+  for (const u of unmodelled) console.log(`           ${u.w}px: ${u.what}`);
 }
 console.log(`\n${failures ? failures + " line(s) below floor on p90" : "all lines clear their floor on p90"}`);
 ws.close(); cleanup();

@@ -2796,12 +2796,21 @@ blockquote.card cite {
   object-position: 0% 50%;
 }
 
-/* Same problem Oxford had, same fix. --color-slate on this line measured a
-   90th-percentile 1.08:1 against the grass and road behind it — a mid-tone
-   blue on a mid-tone ground, effectively invisible. --accent-light is the
-   lighter of the two brand blues and is what Oxford already uses here. */
+/* White, not a brand blue — the only city hero where this line is not
+   two-tone. Both blues were measured against the actual pixels behind the
+   glyphs and both failed: --color-slate at a 90th-percentile 1.03:1,
+   --accent-light at 1.95:1, against a 3:1 floor for text this size. Oxford's
+   --accent-light fix works there because that headline sits over a dark car
+   park; here the same line lands on sunlit grass.
+
+   White measures 3.94:1 at 1440 and 5.22:1 at 390. Still short of 4.5 at
+   desktop, and the honest reason it is not higher is the photograph: a scrim
+   heavy enough to carry a blue here needs alpha 0.80, which erases the road,
+   the lawn and the sunset the picture exists for.
+
+   Recheck with: node tools/text-contrast.mjs      http://127.0.0.1:8744/roofing-southaven-ms/ '.city-hero-content h1 span' */
 .city-hero-southaven .city-hero-h1-city {
-  color: var(--accent-light);
+  color: #fff;
 }
 
 /* Southaven only. No wash across the frame — the sunset, the bell tower and
