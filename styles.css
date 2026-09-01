@@ -71,16 +71,45 @@
   --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.375rem;
-  --text-h3: var(--text-lg);
-  --text-h2: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
-  --text-h1: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
+  /* Display scale. Headings only — body text is deliberately untouched, so the
+     gap between display and copy widens instead of everything growing. Tune
+     these five and every heading on every page follows; nothing downstream
+     restates a size.
+
+              390px    1440px      was
+     h1        36px      56px      32 / 44
+     h2        32px      48px      28 / 40
+     h3        20px      20px      18 / 18
+  */
+  --display-h1: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);
+  --display-h2: clamp(2rem, 1.3rem + 2.6vw, 3rem);
+  --display-h3: 1.25rem;
+  /* 1.08 from 1.15. At 56px that is 60px of leading; 1.15 left 64px and the
+     two lines of a headline read as separate rows. */
+  --display-lh: 1.08;
+  /* -0.025em from -0.02em. Larger type needs proportionally more negative
+     tracking to hold together, not less. */
+  --display-track: -0.025em;
+
+  /* The old names stay as the interface every rule already consumes, so the
+     rescale needs no edit at any call site. */
+  --text-h3: var(--display-h3);
+  --text-h2: var(--display-h2);
+  --text-h1: var(--display-h1);
 
   /* Motion — everything stays under 400ms */
   --dur-hover: 150ms;
   --dur-fast: 200ms;
   --dur-base: 260ms;
   --dur-slow: 380ms;
-  --dur-reveal: 400ms;
+  /* Scroll-reveal motion. These three are the whole vocabulary: change them
+     here and every revealed element on every page follows, because nothing
+     restates a literal. 800ms with a strong ease-out finishes most of its
+     travel early, so it reads deliberate rather than slow. The values band
+     runs the same curve at its own hardcoded 600ms. */
+  --dur-reveal: 800ms;
+  --reveal-travel: 40px;
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.75, 0.3, 1);
 
   /* One card shadow, one lifted variant, one for fixed overlays */
@@ -122,9 +151,9 @@ body {
 h1,
 h2,
 h3 {
-  line-height: 1.15;
+  line-height: var(--display-lh);
   margin: 0 0 0.5em;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--display-track);
   text-wrap: balance;
 }
 
@@ -275,7 +304,11 @@ img {
   font-weight: 700;
 }
 
-.nav-cta {
+/* Qualified with .btn because .btn and .btn-primary both sit later in this
+   file at equal specificity, so a bare .nav-cta loses the tie the moment
+   either gains white-space. The element is always class="btn btn-primary
+   nav-cta". Found by tools/check-css-order.mjs. */
+.btn.nav-cta {
   white-space: nowrap;
 }
 
@@ -802,7 +835,7 @@ img {
   margin: 0 0 var(--space-2);
   color: #fff;
   font-size: var(--text-h1);
-  line-height: 1.12;
+  line-height: var(--display-lh);
   text-wrap: balance;
 }
 
@@ -950,12 +983,40 @@ img {
     border-color var(--dur-fast) var(--ease-out);
 }
 
+/* Focus ring, accent-deep. Deliberately NOT inside the reduced-motion query:
+   a ring is state, not motion, and gating it would leave reduced-motion
+   keyboard users with no visible focus at all. Only the transition below is
+   gated.
+
+   :focus-within rather than :focus-visible on the input, because the ring
+   belongs to the whole white field — the input, the pin and the submit button
+   all sit inside it. It fires for keyboard and pointer alike, which is what
+   makes it survive a Tab as well as a click.
+
+   Drawn with box-shadow, not outline or border-width, so it adds no layout box
+   the Search Box dropdown would have to be repositioned around: the list is
+   absolutely positioned against this element and its top: calc(100% + 6px) is
+   measured from the border edge, which the shadow does not move. */
 .hero-panel .hero-lookup .lookup-cta-field:focus-within {
-  border-color: var(--accent-light);
+  /* Border accent-deep: it sits against the white field, where #2C5B8C is
+     7.04:1 and unmistakable.
+
+     The outer ring is accent-light, not accent-deep. Measured, an accent-deep
+     ring on the navy panel is rgb(14,40,71) against rgb(9,31,59) — 1.11:1,
+     which is invisible. A dark blue ring on a dark navy ground cannot work;
+     the ring has to lighten away from the panel, not darken into it. */
+  border-color: var(--accent-deep);
   box-shadow: inset 0 1px 0 #fff,
     0 8px 22px rgba(7, 29, 55, 0.4),
     0 2px 6px rgba(7, 29, 55, 0.24),
-    0 0 0 4px rgba(157, 185, 220, 0.32);
+    0 0 0 3px rgba(157, 185, 220, 0.75);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-panel .hero-lookup .lookup-cta-field {
+    transition: box-shadow var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
 }
 
 /* Sits on the input's row rather than becoming a row of its own. */
@@ -1030,8 +1091,22 @@ img {
   background: var(--color-primary-dark);
 }
 
-.hero-field-go:hover .hero-field-arrow {
-  transform: translateX(2px);
+/* The shift is motion, so it is gated. The transition lives here too — with
+   it on the base rule a reduced-motion visitor would still get an animated
+   colour change on the arrow. --dur-hover/--ease-out are the site's hover
+   timing, the same pair .card-link and .btn already use. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Qualified: the base .hero-field-arrow rule sits below this query, so at
+     one class it would win the tie on source order. check-css-order caught
+     this on the first build. */
+  .hero-field-go .hero-field-arrow {
+    transition: transform var(--dur-hover) var(--ease-out);
+  }
+
+  .hero-field-go:hover .hero-field-arrow,
+  .hero-field-go:focus-visible .hero-field-arrow {
+    transform: translateX(3px);
+  }
 }
 
 .hero-field-go:focus-visible {
@@ -1048,7 +1123,6 @@ img {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform var(--dur-hover) var(--ease-out);
 }
 
 /* Below the buttons now, and smaller. It used to sit between the lookup and
@@ -1279,38 +1353,37 @@ img {
    about 1100 the section is tall enough that the image fits vertically and
    the crop turns horizontal, so the Y term stops doing anything and the strip
    on view is the middle fifth of the frame — also shingle. */
-.services {
+/* Photographic treatment — HOMEPAGE ONLY.
+
+   .services is not a shared partial: the homepage and the three city pages
+   each carry their own copy of the markup under the same class name. So the
+   only thing that was shared here was the CSS, and unscoped it repainted the
+   city pages' service cards navy while leaving their descriptions at
+   --color-text-muted, which measured 1.01:1 — invisible. Everything below is
+   keyed to .services-photo, which only the homepage section carries. */
+.services-photo {
   position: relative;
-  /* Keeps the ::before's negative z-index inside this section rather than
-     letting it slide behind the page background. */
-  isolation: isolate;
-  background-color: var(--color-navy);
+  /* No background-color, no ::before, no scrim. The photo paints at full
+     strength — chosen deliberately, not a leftover diagnostic.
+
+     Know what this costs before touching it: every text element in this
+     section fails WCAG AA against the photo, at every width from 320 to 2400.
+     Measured over glyph runs: eyebrow 1.61-2.12, heading 1.75-2.22, supporting
+     line 1.57-1.85, call line 1.63-2.01, phone 2.04-2.60, against floors of
+     4.5 (3 for the large text). The four card titles and four card links still
+     pass — they sit on opaque navy, not on the photo.
+
+     Restoring legibility means restoring an overlay. The measured floor for
+     this photo and crop is rgba(10,12,14,0.58); see commit 4195c68 for how
+     that number was derived. */
   background-image: url("images/services-roof-bg.jpg");
   background-size: cover;
-  background-position: 50% 35%;
+  /* Carried over from the overlay work. It was derived to keep bright ground
+     out from under the text, which no longer buys anything with no overlay to
+     minimise, but it is also the crop that centres the roof plane — an
+     independent derivation from the roof centroid lands at 50% 74%. */
+  background-position: 30% 75%;
   color: #fff;
-}
-
-/* One flat overlay across the whole section. Two scrims anchored to the top
-   and bottom edges left an undarkened band across the middle, which read as
-   stripes rather than as a photograph.
-
-   0.74 is derived. Every text element over the photo is now white at some
-   alpha — nothing out here is accent-light any more — so the binding
-   constraint is white at 70%, the supporting and call lines. Against the
-   brightest 16px block, rgb(235,213,173), those clear 4.5:1 from 0.676 up;
-   against the single brightest pixel found behind live text,
-   rgb(252,255,255), from 0.735 up. 0.74 clears the stricter of the two.
-
-   The eyebrow moving off accent-light is only half of why this sits below the
-   old 0.76 floor. Accent-light did not stop being the constraint, it moved to
-   the phone number — with that still accent-light the floor is 0.801. */
-.services::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: rgba(7, 29, 55, 0.74);
 }
 
 /* White rather than accent-light. Accent-light is a lighter target than white
@@ -1319,7 +1392,7 @@ img {
 .services-eyebrow {
   margin: 0 0 var(--space-2);
   color: rgba(255, 255, 255, 0.85);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1330,9 +1403,7 @@ img {
   max-width: 46ch;
   margin: 0 auto var(--space-5);
   color: rgba(255, 255, 255, 0.7);
-  /* 20px: half the 40px heading — a clear step up from the 16px it was,
-     without starting to compete with it. */
-  font-size: 20px;
+  font-size: 22px;
   text-align: center;
   text-wrap: balance;
 }
@@ -1346,17 +1417,56 @@ img {
    The border is accent-light rather than white because it has to hold over
    the photo's brightest areas as well as its darkest; white at 20% dissolved
    into the sunlit grass. */
-.services .card {
+.services-photo .card {
   display: flex;
   flex-direction: column;
   background: rgba(7, 29, 55, 0.88);
   border: 1px solid rgba(157, 185, 220, 0.38);
   box-shadow: none;
+  /* Containing block for the stretched hit area below. */
+  position: relative;
+  /* The affordance has to match the hit area, or the whole card is clickable
+     without looking it. */
+  cursor: pointer;
 }
 
-.services .card:hover {
+/* The whole card is the click target, not just the CTA line. Measured before
+   this: the link's box was 4,259px2 inside a 55,616px2 card — 7.7% of what
+   reads as clickable actually was.
+
+   A pseudo-element on the existing <a>, not a wrapper: an <a> around the card
+   would nest a link inside a link, which is invalid, and it would swallow the
+   h3 into the link text. This keeps one link, one tab stop, one accessible
+   name, and the ?need= href untouched. ::after is already the arrow glyph, so
+   this is ::before.
+
+   Scoped to .services-photo — the homepage. The city pages' service cards look
+   the same but carry a paragraph of body copy and four links that all point at
+   #contact, so a full-card overlay there would block text selection and buy
+   nothing. */
+.services-photo .card-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* Hover and keyboard focus are one state in one selector list, not two rules
+   that agree today. They were split before and immediately drifted: the -2px
+   lift lived on :hover alone, so keyboard users got three of the four changes.
+
+   Border goes to 0.85 from 0.6. The whole card is a click target now, and the
+   old delta — +0.06 background alpha on an already-dark navy, +0.22 border,
+   2px — was sized for flagging a small text link. The border is the most
+   legible of the three against the photo, so it takes the largest step.
+
+   box-shadow stays none here: on the photo a drop shadow reads as mud. That is
+   why .card:hover's shadow has to be cancelled, and the cancel now covers both
+   states — :has() is (0,4,0) against the shared rule's (0,3,0), so it wins on
+   specificity rather than on position. */
+.services-photo .card:hover,
+.services-photo .card:has(.card-link:focus-visible) {
   background: rgba(7, 29, 55, 0.94);
-  border-color: rgba(157, 185, 220, 0.6);
+  border-color: rgba(157, 185, 220, 0.85);
   box-shadow: none;
 }
 
@@ -1365,19 +1475,20 @@ img {
    descriptions any more, so all it did here was reserve an empty line between
    every one-line title and its link. Scoped off rather than deleted — the city
    pages still have descriptions and still need it. */
-.services .card h3 {
+.services-photo .card h3 {
   min-height: 0;
 }
 
-.services .card-link {
+.services-photo .card-link {
   padding-top: var(--space-1);
 }
 
-.services .card h3 {
+.services-photo .card h3 {
   color: #fff;
+  font-size: 20px;
 }
 
-.services .card-link {
+.services-photo .card-link {
   color: var(--accent-light);
 }
 
@@ -1402,7 +1513,7 @@ img {
 .services-call {
   margin: var(--space-5) 0 0;
   color: rgba(255, 255, 255, 0.7);
-  font-size: var(--text-base);
+  font-size: 18px;
   text-align: center;
 }
 
@@ -1413,7 +1524,7 @@ img {
    constraint and the floor was 0.801. */
 .services-call a {
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
 }
 
@@ -1438,8 +1549,20 @@ img {
 /* White, and it has to sit *after* the group above: both are one class and one
    element, so the group would win the tie on source order. .why-us h2 further
    down solves the same problem the same way. */
-.services h2 {
+.services.services-photo h2 {
   color: #fff;
+  /* Its own clamp, one step above the shared --text-h2 at both ends: 32px at
+     390 against that scale's 28px, 44px from 1440 up against its 40px. Same
+     shape rather than a flat size, so the mobile end doesn't jump. Qualified
+     selector, two classes deep, so it wins on specificity rather than order.
+     It has to: the mobile block near the end of the file re-asserts
+     `.services h2 { font-size: var(--text-h2) }` at equal specificity and
+     later, and a one-class selector here lost that tie silently — 390 was
+     still rendering 28px.
+
+     Still one step above the shared --display-h2 at both ends after the
+     rescale: 34px against 32 at 390, 52px against 48 from 1440 up. */
+  font-size: clamp(2.125rem, 1.35rem + 2.9vw, 3.25rem);
   /* The shared group above sets space-heading (48px) below every section
      heading. With a supporting line directly beneath, that read as a hole. */
   margin-bottom: var(--space-2);
@@ -1552,12 +1675,31 @@ img {
   font-size: var(--text-sm);
 }
 
+/* A disabled control should read as blocked, not as a button that ignored the
+   click. The contact form's submit goes disabled and becomes "Sending…" on
+   submit; before this it kept cursor: pointer and a second click looked
+   dropped rather than refused.
+
+   Set on the state, so source order cannot undo it: .btn:disabled is (0,2,0)
+   against .btn's (0,1,0). The bare button:disabled covers the same state on
+   any submit that is not carrying .btn. */
+.btn:disabled,
+.btn[disabled],
+button:disabled {
+  cursor: not-allowed;
+}
+
 .card-link::after {
   content: "\2192";
   transition: translate var(--dur-hover) var(--ease-out);
 }
 
+/* Deliberately not inside the reduced-motion query. It is 3px on a glyph, and
+   the global reduce rule collapses the transition to ~0s so it steps rather
+   than slides. .card-link:focus-visible::after is kept alongside the :has()
+   forms because it also covers links that sit outside a .card. */
 .card:hover .card-link::after,
+.card:has(.card-link:focus-visible) .card-link::after,
 .card-link:focus-visible::after {
   translate: 3px 0;
 }
@@ -1574,12 +1716,15 @@ img {
     border-color var(--dur-fast) var(--ease-out);
 }
 
-.card:hover {
+.card:hover,
+.card:has(.card-link:focus-visible) {
   box-shadow: var(--shadow-card-hover);
 }
 
-/* On the navy band a drop shadow reads as mud, so the lift is paired with a
-   brighter edge instead. */
+/* On the navy band a drop shadow reads as mud, so the edge brightens instead.
+   This is the whole of .why-card's hover now — no lift, and no :has() branch.
+   Nothing in a .why-card is focusable, so a focus selector here could only ever
+   be dead weight that reads as intent. */
 .why-card:hover {
   border-color: rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.08);
@@ -1632,7 +1777,10 @@ img {
 
 .founder-role {
   margin: -0.2em 0 1.1em;
-  color: var(--color-slate);
+  /* accent-deep, not slate: slate is #647e9d, which is 4.19:1 on white at this
+     16px/600 and misses AA by a tenth. accent-deep is 7.04:1 and is already the
+     subordinate brand blue elsewhere. */
+  color: var(--accent-deep);
   font-weight: 600;
 }
 
@@ -1900,6 +2048,69 @@ img {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+/* Grey ground for .service-area where the section below it is white.
+
+   On the homepage .service-area is followed by .contact and both are white,
+   but that page is deliberately left alone. On storm-damage and the three city
+   pages the same pair had no divider between them, so ~2,000px of page read as
+   one block. Applied per page in the markup rather than as a global rule keyed
+   off .contact: b7dbd57 made exactly that mistake, changing .contact to white
+   for the homepage and propagating it to five other pages.
+
+   The section above it is navy on all four (.why-us on the city pages,
+   .storm-claims on storm-damage), so this introduces no new same-ground pair. */
+.service-area-alt {
+  background: var(--color-surface);
+}
+
+/* Grey ground for the injected lookup block.
+
+   .lookup-cta declared no background, so it inherited white from body — and
+   the section below it does the same. That left navy hero, white, white with
+   nothing between the last two on all four pages that include the partial.
+
+   Carried on the partial rather than per page, unlike .service-area-alt,
+   because the section markup does not exist in the source pages: they hold a
+   <!-- lookup-cta --> marker and tools/inject-partials.mjs supplies the
+   section at build time. A per-page class would mean teaching the injector to
+   substitute one, which is machinery for a difference that does not exist —
+   all four pages need the same ground. The partial's inclusion set is exactly
+   the affected set: the three city pages and storm-damage. The homepage does
+   not include it; its lookup lives in the hero and shares only the form
+   classes, not .lookup-cta.
+
+   Navy above and white below on every one of the four, so this separates the
+   pair without creating another. */
+.lookup-cta-alt {
+  background: var(--color-surface);
+}
+
+/* Grey ground for the homepage's contact section.
+
+   The homepage pair resolves here, not at .service-area. Above .service-area
+   sits .testimonials, which is already --color-surface, so giving
+   .service-area the alt ground would have traded one same-ground pair for
+   another rather than removing it — testimonials/service-area instead of
+   service-area/contact.
+
+   .contact was white because of b7dbd57, which needed it separated from the
+   grey FAQ section above it. That FAQ is commented out until David supplies
+   the answers, so the reason is gone and the white is now what causes the
+   pair. Reverting .contact globally would re-break the other four pages,
+   where it is correctly white under a grey .service-area-alt — hence a
+   homepage-only modifier.
+
+   Below it is the navy footer, so nothing new is created underneath.
+
+   Qualified with .contact because the base .contact rule sets background at
+   L2440, below this point in the file. As a bare single class this lost the
+   tie on source order and still rendered white. check-css-order did not flag
+   it: that tool only compares media-query rules against later base rules, and
+   both of these are top level. */
+.contact.contact-alt {
+  background: var(--color-surface);
 }
 
 /* Capped so the pills form a readable block instead of one edge-to-edge line */
@@ -2416,7 +2627,9 @@ blockquote.card cite {
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-slate);
+  /* Same swap as .founder-role: slate on white is 4.19:1, and at 12px this is
+     not large text, so the floor is 4.5. */
+  color: var(--accent-deep);
 }
 
 .contact-details dd {
@@ -2614,8 +2827,36 @@ blockquote.card cite {
 /* Each city's art is a different shape, so the ratio is per page. Compounded
    with .city-hero-media img (0,2,1) so it outranks the base rule above and the
    mobile one below regardless of source order. */
+/* Cropped to the left 91% of the frame, not the whole photograph. Centring the
+   headline to match Tupelo put it over the bell tower, which sits at 58-86% of
+   the source width. object-fit is what the rest of the city heroes avoid — it
+   clips — but here the clip is the point, and 91% keeps the tower whole with
+   5% to spare. It magnifies as it crops, so the hero grows from 810px to 890px
+   at 1440.
+
+   Measured behind the headline at 1440, 90th-percentile ground: "Roof Repair"
+   3.71 -> 4.86, "& Replacement" 3.72 -> 6.69. */
 .city-hero-southaven .city-hero-media img {
-  aspect-ratio: 1366 / 768;
+  aspect-ratio: 1243 / 768;
+  object-fit: cover;
+  object-position: 0% 50%;
+}
+
+/* White, not a brand blue — the only city hero where this line is not
+   two-tone. Both blues were measured against the actual pixels behind the
+   glyphs and both failed: --color-slate at a 90th-percentile 1.03:1,
+   --accent-light at 1.95:1, against a 3:1 floor for text this size. Oxford's
+   --accent-light fix works there because that headline sits over a dark car
+   park; here the same line lands on sunlit grass.
+
+   White measures 3.94:1 at 1440 and 5.22:1 at 390. Still short of 4.5 at
+   desktop, and the honest reason it is not higher is the photograph: a scrim
+   heavy enough to carry a blue here needs alpha 0.80, which erases the road,
+   the lawn and the sunset the picture exists for.
+
+   Recheck with: node tools/text-contrast.mjs      http://127.0.0.1:8744/roofing-southaven-ms/ '.city-hero-content h1 span' */
+.city-hero-southaven .city-hero-h1-city {
+  color: #fff;
 }
 
 /* Southaven only. No wash across the frame — the sunset, the bell tower and
@@ -2850,22 +3091,12 @@ blockquote.card cite {
   );
 }
 
-/* Lower portion rather than centred, anchored off the bottom so the gap under
-   the last line stays fixed instead of drifting with the block's height. */
-.city-hero-oxford .city-hero-content {
-  top: auto;
-  bottom: 8%;
-  translate: none;
-  text-align: left;
-}
-
-.city-hero-oxford .city-hero-content h1 {
-  max-width: none;
-  font-size: clamp(2.25rem, 4.5vw, 3.5rem);
-  /* Set on the h1 so all three lines inherit the same shadow */
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-  margin-bottom: 0;
-}
+/* Oxford and Southaven carry no layout overrides for the hero copy. Both took
+   their own anchoring, measure, size and alignment, which put three variants of
+   the same block on three pages built from the same markup. Everything below
+   now comes from the shared .city-hero-content rules — the Tupelo treatment —
+   so there is one set of values to change instead of three. Only the image
+   treatment and the contrast fix below stay per-city. */
 
 /* Accent over the photograph. #647e9d measured 2.77:1 against the composited
    background behind this line — below even the 3:1 large-text bar. The cream
@@ -2875,33 +3106,6 @@ blockquote.card cite {
   color: var(--accent-light);
 }
 
-.city-hero-oxford .city-hero-content h1::before {
-  margin-left: 0;
-}
-
-/* Headline sits in the scrimmed column, its top edge 60% down the image. A
-   percentage with no translate means the block's start tracks the image height
-   at any width, rather than being centred on it as before. The scrim above
-   needs no vertical adjustment — it has no mask on desktop, so it already runs
-   the full height of the frame. */
-.city-hero-southaven .city-hero-content {
-  top: 60%;
-  translate: none;
-  text-align: left;
-}
-
-.city-hero-southaven .city-hero-content h1 {
-  /* Lines are broken explicitly in the markup, so the measure only has to be
-     wide enough that the longest of them does not wrap again. */
-  max-width: none;
-  font-size: clamp(2.25rem, 4.5vw, 3.5rem);
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
-}
-
-/* The rule follows the text to the left edge */
-.city-hero-southaven .city-hero-content h1::before {
-  margin-left: 0;
-}
 
 /* Darkens only the lower half — the road behind the text — leaving the badge
    and the storefronts at full brightness. */
@@ -3062,8 +3266,11 @@ blockquote.card cite {
     aspect-ratio: 800 / 827;
   }
 
+  /* Same 91% window as desktop, against the mobile source's own 800x534. */
   .city-hero-southaven .city-hero-media img {
-    aspect-ratio: 800 / 534;
+    aspect-ratio: 728 / 534;
+    object-fit: cover;
+    object-position: 0% 50%;
   }
 
   .city-hero-oxford .city-hero-media img {
@@ -3118,15 +3325,6 @@ blockquote.card cite {
     aspect-ratio: 500 / 457;
   }
 
-  /* Same fixed 24px under the last line as Southaven */
-  .city-hero-oxford .city-hero-content {
-    bottom: 24px;
-  }
-
-  .city-hero-oxford .city-hero-content h1 {
-    font-size: 1.625rem;
-  }
-
   /* The shared clamp's 2.25rem floor does not fit here. The text block is
      anchored at 60% of the image, so only the bottom 40% is available — at
      36px the headline runs four lines and lands on the CTA buttons below the
@@ -3173,21 +3371,6 @@ blockquote.card cite {
       #000 55%,
       #000 100%
     );
-  }
-
-  /* Anchored to the bottom of the image rather than centred on it, so the gap
-     under the last line is a fixed 24px instead of drifting with the block's
-     height. The h1's own bottom margin is zeroed or it would add to that gap —
-     there is no subhead beneath it on this page. */
-  .city-hero-southaven .city-hero-content {
-    top: auto;
-    bottom: 24px;
-    translate: none;
-  }
-
-  .city-hero-southaven .city-hero-content h1 {
-    font-size: 1.625rem;
-    margin-bottom: 0;
   }
 
   .city-hero-content p {
@@ -4402,10 +4585,6 @@ blockquote.card cite {
     padding: 48px 0;
   }
 
-  .services-lead {
-    font-size: 18px;
-  }
-
   .services h2,
   .why-us h2,
   .service-area h2,
@@ -4865,8 +5044,12 @@ blockquote.card cite {
     }
   }
 
+  /* Same curve as the scroll reveal, so the load sequence and everything that
+     arrives on scroll share one deceleration. Duration stays --dur-slow: only
+     the curve was asked to unify, and 800ms on a four-step load sequence would
+     hold the hero back for over a second. */
   .hero-anim {
-    animation: rise-fade-up var(--dur-slow) var(--ease-out) both;
+    animation: rise-fade-up var(--dur-slow) var(--ease-reveal) both;
   }
 
   .hero-anim-1 {
@@ -4887,14 +5070,15 @@ blockquote.card cite {
      element renders normally. */
   .js .reveal {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity var(--dur-reveal) var(--ease-out),
-      transform var(--dur-reveal) var(--ease-out);
+    transform: translateY(var(--reveal-travel));
+    transition: opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal);
   }
 
-  /* Founder photo enters from the side rather than from below */
+  /* Founder photo enters from the side rather than from below. Negated from
+     the same token so the two directions cannot drift apart. */
   .js .reveal-left {
-    transform: translateX(-24px);
+    transform: translateX(calc(-1 * var(--reveal-travel)));
   }
 
   .js .reveal.in-view,
@@ -4908,8 +5092,8 @@ blockquote.card cite {
      transition shorthand and leave hover with no transition at all. */
   .js .card,
   .js .why-card {
-    transition: opacity var(--dur-reveal) var(--ease-out),
-      transform var(--dur-reveal) var(--ease-out),
+    transition: opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal),
       box-shadow var(--dur-fast) var(--ease-out),
       translate var(--dur-fast) var(--ease-out),
       background-color var(--dur-fast) var(--ease-out),
@@ -4917,14 +5101,25 @@ blockquote.card cite {
   }
 
   .js .area-list li {
-    transition: opacity var(--dur-reveal) var(--ease-out),
-      transform var(--dur-reveal) var(--ease-out),
+    transition: opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal),
       background-color var(--dur-hover) var(--ease-out);
   }
 
+  /* The one rule that had drifted. Adding the :has() branch is what closes the
+     keyboard gap; -4px from -2px is the strengthening. Stays on `translate`
+     because the reveal animation owns `transform`, and stays inside
+     no-preference because it is the only part of this state that moves.
+
+     .why-card is deliberately absent, and absent rather than reverted to -2px.
+     It is a non-interactive <li> — icon, h3, p, no link, nothing to click — so
+     a lift on it promises a press that never happens. On iOS the promise also
+     sticks: a tap raises the hover state and nothing clears it until the next
+     tap elsewhere. Its border and background shift stay as they were, which is
+     enough to show the row is alive without implying a target. */
   .card:hover,
-  .why-card:hover {
-    translate: 0 -2px;
+  .card:has(.card-link:focus-visible) {
+    translate: 0 -4px;
   }
 
   .btn-primary:active,
@@ -5232,16 +5427,6 @@ blockquote.card cite {
   color: #6d829c;
 }
 
-.sh-attrib {
-  position: absolute;
-  right: 10px;
-  bottom: 6px;
-  z-index: 5;
-  margin: 0;
-  font-size: 10px;
-  color: #48607a;
-}
-
 .sh-mapnote {
   position: absolute;
   inset: auto 16px 56px 16px;
@@ -5390,6 +5575,26 @@ blockquote.card cite {
 
 .sh-close h2 {
   margin: 0 0 var(--space-3);
+}
+
+/* The results panel's address line is a map UI label, not display type, so the
+   display scale's -0.025em is pinned back off it. Scoped to .sh-panel-head
+   rather than .sh-tool, which would also catch the .sh-legend captions and
+   override the 0.1em uppercase tracking they carry. */
+.sh-panel-head h2 {
+  letter-spacing: -0.02em;
+}
+
+/* The storm tool's own captions are UI chrome, not display type, so they keep
+   the leading they had before the rescale. Two classes deep, so this holds
+   regardless of where the base h1/h2/h3 rule sits.
+
+   line-height only. Pinning letter-spacing here as well overrode the 0.1em
+   uppercase tracking those labels carry — it read as -0.24px instead of 1.2px
+   and the captions closed up. Their own rule already beats the base h1/h2/h3
+   selector, so leaving the property out lets it keep winning. */
+.sh-tool h2 {
+  line-height: 1.15;
 }
 
 .sh-close p {

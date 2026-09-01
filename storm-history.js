@@ -416,9 +416,27 @@
       config: { basemap: { lightPreset: BASEMAPS[basemap].light } },
       center: CENTER,
       zoom: 7.2,
+      /* Suppressed only so the control can be added below with the data
+         credits folded in. It is NOT off: Mapbox requires both the logo and a
+         text attribution carrying "© Mapbox", "© OpenStreetMap" and "Improve
+         this map" as links, and the hand-rolled <p> that used to sit in the
+         corner carried none of them — no links at all, and no logo on the page
+         anywhere. */
       attributionControl: false,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    /* The real attribution. Mapbox's own control supplies the required links
+       and the logo, styled by their stylesheet, which is legible by default —
+       their guidance allows restyling colour and size but requires the result
+       stay legible, and the 10px #48607a it replaces was 2.85:1. The storm
+       data credits ride along as customAttribution rather than as a separate
+       element that has to be positioned around it. */
+    map.addControl(
+      new mapboxgl.AttributionControl({
+        compact: false,
+        customAttribution: "NOAA NCEI &middot; NWS",
+      })
+    );
 
     /* style.load, not load: it fires on the first style AND on every switch,
        and setStyle discards every source and layer added after the initial
