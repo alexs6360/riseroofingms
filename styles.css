@@ -2781,8 +2781,27 @@ blockquote.card cite {
 /* Each city's art is a different shape, so the ratio is per page. Compounded
    with .city-hero-media img (0,2,1) so it outranks the base rule above and the
    mobile one below regardless of source order. */
+/* Cropped to the left 91% of the frame, not the whole photograph. Centring the
+   headline to match Tupelo put it over the bell tower, which sits at 58-86% of
+   the source width. object-fit is what the rest of the city heroes avoid — it
+   clips — but here the clip is the point, and 91% keeps the tower whole with
+   5% to spare. It magnifies as it crops, so the hero grows from 810px to 890px
+   at 1440.
+
+   Measured behind the headline at 1440, 90th-percentile ground: "Roof Repair"
+   3.71 -> 4.86, "& Replacement" 3.72 -> 6.69. */
 .city-hero-southaven .city-hero-media img {
-  aspect-ratio: 1366 / 768;
+  aspect-ratio: 1243 / 768;
+  object-fit: cover;
+  object-position: 0% 50%;
+}
+
+/* Same problem Oxford had, same fix. --color-slate on this line measured a
+   90th-percentile 1.08:1 against the grass and road behind it — a mid-tone
+   blue on a mid-tone ground, effectively invisible. --accent-light is the
+   lighter of the two brand blues and is what Oxford already uses here. */
+.city-hero-southaven .city-hero-h1-city {
+  color: var(--accent-light);
 }
 
 /* Southaven only. No wash across the frame — the sunset, the bell tower and
@@ -3192,8 +3211,11 @@ blockquote.card cite {
     aspect-ratio: 800 / 827;
   }
 
+  /* Same 91% window as desktop, against the mobile source's own 800x534. */
   .city-hero-southaven .city-hero-media img {
-    aspect-ratio: 800 / 534;
+    aspect-ratio: 728 / 534;
+    object-fit: cover;
+    object-position: 0% 50%;
   }
 
   .city-hero-oxford .city-hero-media img {
