@@ -27,8 +27,21 @@
  * scrim makes every number too pessimistic, and silence about it is how a
  * measurement turns into a wrong fact.
  *
+ * Two modes:
+ *
+ *   analytic (default)  Samples the source image through the element's
+ *                       object-fit geometry and composites a scrim it can
+ *                       parse. Fast, and never touches the page.
+ *   --raster            Screenshots the page with the text hidden and samples
+ *                       the painted pixels. Slower, and it does mutate the DOM
+ *                       for the duration of the capture (visibility:hidden, so
+ *                       layout is untouched), but it is exact: masks, blend
+ *                       modes, stacked overlays and gradients of any shape are
+ *                       all already composited by the browser. Use it whenever
+ *                       analytic reports an unmodelled overlay.
+ *
  * Usage:
- *   node tools/text-contrast.mjs <url> <selector> [--widths=1440,390] [--port=9222]
+ *   node tools/text-contrast.mjs <url> <selector> [--widths=1440,390] [--raster] [--port=9222]
  *
  * Example:
  *   node tools/text-contrast.mjs http://127.0.0.1:8744/roofing-southaven-ms/ \
@@ -55,8 +68,82 @@ const opt = (name, dflt) => {
 };
 const widths = opt("widths", "1440,390").split(",").map(Number);
 const port = Number(opt("port", "9455"));
+const raster = args.includes("--raster");
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Raster mode. Two page-side steps: read the glyph rects, then sample a
+// screenshot of the same page with the text hidden. The screenshot comes back
+// in as a data URL and is decoded by the browser, so no image decoder is needed
+// here and any format Chrome can paint is supported.
+const RECTS_FN = String.raw`(selector) => {
+  const out = [];
+  for (const el of document.querySelectorAll(selector)) {
+    const cs = getComputedStyle(el);
+    if (cs.display === "none" || cs.visibility === "hidden") continue;
+    const rg = document.createRange(); rg.selectNodeContents(el);
+    const rects = [...rg.getClientRects()].filter((b) => b.width >= 2 && b.height >= 2)
+      .map((b) => ({ l: b.left, t: b.top, r: b.right, b: b.bottom }));
+    if (!rects.length) continue;
+    const fs = parseFloat(cs.fontSize), fw = parseInt(cs.fontWeight) || 400;
+    out.push({ text: el.textContent.trim().slice(0, 28), color: cs.color, fs, fw,
+      floor: fs >= 24 || (fs >= 18.66 && fw >= 700) ? 3 : 4.5, rects });
+  }
+  return out;
+}`;
+
+const HIDE_FN = String.raw`(selector) => {
+  // visibility, not display: the glyph rects were measured with the text in
+  // place and must stay valid while the screenshot is taken.
+  window.__tcHidden = [];
+  for (const el of document.querySelectorAll(selector)) {
+    window.__tcHidden.push([el, el.style.visibility]);
+    el.style.visibility = "hidden";
+  }
+  return window.__tcHidden.length;
+}`;
+
+const RESTORE_FN = String.raw`(() => {
+  for (const [el, v] of window.__tcHidden || []) el.style.visibility = v;
+  const n = (window.__tcHidden || []).length; delete window.__tcHidden; return n;
+})()`;
+
+const SAMPLE_FN = String.raw`(dataUrl, rows) => new Promise((resolve) => {
+  const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const L = (c) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+  const ratio = (a, b) => { const x = L(a), y = L(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const rgba = (s) => { const n = (s.match(/[\d.]+/g) || []).map(Number); return [n[0], n[1], n[2]]; };
+  const im = new Image();
+  im.onload = () => {
+    const cv = document.createElement("canvas");
+    cv.width = im.naturalWidth; cv.height = im.naturalHeight;
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(im, 0, 0);
+    const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+    const out = [];
+    for (const r of rows) {
+      const g = [];
+      for (const b of r.rects) {
+        for (let y = Math.ceil(b.t); y < b.b; y++) {
+          for (let x = Math.ceil(b.l); x < b.r; x++) {
+            if (x < 0 || y < 0 || x >= cv.width || y >= cv.height) continue;
+            const i = (y * cv.width + x) * 4;
+            g.push([d[i], d[i + 1], d[i + 2]]);
+          }
+        }
+      }
+      if (!g.length) continue;
+      g.sort((p, q) => L(q) - L(p));
+      const fg = rgba(r.color);
+      out.push({ el: r.text, color: r.color, fs: r.fs, fw: r.fw, floor: r.floor,
+        worst: +ratio(fg, g[0]).toFixed(2),
+        p90: +ratio(fg, g[Math.floor(g.length * 0.1)]).toFixed(2), unmodelled: null });
+    }
+    resolve(out);
+  };
+  im.onerror = () => resolve([]);
+  im.src = dataUrl;
+})`;
 
 const PAGE_FN = String.raw`(selector) => {
   const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
@@ -221,8 +308,21 @@ for (const w of widths) {
     { width: w, height: 900, deviceScaleFactor: 1, mobile: w < 800 });
   await send("Page.navigate", { url });
   await sleep(3200);
-  const rows = await evaluate(`(${PAGE_FN})(${JSON.stringify(selector)})`);
-  console.log(`\n===== ${w}px  ${url}  ${selector}`);
+  let rows;
+  if (raster) {
+    const rects = await evaluate(`(${RECTS_FN})(${JSON.stringify(selector)})`);
+    const hidden = await evaluate(`(${HIDE_FN})(${JSON.stringify(selector)})`);
+    await sleep(250);
+    const shot = await send("Page.captureScreenshot", { format: "png" });
+    await evaluate(RESTORE_FN);
+    if (!hidden) { console.log(`\n===== ${w}px  nothing matched ${selector}`); continue; }
+    rows = await evaluate(
+      `(${SAMPLE_FN})("data:image/png;base64,${shot.result.data}", ${JSON.stringify(rects)})`
+    );
+  } else {
+    rows = await evaluate(`(${PAGE_FN})(${JSON.stringify(selector)})`);
+  }
+  console.log(`\n===== ${w}px  ${url}  ${selector}${raster ? "  [raster]" : ""}`);
   if (!rows || !rows.length) { console.log("  no matching text found"); continue; }
   console.log("  line                          size  floor    worst      p90   verdict");
   for (const r of rows) {
@@ -238,6 +338,7 @@ for (const w of widths) {
 }
 if (unmodelled.length) {
   console.log(`\n  WARNING: an overlay could not be modelled and was NOT composited in.`);
+  console.log(`           Re-run with --raster for exact numbers.`);
   console.log(`           Numbers at the listed width are more pessimistic than the render.`);
   for (const u of unmodelled) console.log(`           ${u.w}px: ${u.what}`);
 }
