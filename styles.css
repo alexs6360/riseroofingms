@@ -826,20 +826,40 @@ img {
 
    The counts themselves take the one step back up, to the sub's brightness.
    They are the two words a homeowner scanning the panel should catch. */
-/* No max-width of its own, deliberately. .hero-sub caps at 46ch to keep the
-   sentence readable, but this line is scanned rather than read, and every
-   character pulled off a third line is 22px the Call button gets back. It
-   takes the full copy column instead and the injector keeps it to two. */
+/* The proof line, stated under the field rather than in the copy stack.
+
+   It began between .hero-sub and the form, and three paragraphs stacked ahead
+   of the control read as busy — the sub and this line are both explanatory
+   grey text, one after the other, and they competed. Under the field it stops
+   competing: it is a caption on the thing it substantiates, in the place this
+   site already puts provenance (see .sh-currency, "per-layer data currency,
+   stated under the field", which the storm page uses for the same job).
+
+   Sized and coloured as a credit line, not a stat block. A big number over a
+   small label is the template hero move, and at display size these counts read
+   as decoration and invite the question of what a cell is. The credibility is
+   in NOAA and the National Weather Service being named and the date being
+   current, not in the type size.
+
+   No max-width: .hero-sub caps at 46ch to keep a sentence readable, but this
+   is scanned rather than read, and running the full column is what keeps it to
+   one line. */
 .hero-proof {
-  margin: 0 0 var(--space-2);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: var(--text-sm);
+  /* 8px to the card above against the lookup's own 24-40px below it, so the
+     caption reads as attached to the field rather than as a row floating
+     between the field and the buttons. Equal gaps on both sides made it a
+     seventh block; unequal ones make it part of the sixth. */
+  margin: var(--space-1) 0 0;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
+/* A brightness step, not a weight one. Bolding both counts at caption size put
+   the busyness straight back — two dark blobs in a line meant to be quiet. */
 .hero-proof strong {
-  color: rgba(255, 255, 255, 0.82);
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: inherit;
 }
 
 /* Two classes, not one. The element carries both .lookup-cta-form and
@@ -6110,23 +6130,19 @@ blockquote.card cite {
     padding-right: var(--space-5);
   }
 
-  /* A narrower column wraps everything one line deeper — the proof line runs
-     to three here rather than two — so the gaps give back what the wrapping
-     takes. Without this the Call button missed by 9px at 768x900, which is
-     the tall-and-narrow corner neither height tier reaches. */
+  /* A narrower column wraps everything one line deeper — the proof caption
+     runs to two here rather than one — so the gap gives back what the wrapping
+     takes. Without this the Call button missed by 9px at 768x900, which is the
+     tall-and-narrow corner neither height tier reaches. */
   .hero-panel .hero-sub {
     margin-bottom: var(--space-2);
-  }
-
-  .hero-panel .hero-proof {
-    margin-bottom: var(--space-1);
   }
 }
 
 /* Second tier, for viewports shorter still.
 
-   The first tier alone lands the Call button at 759 and the privacy note at
-   817, so it is only fully sufficient from about 820 of height upward. Below
+   The first tier alone lands the Call button at 735 and the privacy note at
+   793, so it is only fully sufficient from about 800 of height upward. Below
    that this tier takes over — which means it covers the whole 650-to-820 span
    where most real laptop windows actually sit once the browser's own chrome is
    subtracted from a 768- or 800-tall screen.
@@ -6135,14 +6151,18 @@ blockquote.card cite {
    longer a composition with a mark at the top of it; it is a form with a
    letterhead, and the mark is sized accordingly.
 
-   The tagline goes entirely at this height. It is the one block in the panel
-   that carries no information the visitor cannot already see: the logo it sits
-   under is the same lockup, and "raising the standard" is a slogan where the
-   line above the form is evidence. Dropping it buys 36px, which is most of
-   what the proof line costs — that is the trade, made explicitly.
+   The tagline goes entirely at this height, and the reason is count rather
+   than arithmetic. It is the one block in the panel carrying nothing the
+   visitor cannot already see — the logo above it is the same lockup, and
+   "raising the standard" is a slogan where everything else here is either the
+   claim, the evidence or the control. On a short screen the panel has room to
+   be read as five blocks, not six, and this is the one to lose.
 
-   It pays for itself twice: at 768 of height this tier puts the privacy note
-   back above the fold as well, which the first tier could not do. */
+   It was first dropped to pay for a proof line that cost 58px in the copy
+   stack. That line is a caption under the field now and costs 18, so the
+   budget no longer needs it — restoring the tagline would still fit at 768.
+   It stays out because six blocks on a short screen is what made the panel
+   feel busy, which is the thing the caption move was answering. */
 @media (min-width: 768px) and (max-height: 820px) {
   .hero-panel {
     padding-top: calc(var(--header-h) + 16px);

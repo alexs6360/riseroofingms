@@ -67,16 +67,20 @@ const n = (v) => v.toLocaleString("en-US");
    into "storms" or "events" — the precision is the point, and a homeowner who
    clicks through sees exactly these two layers on the map.
 
-   Length is a hard constraint, not a matter of taste. At --text-sm in the
-   448px copy column this wraps at roughly 64 characters, and the panel has
-   room for two lines of it; a third costs 22px, which is the whole margin the
-   Call button has above the fold at 1366x768. The span is written as a range
-   rather than "since X … current through Y" for that reason alone — it says
-   the same two dates in 20 fewer characters. */
+   Length is a hard constraint, not a matter of taste. As a caption under the
+   field at --text-xs this wraps at roughly 90 characters in the 448px column,
+   and it has to hold to one line — a second line puts back the visual weight
+   that moving it out of the copy stack was meant to remove.
+
+   That budget is what settles the wording. Middots rather than clauses, the
+   agencies as the acronyms they are printed under on the source data, and the
+   currency date abbreviated. The geography goes entirely: "north Mississippi"
+   costs 19 characters to tell a visitor on a north Mississippi roofer's site
+   something the headline, the map and the address they are about to type all
+   establish anyway. The counts and the sources are what cannot be inferred. */
 const line =
-  "<strong>" + n(cells) + " hail cells</strong> and <strong>" + n(winds) +
-  " wind reports</strong> across north Mississippi, " + years[0] + " to " +
-  pretty(through) + " — NOAA and the National Weather Service.";
+  "<strong>" + n(cells) + " hail cells</strong> · <strong>" + n(winds) +
+  " wind reports</strong> · NOAA and NWS, through " + pretty(through);
 
 const html = fs.readFileSync(PAGE, "utf8");
 if (!html.includes(TOKEN)) {

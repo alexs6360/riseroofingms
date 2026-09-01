@@ -201,22 +201,6 @@
             inspect it.
           </p>
 
-          <!-- Evidence between the claim above and the ask below. Without it
-               the panel asks for a home address, and discloses that it will be
-               followed up on, having given no reason to believe the lookup
-               returns anything — so the most specific thing said was the cost.
-
-               Written by tools/inject-storm-proof.mjs at build time, from the
-               same data/storm-index.json the storm page reads. Not fetched:
-               the numbers would land after first paint and push the form down,
-               and the form is what the height queries in styles.css exist to
-               keep above the fold. The build fails if the placeholder survives,
-               so this can never ship as literal text.
-
-               It carries hero-anim-2, the step the headline and sub already
-               share, rather than a fifth beat of its own. -->
-          <p class="hero-proof hero-anim hero-anim-2">__STORM_PROOF__</p>
-
           <!-- Same ids and classes as the shared lookup partial, deliberately:
                script.js binds the Search Box autocomplete to #lookup-cta-address
                and #lookup-cta-suggest, so this markup picks it up with no new
@@ -261,6 +245,26 @@
                 hidden
               ></ul>
             </div>
+
+            <!-- Evidence for the control it sits under. Without it the panel
+                 asks for a home address, and discloses that it will be followed
+                 up on, having given no reason to believe the lookup returns
+                 anything — so the most specific thing said was the cost.
+
+                 Under the field rather than up in the copy stack: three
+                 paragraphs before the form read as busy, and the storm page
+                 already states its own currency this way (.sh-currency). Inside
+                 the form so it is structurally attached to the input it
+                 describes, and below .lookup-cta-field so it sits on the navy
+                 rather than inside the white card.
+
+                 Written by tools/inject-storm-proof.mjs at build time from the
+                 same data/storm-index.json the storm page reads. Not fetched:
+                 the numbers would land after first paint and push the form
+                 down, and the form is what the height queries in styles.css
+                 exist to keep above the fold. The build fails if the
+                 placeholder survives, so it can never ship as literal text. -->
+            <p class="hero-proof">__STORM_PROOF__</p>
           </form>
 
 
