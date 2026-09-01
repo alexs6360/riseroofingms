@@ -6342,6 +6342,15 @@ blockquote.card cite {
   .hero-panel .hero-sub {
     margin-bottom: var(--space-2);
   }
+
+  /* The display scale is sized for the full-width column above 1100. Down here
+     the copy runs 349-520px, and at 768 the top of that clamp put the H1 on
+     four lines and pushed the Call button 32px under the fold. A display face
+     needs a column to be a display face; below 1100 this one gets a scale that
+     matches the width it actually has. */
+  .hero-panel .hero-headline {
+    font-size: clamp(2rem, 1.2rem + 2.6vw, 2.75rem);
+  }
 }
 
 /* Second tier, for viewports shorter still.
