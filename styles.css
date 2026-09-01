@@ -3096,14 +3096,32 @@ blockquote.card cite {
   pointer-events: none;
 }
 
-/* Offset is a percentage of the image height, so it tracks the badge as the
-   image scales instead of drifting the way a pixel value would. The badge
-   occupies roughly the top 55%. */
+/* Anchored to the foot of the frame, not to a percentage down from its top.
+
+   top: 60% left the block whatever the bottom 40% happened to be, and that is
+   the wrong constraint: the block's height is set by type, which barely moves
+   between 1200 and 1920, while the frame's height falls with the viewport
+   width because the image is 2.36:1. So the space shrank while the thing in it
+   did not, and from 1200 down to 768 the subhead crossed into the CTA bar
+   below the image. Fixing the headline wrap bought four breakpoints back; it
+   could not fix the rest, because no measure cap changes the fact that 40% of
+   a 434px frame does not hold a 183px block plus its offset.
+
+   Anchoring from the bottom makes the clearance the invariant rather than the
+   leftover. The block now sits a fixed fraction above the foot of the image at
+   every width, which is what "clear the buttons" actually means, and it still
+   scales with the frame the way the old percentage did. It also closes the gap
+   this left at the wide end: at 1920 the subhead used to float 121px above the
+   image edge with the text high in the frame, and it now sits evenly.
+
+   The badge occupies roughly the top 55%; the block clears it at every width
+   measured, 390 through 1920. */
 .city-hero-content {
   position: absolute;
   left: 0;
   right: 0;
-  top: 60%;
+  top: auto;
+  bottom: 9%;
   text-align: center;
   color: #fff;
   /* Both this and ::after are positioned with z-index auto, so without this
@@ -3123,6 +3141,18 @@ blockquote.card cite {
 
 .city-hero-content h1 {
   margin: 0 auto var(--space-3);
+  /* 22ch is 734px at the 60px desktop size and "Roof Repair & Replacement"
+     needs 760, so on Tupelo — the one page that sets the service line as a
+     single span — it wraps. That wrap is load-bearing by accident: it breaks
+     after "Repair", which is exactly the split Oxford and Southaven write out
+     as explicit spans so it "never lands mid-phrase as the viewport changes".
+     Lifting the cap here would give Tupelo two lines against their three and
+     break the one-treatment-for-all-three of 8623def, so the cap stays and the
+     overflow is fixed where it is actually caused, on .city-hero-content above.
+
+     Worth making deliberate later: Tupelo relies on a measure to produce a
+     break its siblings state in markup, and a copy edit or a type change moves
+     it. */
   max-width: 22ch;
   font-size: clamp(2.25rem, 5vw, 3.75rem);
   font-weight: 600;
