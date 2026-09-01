@@ -5999,3 +5999,123 @@ blockquote.card cite {
 }
 
 /* Results panel sections */
+
+/* ============================================================
+   Hero fold
+   ============================================================
+
+   Measured, not eyeballed. At 1440x900 the panel ends at 880 and everything
+   fits, which is the width the hero was built at. Two other bands did not:
+
+     1366x768  the Call button ran to 821 and the privacy note to 880, so on
+               the most common laptop resolution the phone number was not on
+               screen. Real browser chrome makes the usable height smaller
+               still, so the true miss was worse than 53px.
+     900x800   the submit button itself started at 746. The primary action was
+               below the fold, and the H1 broke to five lines with "Storm /
+               damage" split mid-phrase.
+
+   Two separate causes, so two separate queries below: one keyed to height,
+   one to width. Both live at the end of the stylesheet deliberately — every
+   base rule they override sits earlier in the file, so nothing later can beat
+   them on source order and tools/check-css-order.mjs stays quiet.
+   ------------------------------------------------------------------------ */
+
+/* Cause 1: not enough vertical room.
+
+   Keyed to the viewport's height rather than its width, because height is the
+   thing actually in short supply — a 1440-wide window with browser chrome has
+   less usable height than the 900 it reports as a screen size. 860 is the
+   ceiling so 1440x900 keeps the proportions it was designed with and only
+   genuinely short viewports compress.
+
+   The logo takes the largest single cut, from 320 to 232. That is the trade
+   this query exists to make: on a short screen the address field and the phone
+   number beat the size of the mark, and 232 is still half again the 156 the
+   phone layout has always used. The rest is rhythm — six gaps, none of them
+   more than 16px, which together recover more than the logo does. */
+@media (min-width: 768px) and (max-height: 860px) {
+  .hero-panel {
+    /* Still clears the fixed header; 56px of air below it becomes 28. */
+    padding-top: calc(var(--header-h) + 28px);
+    padding-bottom: var(--space-5);
+  }
+
+  .hero-panel .hero-logo {
+    width: 232px;
+  }
+
+  .hero-panel .hero-lockup-tagline {
+    margin-bottom: var(--space-4);
+  }
+
+  .hero-panel .hero-headline {
+    margin-bottom: var(--space-1);
+  }
+
+  .hero-panel .hero-sub {
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-panel .hero-lookup {
+    margin-bottom: var(--space-3);
+  }
+}
+
+/* Cause 2: not enough horizontal room for the copy.
+
+   Between 768 and 1100 the panel was 45% of the viewport, which at 900 left a
+   293px column still being set with 44px type — hence the five-line H1 and the
+   mid-phrase break. The angled blend already switches at 1100; the column
+   split did not, so this band inherited a ratio chosen for widths it never
+   sees.
+
+   58/42 gives the copy 410px at 900 and the H1 goes back to three lines. The
+   media keeps enough width to read as footage rather than a stripe, and above
+   1100 the single-cell blend takes over and neither value applies. */
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  .hero {
+    grid-template-columns: 58% 42%;
+  }
+
+  /* The panel's right padding is dead space in this band — the seam is a hard
+     vertical edge here, not a fade, so the copy can run closer to it. */
+  .hero-panel {
+    padding-right: var(--space-5);
+  }
+}
+
+/* Second tier, for viewports shorter still.
+
+   860 covers a maximised window on a 768-tall screen only if you ignore the
+   browser's own chrome. A real 1366x768 laptop reports roughly 650 of usable
+   height, and at 650 the first tier still left the Call button 6px short — so
+   close that measuring at the reported screen size would never have caught it.
+
+   The logo takes another cut here, to 172. Below this height the hero is no
+   longer a composition with a mark at the top of it; it is a form with a
+   letterhead, and the mark is sized accordingly.
+
+   The privacy note is deliberately not chased above the fold at this height.
+   Getting it there costs either the sub or a step of the headline, and it is a
+   disclosure rather than an action — it needs to sit with the form, not to be
+   seen before the visitor has decided to use it. Everything that is a control
+   is above the fold; the fine print is the one thing allowed below. */
+@media (min-width: 768px) and (max-height: 720px) {
+  .hero-panel {
+    padding-top: calc(var(--header-h) + 16px);
+    padding-bottom: var(--space-4);
+  }
+
+  .hero-panel .hero-logo {
+    width: 172px;
+  }
+
+  .hero-panel .hero-lockup-tagline {
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-panel .hero-lookup {
+    margin-bottom: var(--space-2);
+  }
+}
