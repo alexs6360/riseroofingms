@@ -816,6 +816,32 @@ img {
   line-height: 1.5;
 }
 
+/* The proof line. Deliberately not a stat block: a big number with a small
+   label under it is the template hero move, and at display size these two
+   counts would read as decoration and invite the question of what a "cell"
+   is. Set as body copy instead, a step below .hero-sub in both size and
+   brightness, so it reads as a footnote to the claim rather than a competing
+   headline — the credibility is in NOAA and the National Weather Service
+   being named and in the date being current, not in the type size.
+
+   The counts themselves take the one step back up, to the sub's brightness.
+   They are the two words a homeowner scanning the panel should catch. */
+/* No max-width of its own, deliberately. .hero-sub caps at 46ch to keep the
+   sentence readable, but this line is scanned rather than read, and every
+   character pulled off a third line is 22px the Call button gets back. It
+   takes the full copy column instead and the injector keeps it to two. */
+.hero-proof {
+  margin: 0 0 var(--space-2);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.hero-proof strong {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 600;
+}
+
 /* Two classes, not one. The element carries both .lookup-cta-form and
    .hero-lookup; both are single-class selectors and .lookup-cta-form { margin:
    0 } sits ~4,000 lines further down, so it won the tie on source order and
@@ -6083,36 +6109,56 @@ blockquote.card cite {
   .hero-panel {
     padding-right: var(--space-5);
   }
+
+  /* A narrower column wraps everything one line deeper — the proof line runs
+     to three here rather than two — so the gaps give back what the wrapping
+     takes. Without this the Call button missed by 9px at 768x900, which is
+     the tall-and-narrow corner neither height tier reaches. */
+  .hero-panel .hero-sub {
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-panel .hero-proof {
+    margin-bottom: var(--space-1);
+  }
 }
 
 /* Second tier, for viewports shorter still.
 
-   860 covers a maximised window on a 768-tall screen only if you ignore the
-   browser's own chrome. A real 1366x768 laptop reports roughly 650 of usable
-   height, and at 650 the first tier still left the Call button 6px short — so
-   close that measuring at the reported screen size would never have caught it.
+   The first tier alone lands the Call button at 759 and the privacy note at
+   817, so it is only fully sufficient from about 820 of height upward. Below
+   that this tier takes over — which means it covers the whole 650-to-820 span
+   where most real laptop windows actually sit once the browser's own chrome is
+   subtracted from a 768- or 800-tall screen.
 
    The logo takes another cut here, to 172. Below this height the hero is no
    longer a composition with a mark at the top of it; it is a form with a
    letterhead, and the mark is sized accordingly.
 
-   The privacy note is deliberately not chased above the fold at this height.
-   Getting it there costs either the sub or a step of the headline, and it is a
-   disclosure rather than an action — it needs to sit with the form, not to be
-   seen before the visitor has decided to use it. Everything that is a control
-   is above the fold; the fine print is the one thing allowed below. */
-@media (min-width: 768px) and (max-height: 720px) {
+   The tagline goes entirely at this height. It is the one block in the panel
+   that carries no information the visitor cannot already see: the logo it sits
+   under is the same lockup, and "raising the standard" is a slogan where the
+   line above the form is evidence. Dropping it buys 36px, which is most of
+   what the proof line costs — that is the trade, made explicitly.
+
+   It pays for itself twice: at 768 of height this tier puts the privacy note
+   back above the fold as well, which the first tier could not do. */
+@media (min-width: 768px) and (max-height: 820px) {
   .hero-panel {
     padding-top: calc(var(--header-h) + 16px);
     padding-bottom: var(--space-4);
   }
 
   .hero-panel .hero-logo {
-    width: 172px;
+    width: 148px;
   }
 
   .hero-panel .hero-lockup-tagline {
-    margin-bottom: var(--space-2);
+    display: none;
+  }
+
+  .hero-panel .hero-sub {
+    margin-bottom: var(--space-1);
   }
 
   .hero-panel .hero-lookup {

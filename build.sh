@@ -71,6 +71,12 @@ done
 # directories copied above.
 node tools/inject-partials.mjs || exit 1
 
+# The hero's proof line, written from data/storm-index.json rather than fetched
+# at runtime. Runs after index.html is in dist/ and fails the build if the
+# placeholder is still there afterwards — an empty or literal __STORM_PROOF__
+# in the hero is worse than the line not existing.
+node tools/inject-storm-proof.mjs || exit 1
+
 
 # Drag-and-drop bundle
 rm -f rise-roofing-site.zip
