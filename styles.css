@@ -2842,23 +2842,6 @@ blockquote.card cite {
   object-position: 0% 50%;
 }
 
-/* White, not a brand blue — the only city hero where this line is not
-   two-tone. Both blues were measured against the actual pixels behind the
-   glyphs and both failed: --color-slate at a 90th-percentile 1.03:1,
-   --accent-light at 1.95:1, against a 3:1 floor for text this size. Oxford's
-   --accent-light fix works there because that headline sits over a dark car
-   park; here the same line lands on sunlit grass.
-
-   White measures 3.94:1 at 1440 and 5.22:1 at 390. Still short of 4.5 at
-   desktop, and the honest reason it is not higher is the photograph: a scrim
-   heavy enough to carry a blue here needs alpha 0.80, which erases the road,
-   the lawn and the sunset the picture exists for.
-
-   Recheck with: node tools/text-contrast.mjs      http://127.0.0.1:8744/roofing-southaven-ms/ '.city-hero-content h1 span' */
-.city-hero-southaven .city-hero-h1-city {
-  color: #fff;
-}
-
 /* Southaven only. No wash across the frame — the sunset, the bell tower and
    the streetscape all stay at full strength. The scrim is a left-edge gradient
    darkening just the column the headline sits in, gone by 45%. */
@@ -3098,14 +3081,6 @@ blockquote.card cite {
    so there is one set of values to change instead of three. Only the image
    treatment and the contrast fix below stay per-city. */
 
-/* Accent over the photograph. #647e9d measured 2.77:1 against the composited
-   background behind this line — below even the 3:1 large-text bar. The cream
-   this replaces read 9.16:1; --accent-light is darker, so the measured value
-   after the swap is recorded below rather than assumed. */
-.city-hero-oxford .city-hero-h1-city {
-  color: var(--accent-light);
-}
-
 
 /* Darkens only the lower half — the road behind the text — leaving the badge
    and the storefronts at full brightness. */
@@ -3169,6 +3144,33 @@ blockquote.card cite {
   background: rgba(255, 255, 255, 0.6);
 }
 
+/* One scrim behind the heading block, not across the frame. A full-frame wash
+   heavy enough to fix Tupelo took the road, the cars and the kerb with it and
+   still left the city line short; confined to the block it clears every line
+   on all three pages and the photograph survives either side of it.
+
+   0.30 is Tupelo's floor and the shared value. Oxford clears 3:1 from 0.20 and
+   Southaven already clears it at 0, so this is set by the worst page rather
+   than tuned per city — one number to change instead of three.
+
+   Excluded on .city-hero-storm: that headline has its own bottom-anchored
+   treatment over a near-black sky and needs none of this.
+
+   Re-measure with:
+     node tools/text-contrast.mjs <page-url> '.city-hero-content h1 span' --raster */
+.city-hero:not(.city-hero-storm) .city-hero-content::after {
+  content: "";
+  position: absolute;
+  inset: -28px -40px -32px;
+  z-index: -1;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(7, 29, 55, 0.3) 0%,
+    rgba(7, 29, 55, 0.3) 58%,
+    rgba(7, 29, 55, 0) 100%
+  );
+}
+
 /* Two-tone: the service on top in white, the place beneath it in the brand
    blue. Both are blocks so the split always falls on the line break rather
    than wherever the text happens to wrap. */
@@ -3177,8 +3179,18 @@ blockquote.card cite {
   display: block;
 }
 
+/* White on every city hero. This started as a two-tone treatment — the service
+   in white, the place beneath it in a brand blue — and it did not survive
+   measurement. Slate read a 90th-percentile 1.03:1 on Southaven and 2.15:1 on
+   Tupelo; accent-light read 1.95:1 and 1.94:1. Both are mid-tone blues, and
+   every one of these headlines lands on mid-tone ground: grass, a lit street,
+   a car park. A scrim heavy enough to carry a blue costs more of the
+   photograph than the two-tone was worth.
+
+   .city-hero-storm keeps accent-light through its own rule — its headline sits
+   on a near-black storm sky, which is the one place the blue holds up. */
 .city-hero-h1-city {
-  color: var(--color-slate);
+  color: #fff;
 }
 
 .city-hero-content p {
