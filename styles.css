@@ -3017,22 +3017,12 @@ blockquote.card cite {
   );
 }
 
-/* Lower portion rather than centred, anchored off the bottom so the gap under
-   the last line stays fixed instead of drifting with the block's height. */
-.city-hero-oxford .city-hero-content {
-  top: auto;
-  bottom: 8%;
-  translate: none;
-  text-align: left;
-}
-
-.city-hero-oxford .city-hero-content h1 {
-  max-width: none;
-  font-size: clamp(2.25rem, 4.5vw, 3.5rem);
-  /* Set on the h1 so all three lines inherit the same shadow */
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-  margin-bottom: 0;
-}
+/* Oxford and Southaven carry no layout overrides for the hero copy. Both took
+   their own anchoring, measure, size and alignment, which put three variants of
+   the same block on three pages built from the same markup. Everything below
+   now comes from the shared .city-hero-content rules — the Tupelo treatment —
+   so there is one set of values to change instead of three. Only the image
+   treatment and the contrast fix below stay per-city. */
 
 /* Accent over the photograph. #647e9d measured 2.77:1 against the composited
    background behind this line — below even the 3:1 large-text bar. The cream
@@ -3042,33 +3032,6 @@ blockquote.card cite {
   color: var(--accent-light);
 }
 
-.city-hero-oxford .city-hero-content h1::before {
-  margin-left: 0;
-}
-
-/* Headline sits in the scrimmed column, its top edge 60% down the image. A
-   percentage with no translate means the block's start tracks the image height
-   at any width, rather than being centred on it as before. The scrim above
-   needs no vertical adjustment — it has no mask on desktop, so it already runs
-   the full height of the frame. */
-.city-hero-southaven .city-hero-content {
-  top: 60%;
-  translate: none;
-  text-align: left;
-}
-
-.city-hero-southaven .city-hero-content h1 {
-  /* Lines are broken explicitly in the markup, so the measure only has to be
-     wide enough that the longest of them does not wrap again. */
-  max-width: none;
-  font-size: clamp(2.25rem, 4.5vw, 3.5rem);
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
-}
-
-/* The rule follows the text to the left edge */
-.city-hero-southaven .city-hero-content h1::before {
-  margin-left: 0;
-}
 
 /* Darkens only the lower half — the road behind the text — leaving the badge
    and the storefronts at full brightness. */
@@ -3285,15 +3248,6 @@ blockquote.card cite {
     aspect-ratio: 500 / 457;
   }
 
-  /* Same fixed 24px under the last line as Southaven */
-  .city-hero-oxford .city-hero-content {
-    bottom: 24px;
-  }
-
-  .city-hero-oxford .city-hero-content h1 {
-    font-size: 1.625rem;
-  }
-
   /* The shared clamp's 2.25rem floor does not fit here. The text block is
      anchored at 60% of the image, so only the bottom 40% is available — at
      36px the headline runs four lines and lands on the CTA buttons below the
@@ -3340,21 +3294,6 @@ blockquote.card cite {
       #000 55%,
       #000 100%
     );
-  }
-
-  /* Anchored to the bottom of the image rather than centred on it, so the gap
-     under the last line is a fixed 24px instead of drifting with the block's
-     height. The h1's own bottom margin is zeroed or it would add to that gap —
-     there is no subhead beneath it on this page. */
-  .city-hero-southaven .city-hero-content {
-    top: auto;
-    bottom: 24px;
-    translate: none;
-  }
-
-  .city-hero-southaven .city-hero-content h1 {
-    font-size: 1.625rem;
-    margin-bottom: 0;
   }
 
   .city-hero-content p {
@@ -5559,6 +5498,14 @@ blockquote.card cite {
 
 .sh-close h2 {
   margin: 0 0 var(--space-3);
+}
+
+/* The results panel's address line is a map UI label, not display type, so the
+   display scale's -0.025em is pinned back off it. Scoped to .sh-panel-head
+   rather than .sh-tool, which would also catch the .sh-legend captions and
+   override the 0.1em uppercase tracking they carry. */
+.sh-panel-head h2 {
+  letter-spacing: -0.02em;
 }
 
 /* The storm tool's own captions are UI chrome, not display type, so they keep
