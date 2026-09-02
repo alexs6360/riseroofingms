@@ -2845,19 +2845,14 @@ blockquote.card cite {
 /* Each city's art is a different shape, so the ratio is per page. Compounded
    with .city-hero-media img (0,2,1) so it outranks the base rule above and the
    mobile one below regardless of source order. */
-/* Cropped to the left 91% of the frame, not the whole photograph. Centring the
-   headline to match Tupelo put it over the bell tower, which sits at 58-86% of
-   the source width. object-fit is what the rest of the city heroes avoid — it
-   clips — but here the clip is the point, and 91% keeps the tower whole with
-   5% to spare. It magnifies as it crops, so the hero grows from 810px to 890px
-   at 1440.
-
-   Measured behind the headline at 1440, 90th-percentile ground: "Roof Repair"
-   3.71 -> 4.86, "& Replacement" 3.72 -> 6.69. */
+/* The whole photograph, uncropped — its own 1366x768. It was cropped to the
+   left 91% to move the bell tower out from behind a centred headline; with the
+   headline at bottom-left the tower is no longer behind it, and object-fit
+   magnifies as it crops, so the crop was costing 80px of hero height at 1440
+   and 26px at 390 for nothing. Re-measured without it: every line still clears
+   3:1, and the p90s are unchanged to within a fifth of a point. */
 .city-hero-southaven .city-hero-media img {
-  aspect-ratio: 1243 / 768;
-  object-fit: cover;
-  object-position: 0% 50%;
+  aspect-ratio: 1366 / 768;
 }
 
 /* Southaven only. No wash across the frame — the sunset, the bell tower and
@@ -3230,6 +3225,47 @@ blockquote.card cite {
   );
 }
 
+/* Oxford and Southaven sit bottom-left; Tupelo stays centred. Both write their
+   line breaks out as explicit spans, so a left edge gives them a common
+   starting point down the block that a centred rag does not. Everything below
+   is the alignment and the things that have to follow it — the block itself
+   stays bottom-anchored by the shared rule above. */
+.city-hero-oxford .city-hero-content,
+.city-hero-southaven .city-hero-content {
+  text-align: left;
+}
+
+/* The measure and the auto margins exist to centre a block. Left-aligned they
+   would hold the text off the container edge and re-centre it. */
+.city-hero-oxford .city-hero-content h1,
+.city-hero-southaven .city-hero-content h1 {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* The rule follows the text to the left edge rather than staying centred over
+   a left-aligned headline. */
+.city-hero-oxford .city-hero-content h1::before,
+.city-hero-southaven .city-hero-content h1::before {
+  margin-left: 0;
+}
+
+/* The scrim has to travel with the text. The shared radial is an ellipse at the
+   centre of a full-width box, which is where the text no longer is — left the
+   type sat on the falling edge of it. A left-weighted linear does the same job
+   for a left-aligned block: same 0.30, held flat across the column the text
+   occupies, gone by 65%. */
+.city-hero-oxford .city-hero-content::after,
+.city-hero-southaven .city-hero-content::after {
+  background: linear-gradient(
+    to right,
+    rgba(7, 29, 55, 0.3) 0%,
+    rgba(7, 29, 55, 0.3) 35%,
+    rgba(7, 29, 55, 0) 65%
+  );
+}
+
 /* Two-tone: the service on top in white, the place beneath it in the brand
    blue. Both are blocks so the split always falls on the line break rather
    than wherever the text happens to wrap. */
@@ -3337,11 +3373,8 @@ blockquote.card cite {
     aspect-ratio: 800 / 827;
   }
 
-  /* Same 91% window as desktop, against the mobile source's own 800x534. */
   .city-hero-southaven .city-hero-media img {
-    aspect-ratio: 728 / 534;
-    object-fit: cover;
-    object-position: 0% 50%;
+    aspect-ratio: 800 / 534;
   }
 
   .city-hero-oxford .city-hero-media img {
