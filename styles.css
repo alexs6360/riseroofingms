@@ -815,6 +815,24 @@ img {
    thing on the page. */
 .hero-logo {
   display: block;
+  /* Dimension off the artwork that is already there. logo.png is 79%
+     transparent and every opaque pixel is pure white, so drop-shadow follows
+     the letterforms and the roof mark exactly rather than shadowing a box —
+     the mark lifts off the panel instead of being printed on it.
+
+     Two stops, because that is how a lit object actually reads: a tight
+     contact shadow that says how far off the surface it sits, and a broad
+     ambient one that says how soft the light is. One stop alone reads as a
+     sticker.
+
+     This is the version of a three-dimensional logo that survives this panel.
+     A bevelled render cannot: its highlights are near-white but its extrusion
+     faces and outlines are dark charcoal, and on #071d37 those edges stop
+     reading as edges and read as holes — the letterforms lose definition at
+     exactly the sizes the hero uses them, 320 down to 148. A filter keeps the
+     white knockout that navy needs and puts the depth in the light instead. */
+  filter: drop-shadow(0 2px 2px rgba(4, 18, 31, 0.5))
+    drop-shadow(0 10px 20px rgba(4, 18, 31, 0.38));
   /* 320px, up from 240. The panel is 45% of the viewport less its padding, so
      at 1440 this is roughly half the panel's width — large enough to read as
      the hero's opening statement rather than as a label above the headline. */
@@ -6375,6 +6393,20 @@ blockquote.card cite {
      vertical edge here, not a fade, so the copy can run closer to it. */
   .hero-panel {
     padding-right: var(--space-5);
+
+    /* And since it is a hard edge, the panel can cast across it. Above 1100
+       the panel dissolves into the footage along an angled alpha fade and
+       there is no edge to throw from — worse, a shadow there would be clipped
+       by the same mask that draws the fade. Here the two planes meet head on,
+       so the navy reads as a card in front of the photograph rather than a
+       second colour field beside it.
+
+       Throws right only: -8px of spread cancels the blur on the other three
+       sides, so nothing bleeds under the header or past the panel's own left
+       gutter. Safe against overflow: hidden above, which clips children, not
+       the element's own shadow — and .hero-panel already carries z-index 1
+       against .hero-media's auto, so it paints over the footage. */
+    box-shadow: 14px 0 28px -8px rgba(4, 18, 31, 0.7);
   }
 
   /* A narrower column wraps everything one line deeper — the proof caption
