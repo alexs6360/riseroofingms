@@ -112,6 +112,25 @@
   --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.75, 0.3, 1);
 
+  /* The hero mark's extruded side, as light rather than shadow.
+
+     Chained drop-shadows each shadow the *result* of the one before, so six
+     of them at 1px build one solid side face stepping down-right — following
+     logo.png's alpha exactly, which is what makes this work on artwork rather
+     than on a box.
+
+     The colours step from #2a5384 down to #0d1f30. That direction is the whole
+     trick on this panel: a bevelled render puts near-black on its side faces,
+     and on #071d37 near-black is not an edge, it is a hole. Starting the run
+     LIGHTER than the panel and falling INTO it reads as a lit solid instead —
+     the face catches the light, the side turns away from it.
+
+     Down-right because the panel's own gradient is lit from the upper left at
+     145deg. One light source for the whole hero, or nothing reads as solid. */
+  --logo-extrude: drop-shadow(1px 1px 0 #2a5384) drop-shadow(1px 1px 0 #24486f)
+    drop-shadow(1px 1px 0 #1e3d5f) drop-shadow(1px 1px 0 #18324e)
+    drop-shadow(1px 1px 0 #12283e) drop-shadow(1px 1px 0 #0d1f30);
+
   /* One card shadow, one lifted variant, one for fixed overlays */
   --shadow-card: 0 1px 2px rgba(16, 31, 61, 0.04),
     0 4px 12px rgba(16, 31, 61, 0.05);
@@ -831,8 +850,8 @@ img {
      reading as edges and read as holes — the letterforms lose definition at
      exactly the sizes the hero uses them, 320 down to 148. A filter keeps the
      white knockout that navy needs and puts the depth in the light instead. */
-  filter: drop-shadow(0 2px 2px rgba(4, 18, 31, 0.5))
-    drop-shadow(0 10px 20px rgba(4, 18, 31, 0.38));
+  filter: var(--logo-extrude) drop-shadow(0 3px 3px rgba(4, 18, 31, 0.55))
+    drop-shadow(0 14px 26px rgba(4, 18, 31, 0.42));
   /* 320px, up from 240. The panel is 45% of the viewport less its padding, so
      at 1440 this is roughly half the panel's width — large enough to read as
      the hero's opening statement rather than as a label above the headline. */
@@ -5027,6 +5046,10 @@ blockquote.card cite {
        proportional width increase would have. */
     width: 156px;
     margin: var(--space-3) auto var(--space-5);
+    /* Same three-step run as the short-viewport tier: near enough the same
+       rendered width, and the same thin-stroke limit applies. */
+    --logo-extrude: drop-shadow(1px 1px 0 #2a5384)
+      drop-shadow(1px 1px 0 #1a3552) drop-shadow(1px 1px 0 #0d1f30);
   }
 
   /* The band belongs to desktop; on a phone the tagline sits inside the hero
@@ -6365,6 +6388,12 @@ blockquote.card cite {
 
   .hero-panel .hero-logo {
     width: 232px;
+    /* The extrusion is a px depth on a mark whose width is not fixed, so it
+       has to be restated per tier or it grows in proportion as the mark
+       shrinks. Six steps is 1.9% of 320px; four is the same ratio at 232. */
+    --logo-extrude: drop-shadow(1px 1px 0 #2a5384)
+      drop-shadow(1px 1px 0 #204361) drop-shadow(1px 1px 0 #163049)
+      drop-shadow(1px 1px 0 #0d1f30);
   }
 
   .hero-panel .hero-lockup-tagline {
@@ -6470,6 +6499,11 @@ blockquote.card cite {
 
   .hero-panel .hero-logo {
     width: 148px;
+    /* Three. At six the side face was wider than the strokes of "ROOFING
+       SOLUTIONS" and closed them up — the extrusion has to stay thinner than
+       the thinnest stroke it is attached to. */
+    --logo-extrude: drop-shadow(1px 1px 0 #2a5384)
+      drop-shadow(1px 1px 0 #1a3552) drop-shadow(1px 1px 0 #0d1f30);
   }
 
   .hero-panel .hero-lockup-tagline {
