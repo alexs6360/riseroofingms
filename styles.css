@@ -3138,8 +3138,19 @@ blockquote.card cite {
   position: absolute;
   left: 0;
   right: 0;
+  /* Anchored to the foot of the image. top: 60% keyed the offset to the image
+     height, which shrinks faster than the text inside it: between 1200 and 768
+     the image falls from 509px to its 380px min-height floor while the headline
+     holds its line count and its font clamps at a 36px minimum, so the block
+     ran out of frame and into the CTA bar.
+
+     clamp(), not a percentage. A percentage of the image height is still keyed
+     to the thing that shrinks — it only escapes the bug because min-height
+     happens to floor the image at 380. The clamp carries its own floor, so the
+     offset stays correct if that min-height or an aspect-ratio ever changes.
+     24px at the narrow end matches what the mobile layout already used. */
   top: auto;
-  bottom: 9%;
+  bottom: clamp(24px, 3vw, 72px);
   text-align: center;
   color: #fff;
   /* Both this and ::after are positioned with z-index auto, so without this
