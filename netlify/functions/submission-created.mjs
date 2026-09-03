@@ -211,7 +211,10 @@ async function handleSubmission(data) {
   if (!data.address) { log("skipped", { reason: "no address field" }); return; }
 
   const token = process.env.MAPBOX_TOKEN;
-  const siteUrl = process.env.URL || "https://riseroofingms-662.netlify.app";
+  /* Netlify sets URL in the function runtime, so the fallback is only reached
+     if that is somehow unset. It still has to be the real domain — the map
+     image and the follow-up link in the notification are built from it. */
+  const siteUrl = process.env.URL || "https://riseroofingms.com";
 
   let image = null, note = "";
   try {
