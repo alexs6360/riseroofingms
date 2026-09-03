@@ -1476,26 +1476,45 @@ img {
   /* Fallback ground if the JPEG never loads — white text on white otherwise.
      It never paints while the image is present. */
   background-color: var(--color-navy);
-  /* David's Tupelo job, not the stock aerial. services-roof-bg.jpg measured
-     B-R +13.6 on its roof plane — a weathered slate roof under open sky — and
-     no overlay fixed that, because the roof was the largest thing in frame and
-     set the perceived white point. This one measures +1.2. */
-  background-image: url("images/work/tupelo-replacement-front.jpg");
+  /* CertainTeed Landmark Solaris product photograph — stock, licensed, and
+     David has confirmed that. It replaces his own Tupelo job here because that
+     photo is the Completed Work gallery's lead, and one picture doing both was
+     the same image twice on one page. The "our actual work" claim lives in the
+     gallery; this is a scrimmed background.
+
+     Chosen on measurement, not just to break the duplication. 1920x1596 is
+     larger than the band at both widths — 0.75x at 1440, 0.73x at 390 — so it
+     is the only candidate in the project that is downscaled rather than
+     stretched. Warmth at the crop: B-R -20.4 at 1440 against the Tupelo
+     photo's -14.1. */
+  background-image: url("images/services-stucco-house.jpg");
   background-size: cover;
   background-position: 70% 90%;
   color: #fff;
 }
 
 /* One flat overlay, neutral rather than navy — a navy tint recoloured the whole
-   frame and the photo read as texture rather than a house. 0.545 is a starting
-   value carried over from the crop study on this same photograph, not a floor
-   derived against this section's type. Measured numbers are in the reply. */
+   frame and the photo read as texture rather than a house.
+
+   0.565 is derived against this photograph, not carried over. The binding
+   constraint is 390, where the crop pulls in 30% cloud and every line lands on
+   roughly the same bright ground; at 1440 there is no sky in frame and the
+   floor would be far lower. Bisected up from 0.545 rather than rounded to a
+   comfortable number:
+
+     0.545  eyebrow 4.31 p90, subhead 4.30   fails 4.5
+     0.557  4.48 / 4.47                      fails
+     0.560  4.55 / 4.54                      clears p90, worst still 4.49
+     0.565  4.61 / 4.60, worst 4.55          clears on both statistics
+
+   Values pair up because the composited ground quantises to 8 bits, so 0.555
+   and 0.557 measure identically. */
 .services-photo::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgba(10, 12, 14, 0.545);
+  background: rgba(10, 12, 14, 0.565);
 }
 
 
