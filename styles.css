@@ -98,6 +98,15 @@
   --text-h1: var(--display-h1);
 
   /* Motion — everything stays under 400ms */
+  /* Parallax on the services background layer. --parallax-factor is the
+     fraction of scroll distance the image travels; --parallax-range is how far
+     the layer is oversized past the section on each edge, which is also the
+     hard cap on travel. Keep factor small enough that the computed offset stays
+     inside range at every viewport, or the clamp in script.js starts biting and
+     the motion flattens at the extremes. */
+  --parallax-range: 80px;
+  --parallax-factor: 0.08;
+
   --dur-hover: 150ms;
   --dur-fast: 200ms;
   --dur-base: 260ms;
@@ -1470,28 +1479,60 @@ img {
    keyed to .services-photo, which only the homepage section carries. */
 .services-photo {
   position: relative;
-  /* Keeps the ::before's negative z-index inside this section rather than
-     letting it slide behind the page background. */
+  /* Keeps the layers' negative z-indexes inside this section rather than
+     letting them slide behind the page background. */
   isolation: isolate;
-  /* Fallback ground if the JPEG never loads — white text on white otherwise.
-     It never paints while the image is present. */
+  /* Clips the oversized parallax layer. Without it the layer's extra height
+     would show above and below the section. */
+  overflow: hidden;
+  /* Fallback ground if the JPEG never loads — white text on white otherwise. */
   background-color: var(--color-navy);
-  /* CertainTeed Landmark Solaris product photograph — stock, licensed, and
-     David has confirmed that. It replaces his own Tupelo job here because that
-     photo is the Completed Work gallery's lead, and one picture doing both was
-     the same image twice on one page. The "our actual work" claim lives in the
-     gallery; this is a scrimmed background.
+  color: #fff;
+}
 
-     Chosen on measurement, not just to break the duplication. 1920x1596 is
-     larger than the band at both widths — 0.75x at 1440, 0.73x at 390 — so it
-     is the only candidate in the project that is downscaled rather than
-     stretched. Warmth at the crop: B-R -20.4 at 1440 against the Tupelo
-     photo's -14.1. */
+/* The photograph, on its own layer so it can translate without moving the
+   overlay or the content, and without touching `transform`, which the reveal
+   animation owns.
+
+   Oversized by --parallax-range on both edges and clipped by the section, which
+   is what makes a gap structurally impossible: the layer is taller than the
+   section by 2x range, so translating it by up to +/- range still covers the
+   section at every scroll position. Making the layer taller while leaving
+   background-size: cover would not have worked on its own — cover scales the
+   image to the box, so a taller box just yields a taller image and the same
+   zero slack. It is the clipping that creates the headroom, not the size.
+
+   Measured before this existed: the section had 48px of upward slack at 1440
+   and exactly none at 390, where cover is height-driven and the drawn image was
+   1169px against a 1169px section. A translating layer would have shown a gap
+   on the first frame at 390.
+
+   CertainTeed Landmark Solaris product photograph — stock, licensed, and David
+   has confirmed that. 1920x1596 is larger than the band at both widths, so it
+   is downscaled rather than stretched. */
+.services-photo::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--parallax-range) * -1);
+  height: calc(100% + var(--parallax-range) * 2);
+  z-index: -2;
   background-image: url("images/services-stucco-house.jpg");
   background-size: cover;
   background-position: 70% 90%;
-  color: #fff;
 }
+
+/* The translate itself is the only motion here, so it is the only thing gated.
+   Under reduce the layer keeps its position and size and simply never moves —
+   no transform is applied at all, rather than one that resolves to zero. */
+@media (prefers-reduced-motion: no-preference) {
+  .services-photo::after {
+    translate: 0 var(--parallax-y, 0px);
+    will-change: translate;
+  }
+}
+
 
 /* One flat overlay, neutral rather than navy — a navy tint recoloured the whole
    frame and the photo read as texture rather than a house.

@@ -763,3 +763,65 @@ window.AddressAutocomplete = (function () {
     },
   });
 })();
+
+/* Parallax on the services section's background layer.
+
+   Scroll-driven rather than background-attachment: fixed, which pins to the
+   viewport rather than translating and is a known jank source on iOS. The
+   layer is .services-photo::after; the translate is applied by writing a custom
+   property on the section, which the pseudo-element inherits.
+
+   One layout read per frame. getBoundingClientRect rather than a cached
+   offsetTop plus scrollY, because lazy images above this section change its
+   document position after load and a cached offset would drift.
+
+   A second IntersectionObserver, deliberately not the reveal one. That observer
+   is threshold 0.15 and calls unobserve on first intersection — it is a
+   fire-once trigger and cannot report a section leaving, which is exactly what
+   has to stop the loop. This one is threshold 0, never unobserves, and only
+   toggles a boolean. */
+const parallaxSection = document.querySelector(".services-photo");
+
+if (parallaxSection && !prefersReducedMotion) {
+  const cs = getComputedStyle(parallaxSection);
+  const range = parseFloat(cs.getPropertyValue("--parallax-range")) || 80;
+  const factor = parseFloat(cs.getPropertyValue("--parallax-factor")) || 0.08;
+
+  let active = false;
+  let queued = false;
+
+  function frame() {
+    queued = false;
+    if (!active) return;
+
+    const rect = parallaxSection.getBoundingClientRect();
+    /* Distance from the section's centre to the viewport's, so the offset is
+       zero when the section is centred and symmetric either side of that. */
+    const delta = rect.top + rect.height / 2 - window.innerHeight / 2;
+
+    /* Clamped to range because range is what the layer was oversized by. Past
+       it the layer would stop covering the section and a gap would open. */
+    let y = -delta * factor;
+    if (y > range) y = range;
+    else if (y < -range) y = -range;
+
+    parallaxSection.style.setProperty("--parallax-y", y.toFixed(2) + "px");
+    queue();
+  }
+
+  function queue() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(frame);
+  }
+
+  new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        active = entry.isIntersecting;
+        if (active) queue();
+      }
+    },
+    { threshold: 0 }
+  ).observe(parallaxSection);
+}
