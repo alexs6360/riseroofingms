@@ -173,14 +173,21 @@
     <section class="hero">
       <div class="hero-panel">
         <div class="hero-panel-inner">
-          <img
-            src="images/logo.png"
-            alt="RISE Roofing Solutions"
-            class="hero-logo hero-anim hero-anim-1"
-            width="611"
-            height="308"
-            fetchpriority="high"
-          />
+          <!-- Wrapped so the metallic face can be a masked layer over the mark.
+               The <img> stays: it carries the alt text and the fetchpriority
+               that makes this the hero's LCP candidate, and a CSS background
+               would be discovered only after the CSSOM. The wrapper owns the
+               size and the spacing; the img fills it. -->
+          <span class="hero-lockup hero-anim hero-anim-1">
+            <img
+              src="images/logo.png"
+              alt="RISE Roofing Solutions"
+              class="hero-logo"
+              width="611"
+              height="308"
+              fetchpriority="high"
+            />
+          </span>
 
           <!-- The tagline belongs with the mark, not floating over the footage.
                Desktop only: below 768 the hero has no room for it, and the

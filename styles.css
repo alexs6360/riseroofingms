@@ -811,7 +811,7 @@ img {
 
   /* Was 48px; the tagline's own bottom margin carries that distance now.
      Qualified because the base .hero-logo rule sits later in this file. */
-  .hero-panel .hero-logo {
+  .hero-panel .hero-lockup {
     margin-bottom: var(--space-2);
   }
 }
@@ -832,6 +832,78 @@ img {
    two buttons, and at 340px with 40px beneath it the buttons fell below the
    fold. It is still the first thing seen — it no longer has to be the biggest
    thing on the page. */
+/* The lockup owns the size and the spacing; the <img> inside fills it. The
+   wrapper exists so the metallic face can be a masked layer painted over the
+   mark — an <img> cannot carry a pseudo-element, and a background on the img
+   would sit behind its own pixels rather than over them.
+
+   Everything the height tiers set — width, and the extrusion depth — is set
+   here now. --logo-extrude is a custom property, so it inherits down to the
+   img whose filter consumes it, and a tier restates the depth without
+   restating the whole chain. */
+.hero-lockup {
+  position: relative;
+  display: block;
+  /* 320px, up from 240. The panel is 45% of the viewport less its padding, so
+     at 1440 this is roughly half the panel's width — large enough to read as
+     the hero's opening statement rather than as a label above the headline. */
+  width: 320px;
+  max-width: 100%;
+  /* 48px, up from 32. At 240px wide a 32px gap held; at 320 the mark is 161px
+     tall and the headline started to look attached to it. */
+  margin-bottom: var(--space-6);
+}
+
+/* Guarded, unlike the other masks in this file, and for a reason worth stating:
+   they degrade to "no fade" — the element simply paints in full, which is
+   survivable. This one would degrade to a solid light rectangle sitting over
+   the mark, because the gradient is the whole element and the mask is the only
+   thing giving it a shape. Without support the pseudo-element must not exist
+   at all, which leaves the white knockout and the extrusion — exactly what
+   shipped in 3fe6e96. */
+@supports ((-webkit-mask-image: url("images/logo.png")) or
+  (mask-image: url("images/logo.png"))) {
+  /* The metallic face, masked to the mark's own alpha.
+
+     logo.png is 79% transparent and pure white where it is not, so it works as
+     its own stencil: mask it over a gradient and the gradient becomes the
+     letterforms. inset: 0 with mask-size 100% 100% lands it exactly on the img
+     below, which is width: 100% of this same box.
+
+     The ramp is banded light-dark-light the way a rolled metal edge catches a
+     room — that alternation is what reads as metal rather than as a gradient
+     fill. Every stop stays above #cbd8e8 though: the whole reason a chrome
+     render fails on this panel is that its dark bands land near #071d37 and
+     stop reading as shading, so the face has to do its modelling entirely in
+     the light half of the range.
+
+     Painted over the img, so it covers the white face while the extrusion and
+     both shadows — which fall outside the mark's alpha — are untouched. */
+  .hero-lockup::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      172deg,
+      #ffffff 0%,
+      #f1f6fc 13%,
+      #ffffff 26%,
+      #cbd8e8 43%,
+      #ffffff 55%,
+      #e2ebf5 71%,
+      #ffffff 87%,
+      #d9e3ef 100%
+    );
+    -webkit-mask-image: url("images/logo.png");
+    mask-image: url("images/logo.png");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+}
+
 .hero-logo {
   display: block;
   /* Dimension off the artwork that is already there. logo.png is 79%
@@ -844,23 +916,14 @@ img {
      ambient one that says how soft the light is. One stop alone reads as a
      sticker.
 
-     This is the version of a three-dimensional logo that survives this panel.
-     A bevelled render cannot: its highlights are near-white but its extrusion
-     faces and outlines are dark charcoal, and on #071d37 those edges stop
-     reading as edges and read as holes — the letterforms lose definition at
-     exactly the sizes the hero uses them, 320 down to 148. A filter keeps the
-     white knockout that navy needs and puts the depth in the light instead. */
+     The img still renders under ::after rather than being decorative: it
+     carries the alt text and the fetchpriority that make this the hero's LCP
+     candidate, and its alpha is what both the extrusion and the mask are
+     built from. */
   filter: var(--logo-extrude) drop-shadow(0 3px 3px rgba(4, 18, 31, 0.55))
     drop-shadow(0 14px 26px rgba(4, 18, 31, 0.42));
-  /* 320px, up from 240. The panel is 45% of the viewport less its padding, so
-     at 1440 this is roughly half the panel's width — large enough to read as
-     the hero's opening statement rather than as a label above the headline. */
-  width: 320px;
-  max-width: 100%;
+  width: 100%;
   height: auto;
-  /* 48px, up from 32. At 240px wide a 32px gap held; at 320 the mark is 161px
-     tall and the headline started to look attached to it. */
-  margin-bottom: var(--space-6);
 }
 
 /* Steps back from the logo rather than competing with it: smaller than the
@@ -5071,7 +5134,7 @@ blockquote.card cite {
      padding is exactly --header-h, which clears the fixed header and no more,
      so this margin is the whole visible gap beneath the bar — 32px of it read
      as a hole. 16px halves it and still leaves the mark clear of the bar. */
-  .hero-logo {
+  .hero-lockup {
     /* Width deliberately unchanged. At 390 the address tool is the thing that
        has to stay above the fold, and every pixel the mark gains pushes the
        card down. The presence comes from the space around it instead: 16 -> 24
@@ -6419,7 +6482,7 @@ blockquote.card cite {
     padding-bottom: var(--space-5);
   }
 
-  .hero-panel .hero-logo {
+  .hero-panel .hero-lockup {
     width: 232px;
     /* The extrusion is a px depth on a mark whose width is not fixed, so it
        has to be restated per tier or it grows in proportion as the mark
@@ -6530,7 +6593,7 @@ blockquote.card cite {
     padding-bottom: var(--space-4);
   }
 
-  .hero-panel .hero-logo {
+  .hero-panel .hero-lockup {
     width: 148px;
     /* Three. At six the side face was wider than the strokes of "ROOFING
        SOLUTIONS" and closed them up — the extrusion has to stay thinner than
