@@ -53,11 +53,15 @@ const throughs = [idx.hail && idx.hail.through, idx.wind && idx.wind.through].fi
 if (!throughs.length) fail(INDEX + " carries no currency date for either layer");
 const through = throughs.sort()[0];
 
-const pretty = (iso) => {
+/* "Aug 2026", not "August 26, 2026". The day is noise at this size — nobody
+   acts on it — and the abbreviated month is what keeps the line to one row at
+   390. Every en-US short month is three characters, so there is no longest
+   case to budget for. */
+const monthYear = (iso) => {
   const d = new Date(iso + "T00:00:00Z");
   if (isNaN(d)) fail("unparseable date in " + INDEX + ": " + iso);
   return d.toLocaleDateString("en-US", {
-    year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+    year: "numeric", month: "short", timeZone: "UTC",
   });
 };
 
@@ -67,20 +71,22 @@ const n = (v) => v.toLocaleString("en-US");
    into "storms" or "events" — the precision is the point, and a homeowner who
    clicks through sees exactly these two layers on the map.
 
-   Length is a hard constraint, not a matter of taste. As a caption under the
-   field at --text-xs this wraps at roughly 90 characters in the 448px column,
-   and it has to hold to one line — a second line puts back the visual weight
-   that moving it out of the copy stack was meant to remove.
+   Length is a hard constraint, not a matter of taste, and 390 sets it: the
+   caption column is 350px there against 448 on desktop, so mobile is the only
+   width that binds. Measured with white-space: nowrap at the worst case this
+   can reach — six-digit counts both sides, which is 52 characters — the line
+   needs 311px. That leaves 39px of margin at 390 and 137px at 1440.
 
-   That budget is what settles the wording. Middots rather than clauses, the
-   agencies as the acronyms they are printed under on the source data, and the
-   currency date abbreviated. The geography goes entirely: "north Mississippi"
-   costs 19 characters to tell a visitor on a north Mississippi roofer's site
-   something the headline, the map and the address they are about to type all
-   establish anyway. The counts and the sources are what cannot be inferred. */
+   The sources are what paid for it. "NOAA and NWS, through " costs 22
+   characters and pushes the worst case to 517px, which is 167px past the
+   mobile column; the same line with the agencies kept and only the date
+   abbreviated still lands at 352px against 350. Two of the three — unit nouns,
+   sources, currency date — is all that fits, and the agencies are the part a
+   homeowner can least act on. They remain on the storm page, on the map's own
+   attribution, where someone checking the provenance will actually look. */
 const line =
   "<strong>" + n(cells) + " hail cells</strong> · <strong>" + n(winds) +
-  " wind reports</strong> · NOAA and NWS, through " + pretty(through);
+  " wind reports</strong> · " + monthYear(through);
 
 const html = fs.readFileSync(PAGE, "utf8");
 if (!html.includes(TOKEN)) {
