@@ -308,6 +308,27 @@ for (const w of widths) {
     { width: w, height: 900, deviceScaleFactor: 1, mobile: w < 800 });
   await send("Page.navigate", { url });
   await sleep(3200);
+  // Scroll the target into view before measuring. Glyph rects are
+  // viewport-relative and raster mode samples a viewport screenshot, so a
+  // below-fold target would be sampled off-canvas. Scroll-reveal animations
+  // also leave text at opacity 0 until it enters the viewport, which neither
+  // display nor visibility reports — so a page that uses them would be
+  // measured while its text is invisible.
+  const settled = await evaluate(`(() => {
+    document.documentElement.style.scrollBehavior = "auto";
+    const el = document.querySelector(${JSON.stringify(selector)});
+    if (!el) return { found: false };
+    el.scrollIntoView({ block: "center" });
+    return { found: true };
+  })()`);
+  if (!settled || !settled.found) { console.log(`\n===== ${w}px  no element matches ${selector}`); continue; }
+  await sleep(1400);
+  const faded = await evaluate(`[...document.querySelectorAll(${JSON.stringify(selector)})]
+    .filter((e) => parseFloat(getComputedStyle(e).opacity) < 1).length`);
+  if (faded) {
+    console.log(`\n  WARNING: ${faded} matched element(s) still below full opacity after scrolling.`);
+    console.log(`           Their contrast is being measured against a partly transparent glyph.`);
+  }
   let rows;
   if (raster) {
     const rects = await evaluate(`(${RECTS_FN})(${JSON.stringify(selector)})`);

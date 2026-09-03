@@ -1470,28 +1470,34 @@ img {
    keyed to .services-photo, which only the homepage section carries. */
 .services-photo {
   position: relative;
-  /* No background-color, no ::before, no scrim. The photo paints at full
-     strength — chosen deliberately, not a leftover diagnostic.
-
-     Know what this costs before touching it: every text element in this
-     section fails WCAG AA against the photo, at every width from 320 to 2400.
-     Measured over glyph runs: eyebrow 1.61-2.12, heading 1.75-2.22, supporting
-     line 1.57-1.85, call line 1.63-2.01, phone 2.04-2.60, against floors of
-     4.5 (3 for the large text). The four card titles and four card links still
-     pass — they sit on opaque navy, not on the photo.
-
-     Restoring legibility means restoring an overlay. The measured floor for
-     this photo and crop is rgba(10,12,14,0.58); see commit 4195c68 for how
-     that number was derived. */
-  background-image: url("images/services-roof-bg.jpg");
+  /* Keeps the ::before's negative z-index inside this section rather than
+     letting it slide behind the page background. */
+  isolation: isolate;
+  /* Fallback ground if the JPEG never loads — white text on white otherwise.
+     It never paints while the image is present. */
+  background-color: var(--color-navy);
+  /* David's Tupelo job, not the stock aerial. services-roof-bg.jpg measured
+     B-R +13.6 on its roof plane — a weathered slate roof under open sky — and
+     no overlay fixed that, because the roof was the largest thing in frame and
+     set the perceived white point. This one measures +1.2. */
+  background-image: url("images/work/tupelo-replacement-front.jpg");
   background-size: cover;
-  /* Carried over from the overlay work. It was derived to keep bright ground
-     out from under the text, which no longer buys anything with no overlay to
-     minimise, but it is also the crop that centres the roof plane — an
-     independent derivation from the roof centroid lands at 50% 74%. */
-  background-position: 30% 75%;
+  background-position: 70% 90%;
   color: #fff;
 }
+
+/* One flat overlay, neutral rather than navy — a navy tint recoloured the whole
+   frame and the photo read as texture rather than a house. 0.545 is a starting
+   value carried over from the crop study on this same photograph, not a floor
+   derived against this section's type. Measured numbers are in the reply. */
+.services-photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(10, 12, 14, 0.545);
+}
+
 
 /* White rather than accent-light. Accent-light is a lighter target than white
    and runs out of contrast about a full point sooner, which is what held the
