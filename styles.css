@@ -5421,6 +5421,27 @@ blockquote.card cite {
     position: relative;
     z-index: 1;
   }
+
+  /* While the address dropdown is open, put the hero back on top of the
+     sections that were lifted over it.
+
+     sticky makes .hero a stacking context whatever its z-index, so everything
+     inside it — including the suggestion list, which asks for z-index 40 — is
+     capped at the hero's level. Lifting the sections to 1 therefore buried the
+     list under .values whenever the hero was pinned. Raising the hero to 2 for
+     exactly as long as the list is open is the narrowest fix: a reader with the
+     list open is at the top of the page typing an address, not scrolling
+     content over the hero.
+
+     Keyed off the list's own `hidden` attribute, which script.js already
+     toggles, so there is no new state to keep in sync. Scoped to .hero, which
+     exists only on the homepage.
+
+     This fixes the two rows that sticky cost. It does not fix the list being
+     taller than the room below the field — see the note on .sh-suggest. */
+  .hero:has(.lookup-cta-suggest:not([hidden])) {
+    z-index: 2;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
