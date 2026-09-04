@@ -5383,6 +5383,46 @@ blockquote.card cite {
   }
 }
 
+/* Sticky hero, prototype. The hero pins at its own height and everything after
+   it scrolls over the top — no pin container, no height change, so the page
+   advances at its normal rate throughout.
+
+   Two rules, and the second is the one that matters. A statically positioned
+   element paints below a positioned one, and seven of the sections after the
+   hero are static: values, service-line, work, founder, testimonials,
+   service-area, contact. A sticky hero is positioned, so without lifting them
+   the hero would paint OVER them — the content would slide under the hero
+   instead of over it, which is backwards.
+
+   They all need lifting rather than just the next one or two, because the hero
+   has no wrapper: its containing block is <main>, so it stays pinned for the
+   whole document and every later section passes over it.
+
+   Scoped by `.hero ~ section` rather than by a page class. .hero exists only on
+   the homepage — the city pages use .city-hero — so no other page is reached.
+   The lift recontextualises any absolutely positioned descendant; checked, and
+   the only ones are three .visually-hidden headings, clipped to a pixel and
+   unaffected either way.
+
+   Both rules sit inside no-preference, so under reduce the hero is relative and
+   the sections are static — exactly what ships today. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero {
+    position: sticky;
+    top: 0;
+    /* sticky creates a stacking context whatever the z-index, so the hero's
+       subtree is capped here regardless. Not a new constraint: the comment on
+       .hero-panel already records that its own z-index 1 caps the address
+       dropdown below the sticky call bar at 30. */
+    z-index: 0;
+  }
+
+  main > .hero ~ section {
+    position: relative;
+    z-index: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
