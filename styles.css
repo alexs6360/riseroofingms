@@ -5759,8 +5759,19 @@ blockquote.card cite {
   margin: 0;
   padding: 0;
   /* Long histories scroll inside the panel rather than stretching the page */
+  /* Fallback cap for when script.js never runs. With it the list carries an
+     inline max-height measured against the room actually available on the
+     side it opened to. */
   max-height: 320px;
   overflow-y: auto;
+}
+
+/* Opened upward, because the room below the field was shorter than the list and
+   the room above was longer. Two classes against the base rule's one, so this
+   wins on specificity rather than on source order. */
+.sh-suggest.is-above {
+  top: auto;
+  bottom: calc(100% + 6px);
 }
 
 /* Rows are buttons now: selecting one filters the map to that day. */

@@ -609,11 +609,80 @@ window.AddressAutocomplete = (function () {
     var items = [];
     var activeIndex = -1;
 
+    /* Which way the list opens, and how tall it is allowed to be.
+
+       Measured when the list opens rather than once at load, because nothing
+       here is static: the field moves with scroll, the homepage hero can be
+       pinned or not, and the sticky call bar only exists below 768px. A value
+       cached at load would be wrong by the time anyone typed.
+
+       The room below ends at the call bar when there is one and at the viewport
+       floor when there is not; the room above ends under the fixed header. Both
+       are real occluders — measured, the bar was swallowing the last three
+       suggestions on a phone, and the header would swallow the first three if
+       the list opened upward without accounting for it. */
+    var GAP = 6;
+    var EDGE = 8;
+
+    function roomFor() {
+      var fr = listEl.parentElement.getBoundingClientRect();
+
+      var header = document.querySelector(".site-header");
+      var headerBottom = 0;
+      if (header && getComputedStyle(header).position === "fixed") {
+        headerBottom = header.getBoundingClientRect().bottom;
+      }
+
+      var bar = document.querySelector(".sticky-call");
+      var floor = window.innerHeight;
+      if (bar && getComputedStyle(bar).display !== "none") {
+        floor = Math.min(floor, bar.getBoundingClientRect().top);
+      }
+
+      return {
+        below: floor - fr.bottom - GAP - EDGE,
+        above: fr.top - headerBottom - GAP - EDGE
+      };
+    }
+
+    function place() {
+      /* scrollHeight is the content's full height whatever the current cap, so
+         this does not have to clear max-height before measuring. */
+      var natural = listEl.scrollHeight;
+      var room = roomFor();
+
+      /* Flip only when it helps: the list does not fit below AND there is more
+         room above. Otherwise stay below, where a dropdown belongs by default. */
+      var up = natural > room.below && room.above > room.below;
+      var avail = up ? room.above : room.below;
+
+      listEl.classList.toggle("is-above", up);
+      listEl.style.maxHeight = Math.max(0, Math.floor(Math.min(natural, avail))) + "px";
+    }
+
+    /* Re-placed while open, not only on open. Scrolling moves the field against
+       the header and the call bar, and on the homepage it also changes whether
+       the hero is pinned — all of which change the room under an already-open
+       list. rAF-coalesced, so a scroll burst costs one measurement per frame. */
+    var placeQueued = false;
+    function onReflow() {
+      if (placeQueued) return;
+      placeQueued = true;
+      requestAnimationFrame(function () {
+        placeQueued = false;
+        if (!listEl.hidden) place();
+      });
+    }
+
     function close() {
       items = [];
       activeIndex = -1;
       listEl.hidden = true;
       listEl.innerHTML = "";
+      listEl.classList.remove("is-above");
+      listEl.style.maxHeight = "";
+      window.removeEventListener("scroll", onReflow);
+      window.removeEventListener("resize", onReflow);
       input.setAttribute("aria-expanded", "false");
       input.removeAttribute("aria-activedescendant");
     }
@@ -666,6 +735,10 @@ window.AddressAutocomplete = (function () {
 
       listEl.hidden = false;
       input.setAttribute("aria-expanded", "true");
+      /* After hidden is cleared, so there is a box to measure. */
+      place();
+      window.addEventListener("scroll", onReflow, { passive: true });
+      window.addEventListener("resize", onReflow);
       highlight(-1);
     }
 
