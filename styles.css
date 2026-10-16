@@ -3068,6 +3068,204 @@ blockquote.card cite {
   z-index: 3;
 }
 
+/* ---- Storm hero atmosphere ---------------------------------------------
+   Ported from the Apex Exteriors storm page and deliberately re-pitched, so
+   the two sites do not read as one template. Apex runs 70 near-vertical white
+   streaks and strikes every 3-8s; this runs 48 longer ones at roughly twice
+   the wind angle, in --accent-light rather than white, and strikes every
+   5.2-13s. The flash is one hard onset with a long decay rather than Apex's
+   two even flickers.
+
+   Cost is the reason it is built this way rather than on a canvas: every
+   moving property here is transform or opacity, which the compositor animates
+   off the main thread. There is no per-frame JavaScript at all — the only
+   script is a setTimeout chain that fires once every several seconds.
+
+   Stacking inside .storm-frame: the photograph paints first, then rain and
+   bolt at 1, the flash at 2, and .city-hero-storm .city-hero-content at its
+   existing 3 — so the flash lights the sky behind the headline and never
+   washes over the type itself. */
+.storm-rain,
+.storm-bolt,
+.storm-flash {
+  position: absolute;
+  pointer-events: none;
+}
+
+.storm-rain {
+  inset: 0;
+  z-index: 1;
+  /* Clips the drops at the frame rather than letting them fall past the
+     photograph and over the trust row below it. */
+  overflow: hidden;
+}
+
+/* Written by script.js, one per drop. Longer and thinner than the Apex
+   version, and tinted rather than white: --accent-light reads as weather on a
+   navy page where pure white reads as scratches on the lens. */
+.storm-raindrop {
+  position: absolute;
+  top: -12%;
+  left: var(--x, 50%);
+  width: var(--w, 1.4px);
+  height: var(--h, 90px);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(157, 185, 220, 0.9),
+    transparent
+  );
+  opacity: var(--o, 0.55);
+}
+
+.storm-bolt {
+  top: 0;
+  left: var(--bolt-x, 50%);
+  width: 64px;
+  height: 72%;
+  z-index: 1;
+  opacity: 0;
+  overflow: visible;
+  filter: drop-shadow(0 0 7px rgba(157, 185, 220, 0.9))
+    drop-shadow(0 0 18px rgba(44, 91, 140, 0.65));
+}
+
+.storm-bolt path {
+  fill: none;
+  stroke: var(--accent-light);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* --accent-light, not white: a white flash on this palette read as a camera
+   flash, the blue reads as sky. Peak opacity is set in the keyframes.
+
+   A band, not a wash, and that is a contrast fix as much as a realism one.
+   Lightning lights the sky, and the sky is the upper part of this frame — but
+   a flat inset: 0 flash lit the ground behind the type as well. Measured at
+   peak with a flat flash, "in North Mississippi" fell from 3.67 to 2.76
+   against a 3.0 floor: that line is --accent-light and so was the flash, so
+   brightening the ground walked it toward the text colour until the two met.
+
+   The stops are placed off the frame's own geometry rather than by eye. At
+   1440 the urgency strip ends at 5.4% and the headline starts at 58.8%, so the
+   band runs clear of both: nothing before 7%, full across the sky, gone by
+   57%. */
+.storm-flash {
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    rgba(157, 185, 220, 0) 0%,
+    rgba(157, 185, 220, 0) 7%,
+    var(--accent-light) 24%,
+    rgba(157, 185, 220, 0.85) 44%,
+    rgba(157, 185, 220, 0) 57%
+  );
+  opacity: 0;
+}
+
+/* The mobile crop is squarer, so the same two fixtures sit much closer
+   together: the urgency strip runs to 15.3% and the headline starts at 41.8%,
+   leaving a 26-point gap where the desktop frame has 53. The band is narrowed
+   to fit inside it rather than scaled down, which keeps the flash off the type
+   at the cost of a thinner strip of lit sky. */
+@media (max-width: 767.98px) {
+  .storm-flash {
+    background: linear-gradient(
+      to bottom,
+      rgba(157, 185, 220, 0) 0%,
+      rgba(157, 185, 220, 0) 17%,
+      var(--accent-light) 27%,
+      rgba(157, 185, 220, 0.8) 36%,
+      rgba(157, 185, 220, 0) 41%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .storm-raindrop {
+    animation: storm-rain-fall var(--duration, 1.1s) linear infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  /* One wind direction for every drop, because wind has one direction. -110px
+     over 560px is about twice Apex's rake, which is most of why the two do not
+     look alike in motion. */
+  @keyframes storm-rain-fall {
+    from {
+      transform: translate(0, 0);
+    }
+    to {
+      transform: translate(var(--drift, -110px), 560px);
+    }
+  }
+
+  .storm-bolt.is-striking {
+    animation: storm-bolt-strike 0.62s ease-out;
+  }
+
+  /* Three stages rather than Apex's two: a full-brightness hit, a deep drop, a
+     weaker re-light, then out. */
+  @keyframes storm-bolt-strike {
+    0% {
+      opacity: 0;
+    }
+    4% {
+      opacity: 1;
+    }
+    10% {
+      opacity: 0.3;
+    }
+    16% {
+      opacity: 0.75;
+    }
+    24% {
+      opacity: 0.1;
+    }
+    40% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .storm-flash.is-flashing {
+    animation: storm-flash-glow 1.15s ease-out;
+  }
+
+  /* Peak 0.3, and it is the number the contrast floor is set against — the
+     measurement is taken at this frame, not at rest. One onset with a long
+     decay, against Apex's two even flickers at 0.45.
+
+     The whole flicker resolves in just over a second and fires at most once
+     every 5.2s, so this stays far clear of the three-flashes-per-second
+     photosensitivity threshold. */
+  @keyframes storm-flash-glow {
+    0% {
+      opacity: 0;
+    }
+    4% {
+      opacity: 0.3;
+    }
+    10% {
+      opacity: 0.22;
+    }
+    14% {
+      opacity: 0.26;
+    }
+    55% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
 /* Urgency strip across the top of the image */
 .storm-urgency {
   position: absolute;

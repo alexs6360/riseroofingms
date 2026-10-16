@@ -179,6 +179,23 @@
           />
         </picture>
 
+        <!-- Storm atmosphere. Three layers between the photograph and the
+             headline: falling rain, a bolt, and the sky flash that follows it.
+             All three are decorative and carry aria-hidden.
+
+             The rain's drops are written by script.js rather than by hand —
+             four dozen elements with randomised position, length and timing are
+             not maintainable as markup — and are not created at all under
+             prefers-reduced-motion. The bolt and the flash are in the markup
+             because they are single elements, and they sit at opacity 0 until
+             a strike, so under reduced motion they are inert rather than
+             absent. -->
+        <div class="storm-rain" aria-hidden="true"></div>
+        <svg class="storm-bolt" aria-hidden="true" viewBox="0 0 100 400" preserveAspectRatio="none">
+          <path></path>
+        </svg>
+        <div class="storm-flash" aria-hidden="true"></div>
+
         <div class="city-hero-content">
           <div class="container">
             <!-- Three explicit lines rather than letting the measure wrap it,

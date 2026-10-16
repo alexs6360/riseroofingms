@@ -763,3 +763,85 @@ window.AddressAutocomplete = (function () {
     },
   });
 })();
+
+/* Storm hero atmosphere — storm-damage only.
+
+   Guarded on .storm-rain, which exists on that page and nowhere else, so this
+   is inert on the homepage, the city pages and storm-history even though they
+   all load this file.
+
+   Ported from the Apex Exteriors storm page and re-pitched so the two do not
+   read as one template: 48 drops against Apex's 70, longer and at roughly
+   twice the wind angle, and strikes every 5.2-13s against Apex's 3-8s.
+
+   Frame cost is the point of the design. Every drop is a plain element moved
+   by a CSS transform and the flash is a CSS opacity animation, so the
+   compositor runs all of it off the main thread. There is no requestAnimation-
+   Frame loop here at all — the only JavaScript that ever runs after setup is
+   one setTimeout every several seconds, which sets a class and an attribute. */
+(function () {
+  var rain = document.querySelector(".storm-rain");
+  if (!rain || prefersReducedMotion) return;
+
+  /* 48, not Apex's 70. Fewer but longer and more raked reads as heavier
+     weather while costing a third fewer composited layers. */
+  var DROPS = 48;
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < DROPS; i++) {
+    var drop = document.createElement("span");
+    drop.className = "storm-raindrop";
+    drop.style.setProperty("--x", (Math.random() * 108 - 4).toFixed(1) + "%");
+    drop.style.setProperty("--h", (70 + Math.random() * 90).toFixed(0) + "px");
+    drop.style.setProperty("--w", (1 + Math.random() * 0.9).toFixed(2) + "px");
+    drop.style.setProperty("--o", (0.3 + Math.random() * 0.45).toFixed(2));
+    drop.style.setProperty("--duration", (0.85 + Math.random() * 0.8).toFixed(2) + "s");
+    /* Negative, so the field is already full on the first frame rather than
+       filling from the top edge after load. */
+    drop.style.setProperty("--delay", (Math.random() * -2.5).toFixed(2) + "s");
+    frag.appendChild(drop);
+  }
+  /* One append, one layout — not 48. */
+  rain.appendChild(frag);
+
+  var flash = document.querySelector(".storm-flash");
+  var bolt = document.querySelector(".storm-bolt");
+  var boltPath = bolt ? bolt.querySelector("path") : null;
+
+  /* Four shapes rather than Apex's three, and drawn with a different stagger
+     so the silhouette differs even at a glance. viewBox is 100x400, so these
+     scale with the bolt's own height. */
+  var SHAPES = [
+    "M58,0 L41,104 L63,112 L29,244 L49,252 L17,400",
+    "M34,0 L53,72 L31,80 L66,186 L42,195 L58,286 L36,294 L62,400",
+    "M66,0 L48,54 L70,62 L36,168 L56,176 L22,300 L44,308 L14,400",
+    "M44,0 L62,96 L38,103 L68,232 L46,240 L54,330 L28,400"
+  ];
+
+  function strike() {
+    if (bolt && boltPath) {
+      boltPath.setAttribute("d", SHAPES[Math.floor(Math.random() * SHAPES.length)]);
+      bolt.style.setProperty("--bolt-x", (12 + Math.random() * 74).toFixed(0) + "%");
+      bolt.classList.add("is-striking");
+      bolt.addEventListener("animationend", function off() {
+        bolt.classList.remove("is-striking");
+        bolt.removeEventListener("animationend", off);
+      });
+    }
+    if (flash) {
+      flash.classList.add("is-flashing");
+      flash.addEventListener("animationend", function off() {
+        flash.classList.remove("is-flashing");
+        flash.removeEventListener("animationend", off);
+      });
+    }
+    schedule();
+  }
+
+  /* 5.2-13s. Slower and wider than Apex's 3-8s, so the rhythm reads as a
+     different storm. Even the fast end is five seconds between flashes, far
+     outside the three-per-second photosensitivity threshold. */
+  function schedule() {
+    setTimeout(strike, 5200 + Math.random() * 7800);
+  }
+  schedule();
+})();

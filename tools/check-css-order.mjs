@@ -70,7 +70,13 @@ for (let i = 0; i < code.length; i++) {
     buf = "";
   } else if (ch === "}") {
     const frame = stack.pop();
-    if (frame && !frame.head.startsWith("@")) {
+    /* `from`, `to` and `50%` inside @keyframes are keyframe selectors, not
+       element selectors. They never take part in the cascade the way this
+       check assumes, so collecting them makes the `from` of one animation look
+       like it is shadowed by the `from` of a later one — which is how a
+       perfectly ordinary pair of keyframes blocks produced two LATENT hits. */
+    const inKeyframes = stack.some((f) => /^@(-\w+-)?keyframes\b/.test(f.head));
+    if (frame && !frame.head.startsWith("@") && !inKeyframes) {
       const media = stack.find((f) => f.head.startsWith("@media"));
       const decls = new Map();
       for (const part of code.slice(frame.from, i).split(";")) {
